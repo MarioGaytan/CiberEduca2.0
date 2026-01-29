@@ -87,6 +87,48 @@ export class TestsService {
     }
   }
 
+  async listPendingManualAttempts(user: AuthUser) {
+    if (![Role.Teacher, Role.Admin].includes(user.role)) {
+      throw new ForbiddenException('No tienes permisos.');
+    }
+
+    const schoolId = this.requireSchoolId(user);
+
+    if (user.role === Role.Admin) {
+      return this.attemptModel
+        .find({ schoolId, needsManualReview: true })
+        .sort({ submittedAt: -1 })
+        .exec();
+    }
+
+    const tests = await this.testModel
+      .find({ schoolId, createdByUserId: user.userId })
+      .select('_id title workshopId')
+      .exec();
+
+    const testIds = tests.map((t) => String(t._id));
+    if (testIds.length === 0) return [];
+
+    const testInfoById = new Map<string, { title: string; workshopId: string }>();
+    for (const t of tests) {
+      testInfoById.set(String(t._id), { title: t.title, workshopId: t.workshopId });
+    }
+
+    const attempts = await this.attemptModel
+      .find({ schoolId, testId: { $in: testIds }, needsManualReview: true })
+      .sort({ submittedAt: -1 })
+      .exec();
+
+    return attempts.map((a) => {
+      const info = testInfoById.get(a.testId);
+      return {
+        ...a.toObject(),
+        testTitle: info?.title,
+        workshopId: info?.workshopId,
+      };
+    });
+  }
+
   async create(user: AuthUser, input: {
     workshopId: string;
     title: string;

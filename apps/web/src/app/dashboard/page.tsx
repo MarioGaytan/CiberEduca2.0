@@ -120,8 +120,8 @@ export default function DashboardPage() {
                 <div className="mt-2 text-sm text-zinc-400">
                   Las de opción múltiple se califican solas. Las abiertas se revisan.
                 </div>
-                <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Próximo: bandeja de intentos
+                <Link href="/intentos" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                  Ver bandeja de intentos
                 </Link>
               </div>
             </>

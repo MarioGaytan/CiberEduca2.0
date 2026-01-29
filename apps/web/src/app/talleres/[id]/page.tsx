@@ -168,6 +168,14 @@ export default function TallerDetallePage() {
                   <div className="text-sm font-semibold text-zinc-200">Tests</div>
                   <div className="mt-1 text-sm text-zinc-400">Tests asociados a este taller.</div>
                 </div>
+                {role === 'teacher' || role === 'admin' ? (
+                  <Link
+                    href={`/talleres/${id}/tests/nuevo`}
+                    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  >
+                    Crear test
+                  </Link>
+                ) : null}
               </div>
 
               {tests.length === 0 ? (

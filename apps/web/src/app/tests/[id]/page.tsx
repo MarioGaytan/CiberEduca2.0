@@ -26,6 +26,8 @@ type Test = {
   title: string;
   description?: string;
   workshopId: string;
+  status?: 'draft' | 'in_review' | 'approved';
+  reviewerFeedback?: string;
   questions: Question[];
 };
 
@@ -48,6 +50,8 @@ export default function TestPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [workflowError, setWorkflowError] = useState<string | null>(null);
+  const [workflowLoading, setWorkflowLoading] = useState(false);
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
 
@@ -125,6 +129,30 @@ export default function TestPage() {
     setSubmitting(false);
   }
 
+  async function actionPost(path: string, body?: any) {
+    setWorkflowError(null);
+    setWorkflowLoading(true);
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: body ? { 'content-type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = (await res.json().catch(() => undefined)) as any;
+    if (!res.ok) {
+      setWorkflowError((data && (data.message || data.error)) || 'No se pudo completar la acción.');
+      setWorkflowLoading(false);
+      return;
+    }
+
+    const reload = await fetch(`/api/tests/${id}`, { cache: 'no-store' });
+    const reloadData = (await reload.json().catch(() => undefined)) as any;
+    if (reload.ok) {
+      setTest(reloadData as Test);
+    }
+
+    setWorkflowLoading(false);
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
       <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -163,6 +191,62 @@ export default function TestPage() {
                 Este test está en modo lectura para tu rol: <span className="font-semibold">{role}</span>.
               </div>
             ) : null}
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="text-sm font-semibold text-zinc-200">Estado</div>
+              <div className="mt-2 text-2xl font-semibold capitalize">
+                {(test.status ?? 'draft').replace('_', ' ')}
+              </div>
+              {test.reviewerFeedback ? (
+                <div className="mt-2 text-sm text-zinc-400">Feedback: {test.reviewerFeedback}</div>
+              ) : null}
+
+              {workflowError ? (
+                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+                  {workflowError}
+                </div>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                {(role === 'teacher' || role === 'admin') && test.status === 'draft' ? (
+                  <button
+                    onClick={() => actionPost(`/api/tests/${id}/submit`)}
+                    disabled={workflowLoading}
+                    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+                  >
+                    Enviar a revisión
+                  </button>
+                ) : null}
+
+                {(role === 'reviewer' || role === 'admin') && test.status === 'in_review' ? (
+                  <>
+                    <button
+                      onClick={() => actionPost(`/api/tests/${id}/approve`, { feedback: 'Aprobado' })}
+                      disabled={workflowLoading}
+                      className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => actionPost(`/api/tests/${id}/reject`, { feedback: 'Rechazado' })}
+                      disabled={workflowLoading}
+                      className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                    >
+                      Rechazar
+                    </button>
+                  </>
+                ) : null}
+
+                {role === 'teacher' || role === 'admin' ? (
+                  <Link
+                    href={`/tests/${id}/intentos`}
+                    className="rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
+                  >
+                    Ver intentos
+                  </Link>
+                ) : null}
+              </div>
+            </div>
 
             {test.questions.map((q, idx) => (
               <div key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-5">
