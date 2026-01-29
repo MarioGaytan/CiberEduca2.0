@@ -16,7 +16,10 @@ export class AdminBootstrapService implements OnModuleInit {
     const username = this.config.get<string>('BOOTSTRAP_ADMIN_USERNAME');
     const password = this.config.get<string>('BOOTSTRAP_ADMIN_PASSWORD');
     const email = this.config.get<string>('BOOTSTRAP_ADMIN_EMAIL');
-    const schoolId = this.config.get<string>('BOOTSTRAP_ADMIN_SCHOOL_ID');
+    const schoolId =
+      this.config.get<string>('BOOTSTRAP_ADMIN_SCHOOL_ID') ??
+      this.config.get<string>('DEFAULT_SCHOOL_ID') ??
+      'default';
 
     if (!username || !password) {
       this.logger.log(

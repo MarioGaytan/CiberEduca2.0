@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
@@ -17,6 +18,7 @@ import { TestAttempt, TestAttemptDocument } from './schemas/test-attempt.schema'
 @Injectable()
 export class TestsService {
   constructor(
+    private readonly config: ConfigService,
     @InjectModel(Test.name) private readonly testModel: Model<TestDocument>,
     @InjectModel(TestAttempt.name)
     private readonly attemptModel: Model<TestAttemptDocument>,
@@ -25,10 +27,7 @@ export class TestsService {
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
-    if (!user.schoolId) {
-      throw new BadRequestException('Usuario sin escuela asignada.');
-    }
-    return user.schoolId;
+    return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
   }
 
   private async assertTeacherWorkshopAccess(user: AuthUser, workshopId: string) {

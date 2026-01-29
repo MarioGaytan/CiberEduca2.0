@@ -1,4 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
@@ -8,8 +9,13 @@ import { User, UserDocument } from './schemas/user.schema';
 @Injectable()
 export class UsersService {
   constructor(
+    private readonly config: ConfigService,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
+
+  private getDefaultSchoolId(): string {
+    return this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default';
+  }
 
   async countByRole(role: Role): Promise<number> {
     return this.userModel.countDocuments({ role }).exec();
@@ -61,12 +67,14 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(input.password, 12);
 
+    const schoolId = input.schoolId ?? this.getDefaultSchoolId();
+
     const created = new this.userModel({
       username,
       email,
       passwordHash,
       role: input.role,
-      schoolId: input.schoolId,
+      schoolId,
       isActive: true,
     });
 

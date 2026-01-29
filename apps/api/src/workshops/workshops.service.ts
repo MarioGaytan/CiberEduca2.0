@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
@@ -21,15 +22,13 @@ export type AuthUser = {
 @Injectable()
 export class WorkshopsService {
   constructor(
+    private readonly config: ConfigService,
     @InjectModel(Workshop.name)
     private readonly workshopModel: Model<WorkshopDocument>,
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
-    if (!user.schoolId) {
-      throw new BadRequestException('Usuario sin escuela asignada.');
-    }
-    return user.schoolId;
+    return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
   }
 
   async create(user: AuthUser, input: {
