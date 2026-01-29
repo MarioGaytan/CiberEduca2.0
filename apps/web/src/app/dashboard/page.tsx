@@ -88,8 +88,8 @@ export default function DashboardPage() {
                 <div className="mt-2 text-sm text-zinc-400">
                   Ver talleres aprobados y entrar por código cuando sea necesario.
                 </div>
-                <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Próximo: lista de talleres
+                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                  Ver talleres
                 </Link>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -97,8 +97,8 @@ export default function DashboardPage() {
                 <div className="mt-2 text-sm text-zinc-400">
                   Responder tests de opción múltiple y abiertas.
                 </div>
-                <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Próximo: tests por taller
+                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                  Ver tests por taller
                 </Link>
               </div>
             </>
@@ -111,8 +111,8 @@ export default function DashboardPage() {
                 <div className="mt-2 text-sm text-zinc-400">
                   Crea borradores, envía a revisión y publica cuando sea aprobado.
                 </div>
-                <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Próximo: creador de taller
+                <Link href="/talleres/nuevo" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                  Crear taller
                 </Link>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">

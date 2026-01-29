@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n api,web -c magenta,cyan \"npm run dev -w api\" \"npm run dev -w web\"",
+    "seed": "npm run seed -w api",
     "build": "npm run build -ws --if-present",
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present"
