@@ -1,0 +1,103 @@
+import { ConflictException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
+import { Model } from 'mongoose';
+import { Role } from '../common/roles.enum';
+import { User, UserDocument } from './schemas/user.schema';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  ) {}
+
+  async countByRole(role: Role): Promise<number> {
+    return this.userModel.countDocuments({ role }).exec();
+  }
+
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).exec();
+  }
+
+  async findByUsernameOrEmail(identifier: string): Promise<UserDocument | null> {
+    const normalized = identifier.trim().toLowerCase();
+    return this.userModel
+      .findOne({ $or: [{ username: normalized }, { email: normalized }] })
+      .exec();
+  }
+
+  async createStudentUser(input: {
+    username: string;
+    password: string;
+    email?: string;
+    schoolId?: string;
+  }): Promise<UserDocument> {
+    return this.createUser({
+      username: input.username,
+      password: input.password,
+      email: input.email,
+      role: Role.Student,
+      schoolId: input.schoolId,
+    });
+  }
+
+  async createUser(input: {
+    username: string;
+    password: string;
+    email?: string;
+    role: Role;
+    schoolId?: string;
+  }): Promise<UserDocument> {
+    const username = input.username.trim().toLowerCase();
+    const email = input.email?.trim().toLowerCase();
+
+    const existing = await this.userModel
+      .findOne({ $or: [{ username }, ...(email ? [{ email }] : [])] })
+      .exec();
+
+    if (existing) {
+      throw new ConflictException('El usuario o correo ya existe.');
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, 12);
+
+    const created = new this.userModel({
+      username,
+      email,
+      passwordHash,
+      role: input.role,
+      schoolId: input.schoolId,
+      isActive: true,
+    });
+
+    return created.save();
+  }
+
+  async listUsers(filter?: { schoolId?: string }) {
+    const query: Record<string, unknown> = {};
+    if (filter?.schoolId) query.schoolId = filter.schoolId;
+
+    return this.userModel
+      .find(query)
+      .select('-passwordHash -refreshTokenHash')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async setRefreshTokenHash(userId: string, refreshToken: string): Promise<void> {
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
+    await this.userModel
+      .updateOne({ _id: userId }, { $set: { refreshTokenHash } })
+      .exec();
+  }
+
+  async clearRefreshTokenHash(userId: string): Promise<void> {
+    await this.userModel
+      .updateOne({ _id: userId }, { $unset: { refreshTokenHash: 1 } })
+      .exec();
+  }
+
+  async validatePassword(user: UserDocument, password: string): Promise<boolean> {
+    return bcrypt.compare(password, user.passwordHash);
+  }
+}
