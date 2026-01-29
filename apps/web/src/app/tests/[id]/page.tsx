@@ -154,43 +154,38 @@ export default function TestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto w-full max-w-3xl px-6 py-10">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Link href="/talleres" className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-              ← Talleres
-            </Link>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight">{test?.title ?? 'Test'}</h1>
-            {test?.description ? <p className="mt-2 text-sm text-zinc-300">{test.description}</p> : null}
-          </div>
-          <button
-            onClick={() => router.replace('/dashboard')}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-          >
-            Dashboard
-          </button>
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Link href="/talleres" className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+            ← Talleres
+          </Link>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{test?.title ?? 'Test'}</h1>
+          {test?.description ? <p className="mt-2 text-sm text-zinc-300">{test.description}</p> : null}
         </div>
+        <button
+          onClick={() => router.replace('/dashboard')}
+          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+        >
+          Dashboard
+        </button>
+      </div>
 
-        {loading ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
-        ) : error ? (
-          <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">{error}</div>
-        ) : !me || !me.authenticated ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No autenticado.
-          </div>
-        ) : !test ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            Test no encontrado.
-          </div>
-        ) : (
-          <div className="mt-8 space-y-4">
-            {role !== 'student' ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-zinc-300">
-                Este test está en modo lectura para tu rol: <span className="font-semibold">{role}</span>.
-              </div>
-            ) : null}
+      {loading ? (
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+      ) : error ? (
+        <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">{error}</div>
+      ) : !me || !me.authenticated ? (
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+      ) : !test ? (
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Test no encontrado.</div>
+      ) : (
+        <div className="mt-8 space-y-4">
+          {role !== 'student' ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-zinc-300">
+              Este test está en modo lectura para tu rol: <span className="font-semibold">{role}</span>.
+            </div>
+          ) : null}
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <div className="text-sm font-semibold text-zinc-200">Estado</div>
@@ -243,6 +238,15 @@ export default function TestPage() {
                     className="rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
                   >
                     Ver intentos
+                  </Link>
+                ) : null}
+
+                {(role === 'teacher' || role === 'admin') && test.status === 'draft' ? (
+                  <Link
+                    href={`/tests/${id}/editar`}
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                  >
+                    Editar
                   </Link>
                 ) : null}
               </div>
@@ -319,9 +323,8 @@ export default function TestPage() {
                 Volver al taller
               </Link>
             ) : null}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

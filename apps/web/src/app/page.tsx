@@ -29,10 +29,10 @@ export default function Home() {
               Crear cuenta
             </Link>
             <Link
-              href="/dashboard"
+              href="/home"
               className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent px-5 py-3 text-sm font-semibold text-zinc-300 hover:bg-white/5"
             >
-              Ir al dashboard
+              Ir al inicio
             </Link>
           </div>
 

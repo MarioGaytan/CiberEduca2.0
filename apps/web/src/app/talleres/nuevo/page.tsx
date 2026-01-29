@@ -47,12 +47,11 @@ export default function NuevoTallerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto w-full max-w-2xl px-6 py-10">
-        <h1 className="text-3xl font-semibold tracking-tight">Crear taller</h1>
-        <p className="mt-1 text-sm text-zinc-400">Se crea en borrador. Luego puedes enviarlo a revisión.</p>
+    <div>
+      <h1 className="text-3xl font-semibold tracking-tight">Crear taller</h1>
+      <p className="mt-1 text-sm text-zinc-400">Se crea en borrador. Luego puedes enviarlo a revisión.</p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div>
             <label className="text-sm font-semibold text-zinc-200">Título</label>
             <input
@@ -122,8 +121,7 @@ export default function NuevoTallerPage() {
               {loading ? 'Creando…' : 'Crear'}
             </button>
           </div>
-        </form>
-      </div>
+      </form>
     </div>
   );
 }

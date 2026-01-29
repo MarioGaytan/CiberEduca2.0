@@ -31,7 +31,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.replace('/dashboard');
+    router.replace('/home');
   }
 
   return (

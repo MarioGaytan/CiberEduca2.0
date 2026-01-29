@@ -46,40 +46,33 @@ export default function DashboardPage() {
 
   if (loading || !me || !me.authenticated) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-50">
-        <div className="mx-auto w-full max-w-5xl px-6 py-10">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            Cargando…
-          </div>
-        </div>
-      </div>
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto w-full max-w-5xl px-6 py-10">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-            <p className="mt-1 text-sm text-zinc-300">
-              Bienvenido, <span className="font-semibold text-zinc-100">{me.user.username}</span>
-            </p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="mt-4 w-fit rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 sm:mt-0"
-          >
-            Cerrar sesión
-          </button>
+    <div>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-sm text-zinc-300">
+            Bienvenido, <span className="font-semibold text-zinc-100">{me.user.username}</span>
+          </p>
         </div>
+        <button
+          onClick={onLogout}
+          className="mt-4 w-fit rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 sm:mt-0"
+        >
+          Cerrar sesión
+        </button>
+      </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="text-sm font-semibold text-zinc-200">Tu rol</div>
-            <div className="mt-2 text-2xl font-semibold capitalize">{role}</div>
-            <div className="mt-2 text-sm text-zinc-400">La interfaz se ajusta a tus permisos.</div>
-          </div>
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="text-sm font-semibold text-zinc-200">Tu rol</div>
+          <div className="mt-2 text-2xl font-semibold capitalize">{role}</div>
+          <div className="mt-2 text-sm text-zinc-400">La interfaz se ajusta a tus permisos.</div>
+        </div>
 
           {role === 'student' ? (
             <>
@@ -152,7 +145,6 @@ export default function DashboardPage() {
             </>
           ) : null}
         </div>
-      </div>
     </div>
   );
 }

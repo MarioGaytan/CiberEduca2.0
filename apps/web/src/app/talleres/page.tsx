@@ -47,32 +47,29 @@ export default function TalleresPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto w-full max-w-5xl px-6 py-10">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Talleres</h1>
-            <p className="mt-1 text-sm text-zinc-400">
-              Lista de talleres disponibles según tu rol.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-            >
-              Volver
-            </Link>
-            {role === 'teacher' || role === 'admin' ? (
-              <Link
-                href="/talleres/nuevo"
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
-              >
-                Crear taller
-              </Link>
-            ) : null}
-          </div>
+    <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Talleres</h1>
+          <p className="mt-1 text-sm text-zinc-400">Lista de talleres disponibles según tu rol.</p>
         </div>
+        <div className="flex gap-3">
+          <Link
+            href="/home"
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+          >
+            Volver
+          </Link>
+          {role === 'teacher' || role === 'admin' ? (
+            <Link
+              href="/talleres/nuevo"
+              className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+            >
+              Crear taller
+            </Link>
+          ) : null}
+        </div>
+      </div>
 
         {loading ? (
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
@@ -114,7 +111,6 @@ export default function TalleresPage() {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }

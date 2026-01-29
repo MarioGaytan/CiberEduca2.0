@@ -157,32 +157,27 @@ export default function IntentosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-50">
-        <div className="mx-auto w-full max-w-5xl px-6 py-10">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
-        </div>
-      </div>
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto w-full max-w-5xl px-6 py-10">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Link href={`/tests/${id}`} className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-              ← Volver al test
-            </Link>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight">Intentos</h1>
-            <p className="mt-1 text-sm text-zinc-400">{test?.title}</p>
-          </div>
-          <button
-            onClick={() => router.replace('/dashboard')}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-          >
-            Dashboard
-          </button>
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Link href={`/tests/${id}`} className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+            ← Volver al test
+          </Link>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Intentos</h1>
+          <p className="mt-1 text-sm text-zinc-400">{test?.title}</p>
         </div>
+        <button
+          onClick={() => router.replace('/dashboard')}
+          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+        >
+          Dashboard
+        </button>
+      </div>
 
         {error ? (
           <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-200">{error}</div>
@@ -296,7 +291,6 @@ export default function IntentosPage() {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }
