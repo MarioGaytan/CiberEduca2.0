@@ -52,34 +52,35 @@ export default function NuevoTallerPage() {
       <p className="mt-1 text-sm text-zinc-400">Se crea en borrador. Luego puedes enviarlo a revisión.</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        <div className="ce-card p-5">
           <div>
             <label className="text-sm font-semibold text-zinc-200">Título</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+              className="ce-field"
               placeholder="Ej. Introducción a seguridad"
               required
               minLength={3}
             />
           </div>
 
-          <div>
+          <div className="mt-4">
             <label className="text-sm font-semibold text-zinc-200">Descripción</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-2 min-h-[120px] w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+              className="ce-field min-h-[120px]"
               placeholder="Descripción del taller (opcional)"
             />
           </div>
 
-          <div>
+          <div className="mt-4">
             <label className="text-sm font-semibold text-zinc-200">Visibilidad</label>
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value as WorkshopVisibility)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+              className="ce-field"
             >
               <option value="internal">Interno</option>
               <option value="code">Por código</option>
@@ -87,12 +88,12 @@ export default function NuevoTallerPage() {
           </div>
 
           {visibility === 'code' ? (
-            <div>
+            <div className="mt-4">
               <label className="text-sm font-semibold text-zinc-200">Código</label>
               <input
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                className="ce-field"
                 placeholder="Código de acceso"
                 required
                 minLength={3}
@@ -104,23 +105,15 @@ export default function NuevoTallerPage() {
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>
           ) : null}
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => router.replace('/talleres')}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-              disabled={loading}
-            >
+          <div className="mt-4 flex gap-3">
+            <button type="button" onClick={() => router.replace('/talleres')} className="ce-btn ce-btn-ghost py-3" disabled={loading}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
-              disabled={loading}
-            >
+            <button type="submit" className="ce-btn ce-btn-primary py-3" disabled={loading}>
               {loading ? 'Creando…' : 'Crear'}
             </button>
           </div>
+        </div>
       </form>
     </div>
   );

@@ -17,16 +17,21 @@ function apiBaseUrl() {
 export async function POST(req: Request) {
   const body = (await req.json()) as LoginBody;
 
-  const res = await fetch(`${apiBaseUrl()}/auth/login`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${apiBaseUrl()}/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return NextResponse.json({ error: 'No se pudo conectar con el servidor.' }, { status: 502 });
+  }
 
-  const data = (await res.json()) as unknown;
+  const data = (await res.json().catch(() => undefined)) as unknown;
 
   if (!res.ok) {
-    return NextResponse.json(data, { status: res.status });
+    return NextResponse.json(data ?? { error: 'No se pudo iniciar sesión.' }, { status: res.status });
   }
 
   const tokens = data as { accessToken: string; refreshToken: string };

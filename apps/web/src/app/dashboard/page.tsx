@@ -61,14 +61,14 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={onLogout}
-          className="mt-4 w-fit rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 sm:mt-0"
+          className="ce-btn ce-btn-ghost mt-4 w-fit sm:mt-0"
         >
           Cerrar sesión
         </button>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="ce-card p-5">
           <div className="text-sm font-semibold text-zinc-200">Tu rol</div>
           <div className="mt-2 text-2xl font-semibold capitalize">{role}</div>
           <div className="mt-2 text-sm text-zinc-400">La interfaz se ajusta a tus permisos.</div>
@@ -99,48 +99,52 @@ export default function DashboardPage() {
 
           {role === 'teacher' ? (
             <>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="ce-card ce-card-hover p-5">
                 <div className="text-sm font-semibold text-zinc-200">Crear talleres</div>
                 <div className="mt-2 text-sm text-zinc-400">
                   Crea borradores, envía a revisión y publica cuando sea aprobado.
                 </div>
-                <Link href="/talleres/nuevo" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Crear taller
-                </Link>
+                <div className="mt-4">
+                  <Link href="/talleres/nuevo" className="ce-btn ce-btn-primary">
+                    Crear taller
+                  </Link>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="ce-card ce-card-hover p-5">
                 <div className="text-sm font-semibold text-zinc-200">Calificar abiertas</div>
                 <div className="mt-2 text-sm text-zinc-400">
                   Las de opción múltiple se califican solas. Las abiertas se revisan.
                 </div>
-                <Link href="/intentos" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Ver bandeja de intentos
-                </Link>
+                <div className="mt-4">
+                  <Link href="/intentos" className="ce-btn ce-btn-ghost">
+                    Ver bandeja de intentos
+                  </Link>
+                </div>
               </div>
             </>
           ) : null}
 
           {role === 'reviewer' || role === 'admin' ? (
             <>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <Link href="/admin/revision" className="ce-card ce-card-hover block p-5">
                 <div className="text-sm font-semibold text-zinc-200">Revisión</div>
                 <div className="mt-2 text-sm text-zinc-400">
                   Aprobar o rechazar talleres y tests antes de publicarlos.
                 </div>
-                <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                  Próximo: bandeja de revisión
-                </Link>
-              </div>
+                <div className="mt-4">
+                  <span className="ce-btn ce-btn-soft">Abrir bandeja</span>
+                </div>
+              </Link>
               {role === 'admin' ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <Link href="/admin/usuarios" className="ce-card ce-card-hover block p-5">
                   <div className="text-sm font-semibold text-zinc-200">Usuarios</div>
                   <div className="mt-2 text-sm text-zinc-400">
                     Dar de alta profesores, revisores y alumnos.
                   </div>
-                  <Link href="#" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                    Próximo: administración de usuarios
-                  </Link>
-                </div>
+                  <div className="mt-4">
+                    <span className="ce-btn ce-btn-soft">Administrar</span>
+                  </div>
+                </Link>
               ) : null}
             </>
           ) : null}

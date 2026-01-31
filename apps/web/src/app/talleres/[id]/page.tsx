@@ -92,7 +92,7 @@ export default function TallerDetallePage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Link href="/talleres" className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href="/talleres" className="text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             ← Volver a talleres
           </Link>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{workshop?.title ?? 'Taller'}</h1>
@@ -105,7 +105,7 @@ export default function TallerDetallePage() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => router.replace('/dashboard')}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Dashboard
           </button>
@@ -113,7 +113,7 @@ export default function TallerDetallePage() {
           {workshop && (role === 'teacher' || role === 'admin') && workshop.status === 'draft' ? (
             <button
               onClick={() => actionPost(`/api/workshops/${id}/submit`)}
-              className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+              className="ce-btn ce-btn-primary"
             >
               Enviar a revisión
             </button>
@@ -123,13 +123,13 @@ export default function TallerDetallePage() {
             <>
               <button
                 onClick={() => actionPost(`/api/workshops/${id}/approve`, { feedback: 'Aprobado' })}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+                className="ce-btn ce-btn-success"
               >
                 Aprobar
               </button>
               <button
                 onClick={() => actionPost(`/api/workshops/${id}/reject`, { feedback: 'Rechazado' })}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+                className="ce-btn ce-btn-danger"
               >
                 Rechazar
               </button>
@@ -148,7 +148,7 @@ export default function TallerDetallePage() {
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Taller no encontrado.</div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="ce-card ce-card-hover p-5">
             <div className="text-sm font-semibold text-zinc-200">Estado</div>
             <div className="mt-2 text-2xl font-semibold capitalize">{workshop.status.replace('_', ' ')}</div>
             {workshop.reviewerFeedback ? (
@@ -157,7 +157,7 @@ export default function TallerDetallePage() {
             <div className="mt-3 text-sm text-zinc-400">Visibilidad: {workshop.visibility}</div>
           </div>
 
-          <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="lg:col-span-2 ce-card p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold text-zinc-200">Tests</div>
@@ -166,7 +166,7 @@ export default function TallerDetallePage() {
               {role === 'teacher' || role === 'admin' ? (
                 <Link
                   href={`/talleres/${id}/tests/nuevo`}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  className="ce-btn ce-btn-primary"
                 >
                   Crear test
                 </Link>
@@ -181,7 +181,7 @@ export default function TallerDetallePage() {
                   <Link
                     key={t._id}
                     href={`/tests/${t._id}`}
-                    className="block rounded-xl border border-white/10 bg-black/20 p-4 hover:bg-black/30"
+                    className="ce-card ce-card-hover block rounded-xl bg-black/20 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>

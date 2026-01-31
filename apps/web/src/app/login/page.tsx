@@ -25,8 +25,9 @@ export default function LoginPage() {
     setLoading(false);
 
     if (!res.ok) {
-      const data = (await res.json()) as any;
-      setError(data?.message ?? 'No se pudo iniciar sesión.');
+      const data = (await res.json().catch(() => undefined)) as any;
+      const fallback = 'No se pudo iniciar sesión.';
+      setError((data && (data.message || data.error)) || fallback);
       return;
     }
 
@@ -34,19 +35,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
+    <div className="ce-public-shell ce-public-bg">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
         <div className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">CiberEduca</h1>
+          <div className="ce-chip">Acceso</div>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+            <span className="ce-title-gradient">CiberEduca</span>
+          </h1>
           <p className="mt-2 text-sm text-zinc-300">Inicia sesión para continuar.</p>
         </div>
 
-        <form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow">
+        <form onSubmit={onSubmit} className="ce-card p-6">
           <label className="block text-sm font-medium text-zinc-200">Usuario o correo</label>
           <input
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="ce-field"
             placeholder="usuario o correo@escuela.edu"
             autoComplete="username"
             required
@@ -56,7 +60,7 @@ export default function LoginPage() {
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="ce-field"
             placeholder="••••••••"
             type="password"
             autoComplete="current-password"
@@ -71,7 +75,7 @@ export default function LoginPage() {
 
           <button
             disabled={loading}
-            className="mt-6 w-full rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-60"
+            className="ce-btn ce-btn-primary mt-6 w-full py-3"
             type="submit"
           >
             {loading ? 'Entrando…' : 'Iniciar sesión'}
@@ -80,7 +84,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm text-zinc-300">
           ¿No tienes cuenta?{' '}
-          <Link href="/registro" className="font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href="/registro" className="font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             Crear cuenta
           </Link>
         </div>

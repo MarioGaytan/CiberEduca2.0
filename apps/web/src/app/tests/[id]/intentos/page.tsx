@@ -165,7 +165,7 @@ export default function IntentosPage() {
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href={`/tests/${id}`} className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href={`/tests/${id}`} className="text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             ← Volver al test
           </Link>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Intentos</h1>
@@ -173,7 +173,7 @@ export default function IntentosPage() {
         </div>
         <button
           onClick={() => router.replace('/dashboard')}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+          className="ce-btn ce-btn-ghost"
         >
           Dashboard
         </button>
@@ -202,7 +202,7 @@ export default function IntentosPage() {
         ) : (
           <div className="mt-8 space-y-4">
             {attempts.map((a) => (
-              <div key={a._id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div key={a._id} className="ce-card p-5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-zinc-200">Alumno</div>
@@ -219,7 +219,7 @@ export default function IntentosPage() {
                     <button
                       onClick={() => gradeAttempt(a._id)}
                       disabled={saving === a._id}
-                      className="mt-3 w-fit rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60 sm:mt-0"
+                      className="ce-btn ce-btn-primary mt-3 w-fit sm:mt-0"
                     >
                       {saving === a._id ? 'Guardando…' : 'Guardar calificación'}
                     </button>
@@ -277,7 +277,7 @@ export default function IntentosPage() {
                                   },
                                 }));
                               }}
-                              className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                              className="ce-field"
                               min={0}
                               max={q.points}
                             />

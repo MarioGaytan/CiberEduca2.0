@@ -35,19 +35,20 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
+    <div className="ce-public-shell ce-public-bg">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
         <div className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">Crear cuenta</h1>
+          <div className="ce-chip">Registro</div>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight">Crear cuenta</h1>
           <p className="mt-2 text-sm text-zinc-300">Solo toma un minuto.</p>
         </div>
 
-        <form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow">
+        <form onSubmit={onSubmit} className="ce-card p-6">
           <label className="block text-sm font-medium text-zinc-200">Usuario</label>
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="ce-field"
             placeholder="tu_usuario"
             autoComplete="username"
             required
@@ -57,7 +58,7 @@ export default function RegisterPage() {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="ce-field"
             placeholder="alumno@escuela.edu"
             autoComplete="email"
           />
@@ -66,7 +67,7 @@ export default function RegisterPage() {
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-zinc-50 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="ce-field"
             placeholder="mínimo 8 caracteres"
             type="password"
             autoComplete="new-password"
@@ -81,7 +82,7 @@ export default function RegisterPage() {
 
           <button
             disabled={loading}
-            className="mt-6 w-full rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-60"
+            className="ce-btn ce-btn-primary mt-6 w-full py-3"
             type="submit"
           >
             {loading ? 'Creando…' : 'Crear cuenta'}
@@ -90,7 +91,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm text-zinc-300">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href="/login" className="font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             Iniciar sesión
           </Link>
         </div>

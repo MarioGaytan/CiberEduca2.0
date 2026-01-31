@@ -45,9 +45,7 @@ export default function PerfilPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-zinc-200">
-            Perfil
-          </div>
+          <div className="ce-chip">Perfil</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">{me.user.username}</h1>
           <p className="mt-2 text-sm text-zinc-300">
             Rol: <span className="capitalize font-semibold text-zinc-100">{role}</span>
@@ -56,13 +54,13 @@ export default function PerfilPage() {
         <div className="flex gap-3">
           <Link
             href="/home"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Inicio
           </Link>
           <button
             onClick={onLogout}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+            className="ce-btn ce-btn-danger"
             type="button"
           >
             Cerrar sesión
@@ -71,7 +69,7 @@ export default function PerfilPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="ce-card ce-card-hover p-5">
           <div className="text-sm font-semibold text-zinc-200">Accesos</div>
           <div className="mt-3 space-y-2">
             <Link href="/talleres" className="block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
@@ -88,7 +86,7 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="lg:col-span-2 ce-card p-5">
           <div className="text-sm font-semibold text-zinc-200">Preferencias</div>
           <div className="mt-2 text-sm text-zinc-400">
             Próximamente: avatar, modo oscuro/neón, notificaciones y ajustes de accesibilidad.

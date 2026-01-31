@@ -62,13 +62,11 @@ export default function HomePage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-zinc-200">
-            Inicio
-          </div>
+          <div className="ce-chip">Inicio</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">
             {me && me.authenticated ? (
               <span>
-                Hola, <span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">{me.user.username}</span>
+                Hola, <span className="ce-title-gradient">{me.user.username}</span>
               </span>
             ) : (
               'CiberEduca'
@@ -79,13 +77,13 @@ export default function HomePage() {
         <div className="flex gap-3">
           <Link
             href="/talleres"
-            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+            className="ce-btn ce-btn-primary"
           >
             Ir a talleres
           </Link>
           <Link
             href="/perfil"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Perfil
           </Link>
@@ -96,35 +94,39 @@ export default function HomePage() {
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="ce-card ce-card-hover p-5">
             <div className="text-sm font-semibold text-zinc-200">Tu rol</div>
             <div className="mt-2 text-2xl font-semibold capitalize">{role}</div>
             <div className="mt-2 text-sm text-zinc-400">Accesos rápidos según permisos.</div>
           </div>
 
           {(role === 'teacher' || role === 'admin') ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="ce-card ce-card-hover p-5">
               <div className="text-sm font-semibold text-zinc-200">Bandeja</div>
               <div className="mt-2 text-2xl font-semibold">{inbox.length}</div>
               <div className="mt-2 text-sm text-zinc-400">Intentos pendientes de revisión manual.</div>
-              <Link href="/intentos" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-                Ver intentos
-              </Link>
+              <div className="mt-4">
+                <Link href="/intentos" className="ce-btn ce-btn-ghost">
+                  Ver intentos
+                </Link>
+              </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="ce-card ce-card-hover p-5">
               <div className="text-sm font-semibold text-zinc-200">Progreso</div>
               <div className="mt-2 text-2xl font-semibold">0</div>
               <div className="mt-2 text-sm text-zinc-400">Se mostrará tu avance en próximos pasos.</div>
             </div>
           )}
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="ce-card ce-card-hover p-5">
             <div className="text-sm font-semibold text-zinc-200">Acción rápida</div>
             <div className="mt-2 text-sm text-zinc-400">Explora y entra a un taller para ver sus tests.</div>
-            <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
-              Abrir talleres
-            </Link>
+            <div className="mt-4">
+              <Link href="/talleres" className="ce-btn ce-btn-ghost">
+                Abrir talleres
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -138,14 +140,14 @@ export default function HomePage() {
         </div>
 
         {workshops.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No hay talleres.</div>
+          <div className="mt-4 ce-card p-6 text-sm text-zinc-300">No hay talleres.</div>
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {workshops.slice(0, 6).map((w) => (
               <Link
                 key={w._id}
                 href={`/talleres/${w._id}`}
-                className="block rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10"
+                className="ce-card ce-card-hover block p-5"
               >
                 <div className="text-sm font-semibold text-zinc-100">{w.title}</div>
                 {w.description ? <div className="mt-2 text-sm text-zinc-400 line-clamp-2">{w.description}</div> : null}

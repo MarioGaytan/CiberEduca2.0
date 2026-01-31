@@ -107,23 +107,21 @@ export default function AdminRevisionPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-zinc-200">
-            Revisión
-          </div>
+          <div className="ce-chip">Revisión</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">Bandeja de revisión</h1>
           <p className="mt-2 text-sm text-zinc-400">Aprobar o rechazar talleres y tests en revisión.</p>
         </div>
         <div className="flex gap-3">
           <Link
             href={role === 'admin' ? '/admin/usuarios' : '/home'}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             {role === 'admin' ? 'Usuarios' : 'Inicio'}
           </Link>
           <button
             type="button"
             onClick={loadAll}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Recargar
           </button>
@@ -144,8 +142,8 @@ export default function AdminRevisionPage() {
               onClick={() => setTab('workshops')}
               className={
                 tab === 'workshops'
-                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
-                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+                  ? 'ce-btn ce-btn-ghost bg-white/10'
+                  : 'ce-btn ce-btn-ghost'
               }
             >
               Talleres ({workshops.length})
@@ -155,8 +153,8 @@ export default function AdminRevisionPage() {
               onClick={() => setTab('tests')}
               className={
                 tab === 'tests'
-                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
-                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+                  ? 'ce-btn ce-btn-ghost bg-white/10'
+                  : 'ce-btn ce-btn-ghost'
               }
             >
               Tests ({tests.length})
@@ -170,10 +168,10 @@ export default function AdminRevisionPage() {
           {tab === 'workshops' ? (
             <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
               {workshops.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No hay talleres en revisión.</div>
+                <div className="ce-card p-6 text-sm text-zinc-300">No hay talleres en revisión.</div>
               ) : (
                 workshops.map((w) => (
-                  <div key={w._id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div key={w._id} className="ce-card p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="text-sm font-semibold text-zinc-100">{w.title}</div>
@@ -182,7 +180,7 @@ export default function AdminRevisionPage() {
                       </div>
                       <Link
                         href={`/talleres/${w._id}`}
-                        className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-black/30"
+                        className="ce-btn ce-btn-soft px-3 py-2 text-xs"
                       >
                         Ver
                       </Link>
@@ -193,7 +191,7 @@ export default function AdminRevisionPage() {
                         type="button"
                         onClick={() => actionPost(`/api/workshops/${w._id}/approve`, w._id, { feedback: 'Aprobado' })}
                         disabled={busyId === w._id}
-                        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                        className="ce-btn ce-btn-success"
                       >
                         Aprobar
                       </button>
@@ -201,7 +199,7 @@ export default function AdminRevisionPage() {
                         type="button"
                         onClick={() => actionPost(`/api/workshops/${w._id}/reject`, w._id, { feedback: 'Rechazado' })}
                         disabled={busyId === w._id}
-                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                        className="ce-btn ce-btn-danger"
                       >
                         Rechazar
                       </button>
@@ -213,10 +211,10 @@ export default function AdminRevisionPage() {
           ) : (
             <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
               {tests.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No hay tests en revisión.</div>
+                <div className="ce-card p-6 text-sm text-zinc-300">No hay tests en revisión.</div>
               ) : (
                 tests.map((t) => (
-                  <div key={t._id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div key={t._id} className="ce-card p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="text-sm font-semibold text-zinc-100">{t.title}</div>
@@ -225,7 +223,7 @@ export default function AdminRevisionPage() {
                       </div>
                       <Link
                         href={`/tests/${t._id}`}
-                        className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-black/30"
+                        className="ce-btn ce-btn-soft px-3 py-2 text-xs"
                       >
                         Ver
                       </Link>
@@ -236,7 +234,7 @@ export default function AdminRevisionPage() {
                         type="button"
                         onClick={() => actionPost(`/api/tests/${t._id}/approve`, t._id, { feedback: 'Aprobado' })}
                         disabled={busyId === t._id}
-                        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                        className="ce-btn ce-btn-success"
                       >
                         Aprobar
                       </button>
@@ -244,7 +242,7 @@ export default function AdminRevisionPage() {
                         type="button"
                         onClick={() => actionPost(`/api/tests/${t._id}/reject`, t._id, { feedback: 'Rechazado' })}
                         disabled={busyId === t._id}
-                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                        className="ce-btn ce-btn-danger"
                       >
                         Rechazar
                       </button>

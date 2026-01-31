@@ -72,7 +72,7 @@ export default function IntentosInboxPage() {
         <div className="flex gap-3">
           <Link
             href="/home"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Volver
           </Link>
@@ -80,26 +80,22 @@ export default function IntentosInboxPage() {
       </div>
 
         {loading ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
         ) : error ? (
           <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">{error}</div>
         ) : !me || !me.authenticated ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
         ) : role !== 'teacher' && role !== 'admin' ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No tienes permisos para ver esta bandeja.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No tienes permisos para ver esta bandeja.</div>
         ) : attempts.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No hay intentos pendientes.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay intentos pendientes.</div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {attempts.map((a) => (
               <Link
                 key={a._id}
                 href={`/tests/${a.testId}/intentos`}
-                className="block rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10"
+                className="ce-card ce-card-hover block p-5"
               >
                 <div className="text-sm font-semibold text-zinc-100">{a.testTitle ?? 'Test'}</div>
                 <div className="mt-2 text-sm text-zinc-400">Alumno: {a.studentUserId}</div>

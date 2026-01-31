@@ -157,7 +157,7 @@ export default function TestPage() {
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/talleres" className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href="/talleres" className="text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             ← Talleres
           </Link>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{test?.title ?? 'Test'}</h1>
@@ -165,7 +165,7 @@ export default function TestPage() {
         </div>
         <button
           onClick={() => router.replace('/dashboard')}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+          className="ce-btn ce-btn-ghost"
         >
           Dashboard
         </button>
@@ -182,12 +182,12 @@ export default function TestPage() {
       ) : (
         <div className="mt-8 space-y-4">
           {role !== 'student' ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-zinc-300">
+            <div className="ce-card p-5 text-sm text-zinc-300">
               Este test está en modo lectura para tu rol: <span className="font-semibold">{role}</span>.
             </div>
           ) : null}
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="ce-card p-5">
               <div className="text-sm font-semibold text-zinc-200">Estado</div>
               <div className="mt-2 text-2xl font-semibold capitalize">
                 {(test.status ?? 'draft').replace('_', ' ')}
@@ -207,7 +207,7 @@ export default function TestPage() {
                   <button
                     onClick={() => actionPost(`/api/tests/${id}/submit`)}
                     disabled={workflowLoading}
-                    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+                    className="ce-btn ce-btn-primary"
                   >
                     Enviar a revisión
                   </button>
@@ -218,14 +218,14 @@ export default function TestPage() {
                     <button
                       onClick={() => actionPost(`/api/tests/${id}/approve`, { feedback: 'Aprobado' })}
                       disabled={workflowLoading}
-                      className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                      className="ce-btn ce-btn-success"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => actionPost(`/api/tests/${id}/reject`, { feedback: 'Rechazado' })}
                       disabled={workflowLoading}
-                      className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                      className="ce-btn ce-btn-danger"
                     >
                       Rechazar
                     </button>
@@ -235,7 +235,7 @@ export default function TestPage() {
                 {role === 'teacher' || role === 'admin' ? (
                   <Link
                     href={`/tests/${id}/intentos`}
-                    className="rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
+                    className="ce-btn ce-btn-soft"
                   >
                     Ver intentos
                   </Link>
@@ -244,7 +244,7 @@ export default function TestPage() {
                 {(role === 'teacher' || role === 'admin') && test.status === 'draft' ? (
                   <Link
                     href={`/tests/${id}/editar`}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                    className="ce-btn ce-btn-ghost"
                   >
                     Editar
                   </Link>
@@ -253,7 +253,7 @@ export default function TestPage() {
             </div>
 
             {test.questions.map((q, idx) => (
-              <div key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div key={idx} className="ce-card p-5">
                 <div className="text-sm font-semibold text-zinc-200">
                   {idx + 1}. {q.prompt}
                 </div>
@@ -283,7 +283,7 @@ export default function TestPage() {
                     <textarea
                       value={openAnswers[idx] ?? ''}
                       onChange={(e) => setOpenAnswers((prev) => ({ ...prev, [idx]: e.target.value }))}
-                      className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                      className="ce-field min-h-[120px]"
                       placeholder="Escribe tu respuesta..."
                       disabled={role !== 'student'}
                     />
@@ -309,7 +309,7 @@ export default function TestPage() {
               <button
                 onClick={onSubmitAttempt}
                 disabled={submitting}
-                className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+                className="ce-btn ce-btn-primary w-full py-3"
               >
                 {submitting ? 'Enviando…' : 'Enviar intento'}
               </button>

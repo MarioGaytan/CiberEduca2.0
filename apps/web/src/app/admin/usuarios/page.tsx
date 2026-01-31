@@ -127,16 +127,14 @@ export default function AdminUsuariosPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-zinc-200">
-            Admin
-          </div>
+          <div className="ce-chip">Admin</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">Usuarios</h1>
           <p className="mt-2 text-sm text-zinc-400">Crear y listar usuarios por rol.</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/admin/revision"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Revisión
           </Link>
@@ -151,7 +149,7 @@ export default function AdminUsuariosPage() {
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No tienes permisos.</div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="ce-card p-5">
             <div className="text-sm font-semibold text-zinc-200">Crear usuario</div>
             <form onSubmit={onCreate} className="mt-4 space-y-3">
               <div>
@@ -159,7 +157,7 @@ export default function AdminUsuariosPage() {
                 <input
                   value={draft.username}
                   onChange={(e) => setDraft((p) => ({ ...p, username: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                  className="ce-field"
                   minLength={3}
                   required
                   disabled={saving}
@@ -171,7 +169,7 @@ export default function AdminUsuariosPage() {
                 <input
                   value={draft.email}
                   onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                  className="ce-field"
                   type="email"
                   disabled={saving}
                 />
@@ -182,7 +180,7 @@ export default function AdminUsuariosPage() {
                 <select
                   value={draft.role}
                   onChange={(e) => setDraft((p) => ({ ...p, role: e.target.value as any }))}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                  className="ce-field"
                   disabled={saving}
                 >
                   {ROLES.map((r) => (
@@ -198,7 +196,7 @@ export default function AdminUsuariosPage() {
                 <input
                   value={draft.password}
                   onChange={(e) => setDraft((p) => ({ ...p, password: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                  className="ce-field"
                   type="password"
                   minLength={8}
                   required
@@ -219,14 +217,14 @@ export default function AdminUsuariosPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+                className="ce-btn ce-btn-primary w-full py-3"
               >
                 {saving ? 'Creando…' : 'Crear usuario'}
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="lg:col-span-2 ce-card p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold text-zinc-200">Listado</div>
@@ -235,7 +233,7 @@ export default function AdminUsuariosPage() {
               <button
                 type="button"
                 onClick={loadAll}
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                className="ce-btn ce-btn-ghost"
               >
                 Recargar
               </button>

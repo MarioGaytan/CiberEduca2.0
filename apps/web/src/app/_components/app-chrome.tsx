@@ -74,6 +74,10 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     };
   }, [isPublic, router]);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.replace('/login');
@@ -116,7 +120,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen((s) => !s)}
-                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-white/10 lg:hidden"
+                className="ce-btn ce-btn-ghost px-3 py-2 text-xs lg:hidden"
                 type="button"
               >
                 Menú
@@ -136,7 +140,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               </div>
               <button
                 onClick={logout}
-                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-white/10"
+                className="ce-btn ce-btn-ghost px-3 py-2 text-xs"
                 type="button"
               >
                 Salir
@@ -145,18 +149,27 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
+        {sidebarOpen ? (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+            aria-label="Cerrar menú"
+          />
+        ) : null}
+
         <aside
           className={
-            sidebarOpen
-              ? 'fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-zinc-950/90 backdrop-blur lg:hidden'
-              : 'hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-72 lg:border-r lg:border-white/10 lg:bg-zinc-950/70 lg:backdrop-blur'
+            'fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-zinc-950/90 backdrop-blur transition-transform duration-200 ease-out lg:translate-x-0 lg:bg-zinc-950/70 lg:z-30 ' +
+            (sidebarOpen ? 'translate-x-0' : '-translate-x-full') +
+            ' lg:block'
           }
         >
           <div className="flex h-14 items-center justify-between px-4">
             <div className="text-sm font-semibold text-zinc-100">Navegación</div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-white/10 lg:hidden"
+              className="ce-btn ce-btn-ghost px-3 py-2 text-xs lg:hidden"
               type="button"
             >
               Cerrar

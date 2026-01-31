@@ -56,14 +56,14 @@ export default function TalleresPage() {
         <div className="flex gap-3">
           <Link
             href="/home"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Volver
           </Link>
           {role === 'teacher' || role === 'admin' ? (
             <Link
               href="/talleres/nuevo"
-              className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+              className="ce-btn ce-btn-primary"
             >
               Crear taller
             </Link>
@@ -72,24 +72,18 @@ export default function TalleresPage() {
       </div>
 
         {loading ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            Cargando…
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
         ) : !me || !me.authenticated ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No autenticado. Inicia sesión para ver talleres.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado. Inicia sesión para ver talleres.</div>
         ) : workshops.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No hay talleres todavía.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay talleres todavía.</div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {workshops.map((w) => (
               <Link
                 key={w._id}
                 href={`/talleres/${w._id}`}
-                className="block rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10"
+                className="ce-card ce-card-hover block p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
