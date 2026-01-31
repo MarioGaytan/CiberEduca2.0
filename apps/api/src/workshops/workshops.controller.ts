@@ -75,6 +75,12 @@ export class WorkshopsController {
     return this.workshopsService.listForUser(req.user);
   }
 
+  @Roles(Role.Reviewer, Role.Admin)
+  @Get('in-review')
+  listInReview(@Req() req: { user: any }) {
+    return this.workshopsService.listInReview(req.user);
+  }
+
   @Roles(Role.Student, Role.Teacher, Role.Reviewer, Role.Admin)
   @Get(':id')
   getById(@Req() req: { user: any }, @Param('id') id: string) {

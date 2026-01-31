@@ -20,6 +20,8 @@ const NAV: NavItem[] = [
   { href: '/home', label: 'Inicio', visible: () => true },
   { href: '/talleres', label: 'Talleres', visible: () => true },
   { href: '/intentos', label: 'Intentos', visible: (r) => r === 'teacher' || r === 'admin' },
+  { href: '/admin/revision', label: 'Revisión', visible: (r) => r === 'admin' || r === 'reviewer' },
+  { href: '/admin/usuarios', label: 'Usuarios', visible: (r) => r === 'admin' },
   { href: '/dashboard', label: 'Dashboard', visible: () => true },
   { href: '/perfil', label: 'Perfil', visible: () => true },
 ];

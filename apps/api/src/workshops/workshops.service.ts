@@ -171,6 +171,18 @@ export class WorkshopsService {
     return workshop.save();
   }
 
+  async listInReview(user: AuthUser) {
+    if (![Role.Admin, Role.Reviewer].includes(user.role)) {
+      throw new ForbiddenException('No tienes permisos.');
+    }
+
+    const schoolId = this.requireSchoolId(user);
+    return this.workshopModel
+      .find({ schoolId, status: WorkshopStatus.InReview })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   async listForUser(user: AuthUser) {
     const schoolId = this.requireSchoolId(user);
 

@@ -83,6 +83,12 @@ export class TestsController {
     return this.testsService.listPendingManualAttempts(req.user);
   }
 
+  @Roles(Role.Reviewer, Role.Admin)
+  @Get('in-review')
+  listInReview(@Req() req: { user: any }) {
+    return this.testsService.listInReview(req.user);
+  }
+
   @Roles(Role.Student, Role.Teacher, Role.Reviewer, Role.Admin)
   @Get(':id')
   getForTaking(@Req() req: { user: any }, @Param('id') id: string) {

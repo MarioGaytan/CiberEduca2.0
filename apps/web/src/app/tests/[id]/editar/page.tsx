@@ -59,14 +59,74 @@ export default function EditarTestPage() {
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
 
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewMcAnswers, setPreviewMcAnswers] = useState<Record<number, number>>({});
+  const [previewOpenAnswers, setPreviewOpenAnswers] = useState<Record<number, string>>({});
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [questionErrors, setQuestionErrors] = useState<Record<number, string[]>>({});
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
   const canEdit = role === 'teacher' || role === 'admin';
 
   const totalPoints = useMemo(() => questions.reduce((acc, q) => acc + (q.points || 0), 0), [questions]);
+
+  function moveQuestion(from: number, to: number) {
+    setQuestions((prev) => {
+      if (from < 0 || from >= prev.length) return prev;
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }
+
+  function duplicateQuestion(index: number) {
+    setQuestions((prev) => {
+      const q = prev[index];
+      if (!q) return prev;
+      const clone = JSON.parse(JSON.stringify(q)) as QuestionDraft;
+      const next = [...prev];
+      next.splice(index + 1, 0, clone);
+      return next;
+    });
+  }
+
+  function validateAll(input: { title: string; questions: QuestionDraft[] }) {
+    const errs: Record<number, string[]> = {};
+
+    if (!input.title.trim()) {
+      return { ok: false, formError: 'El título es obligatorio.', questionErrors: errs };
+    }
+
+    if (input.questions.length < 1) {
+      return { ok: false, formError: 'Agrega al menos una pregunta.', questionErrors: errs };
+    }
+
+    input.questions.forEach((q, idx) => {
+      const qErrs: string[] = [];
+
+      if (!q.prompt.trim()) qErrs.push('Enunciado requerido.');
+      if (typeof q.points !== 'number' || Number.isNaN(q.points) || q.points < 0) qErrs.push('Puntos inválidos.');
+
+      if (q.type === 'multiple_choice') {
+        if (!q.options || q.options.length < 2) qErrs.push('Requiere al menos 2 opciones.');
+        if (q.options?.some((o) => !o.text.trim())) qErrs.push('Todas las opciones deben tener texto.');
+        if (q.correctOptionIndex < 0 || q.correctOptionIndex >= q.options.length) qErrs.push('Correcta inválida.');
+      }
+
+      if (qErrs.length) errs[idx] = qErrs;
+    });
+
+    if (Object.keys(errs).length > 0) {
+      return { ok: false, formError: 'Revisa las preguntas marcadas.', questionErrors: errs };
+    }
+
+    return { ok: true, formError: null as string | null, questionErrors: errs };
+  }
 
   useEffect(() => {
     let alive = true;
@@ -99,6 +159,7 @@ export default function EditarTestPage() {
       setTitle(t.title ?? '');
       setDescription(t.description ?? '');
       setQuestions((t.questions ?? []) as any);
+      setQuestionErrors({});
 
       setLoading(false);
     })();
@@ -122,6 +183,16 @@ export default function EditarTestPage() {
 
   function removeQuestion(index: number) {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
+    setQuestionErrors((prev) => {
+      const next: Record<number, string[]> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const idx = Number(k);
+        if (Number.isNaN(idx)) return;
+        if (idx < index) next[idx] = v;
+        if (idx > index) next[idx - 1] = v;
+      });
+      return next;
+    });
   }
 
   async function onSave(e: React.FormEvent) {
@@ -129,6 +200,7 @@ export default function EditarTestPage() {
     if (!test) return;
 
     setError(null);
+    setQuestionErrors({});
 
     if (!canEdit) {
       setError('No tienes permisos para editar.');
@@ -140,35 +212,11 @@ export default function EditarTestPage() {
       return;
     }
 
-    if (!title.trim()) {
-      setError('El título es obligatorio.');
+    const validation = validateAll({ title, questions });
+    if (!validation.ok) {
+      setError(validation.formError);
+      setQuestionErrors(validation.questionErrors);
       return;
-    }
-
-    if (questions.length < 1) {
-      setError('Agrega al menos una pregunta.');
-      return;
-    }
-
-    for (const q of questions) {
-      if (!q.prompt.trim()) {
-        setError('Todas las preguntas requieren enunciado.');
-        return;
-      }
-      if (q.type === 'multiple_choice') {
-        if (!q.options || q.options.length < 2) {
-          setError('Las preguntas de opción múltiple requieren al menos 2 opciones.');
-          return;
-        }
-        if (q.options.some((o) => !o.text.trim())) {
-          setError('Todas las opciones deben tener texto.');
-          return;
-        }
-        if (q.correctOptionIndex < 0 || q.correctOptionIndex >= q.options.length) {
-          setError('Índice de opción correcta inválido.');
-          return;
-        }
-      }
     }
 
     setSaving(true);
@@ -255,23 +303,52 @@ export default function EditarTestPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => addQuestion('multiple_choice')}
-            disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
-          >
-            + Opción múltiple
-          </button>
-          <button
-            type="button"
-            onClick={() => addQuestion('open')}
-            disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
-          >
-            + Abierta
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setPreviewMode(false)}
+              className={
+                !previewMode
+                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
+                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+              }
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewMode(true)}
+              className={
+                previewMode
+                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
+                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+              }
+            >
+              Preview alumno
+            </button>
+          </div>
+
+          {!previewMode ? (
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => addQuestion('multiple_choice')}
+                disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
+              >
+                + Opción múltiple
+              </button>
+              <button
+                type="button"
+                onClick={() => addQuestion('open')}
+                disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
+              >
+                + Abierta
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {questions.map((q, idx) => (
@@ -283,136 +360,241 @@ export default function EditarTestPage() {
                 </div>
                 <div className="mt-1 text-xs text-zinc-500">Puntos: {q.points}</div>
               </div>
-              <button
-                type="button"
-                onClick={() => removeQuestion(idx)}
-                disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-                className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
-              >
-                Quitar
-              </button>
-            </div>
-
-            <div className="mt-4">
-              <label className="text-sm font-semibold text-zinc-200">Enunciado</label>
-              <textarea
-                value={q.prompt}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, prompt: v } as any) : it)));
-                }}
-                className="mt-2 min-h-[90px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
-                required
-                disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-              />
-            </div>
-
-            <div className="mt-4">
-              <label className="text-sm font-semibold text-zinc-200">Puntos</label>
-              <input
-                type="number"
-                value={q.points}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, points: n } as any) : it)));
-                }}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
-                min={0}
-                max={100}
-                required
-                disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-              />
-            </div>
-
-            {q.type === 'multiple_choice' ? (
-              <div className="mt-4 space-y-3">
-                <div className="text-sm font-semibold text-zinc-200">Opciones</div>
-                {q.options.map((o, optIdx) => (
-                  <div key={optIdx} className="flex gap-3">
-                    <input
-                      value={o.text}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setQuestions((prev) =>
-                          prev.map((it, i) => {
-                            if (i !== idx) return it;
-                            if (it.type !== 'multiple_choice') return it;
-                            const next = it.options.map((oo, oi) => (oi === optIdx ? { text: v } : oo));
-                            return { ...it, options: next };
-                          }),
-                        );
-                      }}
-                      className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
-                      placeholder={`Opción ${optIdx + 1}`}
-                      required
-                      disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuestions((prev) =>
-                          prev.map((it, i) => {
-                            if (i !== idx) return it;
-                            if (it.type !== 'multiple_choice') return it;
-                            const next = it.options.filter((_, oi) => oi !== optIdx);
-                            const nextCorrect = Math.max(0, Math.min(it.correctOptionIndex, next.length - 1));
-                            return { ...it, options: next, correctOptionIndex: nextCorrect };
-                          }),
-                        );
-                      }}
-                      disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-                      className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
-                    >
-                      X
-                    </button>
-                  </div>
-                ))}
-
-                <div className="flex flex-wrap gap-3">
+              {!previewMode ? (
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setQuestions((prev) =>
-                        prev.map((it, i) => {
-                          if (i !== idx) return it;
-                          if (it.type !== 'multiple_choice') return it;
-                          return { ...it, options: [...it.options, { text: '' }] };
-                        }),
-                      );
-                    }}
-                    disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
+                    onClick={() => moveQuestion(idx, idx - 1)}
+                    disabled={idx === 0 || !canEdit || (test.status ?? 'draft') !== 'draft'}
+                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
                   >
-                    + Opción
+                    ↑
                   </button>
-
-                  <div className="min-w-[240px]">
-                    <label className="text-sm font-semibold text-zinc-200">Correcta</label>
-                    <select
-                      value={q.correctOptionIndex}
-                      onChange={(e) => {
-                        const n = Number(e.target.value);
-                        setQuestions((prev) =>
-                          prev.map((it, i) => {
-                            if (i !== idx) return it;
-                            if (it.type !== 'multiple_choice') return it;
-                            return { ...it, correctOptionIndex: n };
-                          }),
-                        );
-                      }}
-                      disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
-                      className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500 disabled:opacity-60"
-                    >
-                      {q.options.map((_, oi) => (
-                        <option key={oi} value={oi}>
-                          Opción {oi + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => moveQuestion(idx, idx + 1)}
+                    disabled={idx === questions.length - 1 || !canEdit || (test.status ?? 'draft') !== 'draft'}
+                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => duplicateQuestion(idx)}
+                    disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                  >
+                    Duplicar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeQuestion(idx)}
+                    disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                  >
+                    Quitar
+                  </button>
                 </div>
+              ) : null}
+            </div>
+
+            {questionErrors[idx]?.length ? (
+              <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+                {questionErrors[idx].join(' ')}
               </div>
             ) : null}
+
+            {previewMode ? (
+              <div className="mt-4">
+                <div className="text-sm font-semibold text-zinc-200">Vista alumno</div>
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-sm font-semibold text-zinc-100">{idx + 1}. {q.prompt || '—'}</div>
+                  <div className="mt-1 text-xs text-zinc-500">Puntos: {q.points}</div>
+
+                  {q.type === 'multiple_choice' ? (
+                    <div className="mt-4 space-y-2">
+                      {q.options.map((o, optIdx) => (
+                        <label
+                          key={optIdx}
+                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm hover:bg-black/30"
+                        >
+                          <input
+                            type="radio"
+                            name={`preview-q-${idx}`}
+                            className="h-4 w-4"
+                            checked={previewMcAnswers[idx] === optIdx}
+                            onChange={() => setPreviewMcAnswers((prev) => ({ ...prev, [idx]: optIdx }))}
+                          />
+                          <span className="text-zinc-100">{o.text || '—'}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <textarea
+                        value={previewOpenAnswers[idx] ?? ''}
+                        onChange={(e) => setPreviewOpenAnswers((prev) => ({ ...prev, [idx]: e.target.value }))}
+                        className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                        placeholder="Escribe tu respuesta..."
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mt-4">
+                  <label className="text-sm font-semibold text-zinc-200">Enunciado</label>
+                  <textarea
+                    value={q.prompt}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, prompt: v } as any) : it)));
+                      setQuestionErrors((prev) => {
+                        if (!prev[idx]) return prev;
+                        const next = { ...prev };
+                        delete next[idx];
+                        return next;
+                      });
+                    }}
+                    className="mt-2 min-h-[90px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                    required
+                    disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-sm font-semibold text-zinc-200">Puntos</label>
+                  <input
+                    type="number"
+                    value={q.points}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, points: n } as any) : it)));
+                      setQuestionErrors((prev) => {
+                        if (!prev[idx]) return prev;
+                        const next = { ...prev };
+                        delete next[idx];
+                        return next;
+                      });
+                    }}
+                    className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                    min={0}
+                    max={100}
+                    required
+                    disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                  />
+                </div>
+
+                {q.type === 'multiple_choice' ? (
+                  <div className="mt-4 space-y-3">
+                    <div className="text-sm font-semibold text-zinc-200">Opciones</div>
+                    {q.options.map((o, optIdx) => (
+                      <div key={optIdx} className="flex gap-3">
+                        <input
+                          value={o.text}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setQuestions((prev) =>
+                              prev.map((it, i) => {
+                                if (i !== idx) return it;
+                                if (it.type !== 'multiple_choice') return it;
+                                const next = it.options.map((oo, oi) => (oi === optIdx ? { text: v } : oo));
+                                return { ...it, options: next };
+                              }),
+                            );
+                            setQuestionErrors((prev) => {
+                              if (!prev[idx]) return prev;
+                              const next = { ...prev };
+                              delete next[idx];
+                              return next;
+                            });
+                          }}
+                          className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                          placeholder={`Opción ${optIdx + 1}`}
+                          required
+                          disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuestions((prev) =>
+                              prev.map((it, i) => {
+                                if (i !== idx) return it;
+                                if (it.type !== 'multiple_choice') return it;
+                                const next = it.options.filter((_, oi) => oi !== optIdx);
+                                const nextCorrect = Math.max(0, Math.min(it.correctOptionIndex, next.length - 1));
+                                return { ...it, options: next, correctOptionIndex: nextCorrect };
+                              }),
+                            );
+                            setQuestionErrors((prev) => {
+                              if (!prev[idx]) return prev;
+                              const next = { ...prev };
+                              delete next[idx];
+                              return next;
+                            });
+                          }}
+                          disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                        >
+                          X
+                        </button>
+                      </div>
+                    ))}
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuestions((prev) =>
+                            prev.map((it, i) => {
+                              if (i !== idx) return it;
+                              if (it.type !== 'multiple_choice') return it;
+                              return { ...it, options: [...it.options, { text: '' }] };
+                            }),
+                          );
+                        }}
+                        disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:opacity-60"
+                      >
+                        + Opción
+                      </button>
+
+                      <div className="min-w-[240px]">
+                        <label className="text-sm font-semibold text-zinc-200">Correcta</label>
+                        <select
+                          value={q.correctOptionIndex}
+                          onChange={(e) => {
+                            const n = Number(e.target.value);
+                            setQuestions((prev) =>
+                              prev.map((it, i) => {
+                                if (i !== idx) return it;
+                                if (it.type !== 'multiple_choice') return it;
+                                return { ...it, correctOptionIndex: n };
+                              }),
+                            );
+                            setQuestionErrors((prev) => {
+                              if (!prev[idx]) return prev;
+                              const next = { ...prev };
+                              delete next[idx];
+                              return next;
+                            });
+                          }}
+                          disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                          className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500 disabled:opacity-60"
+                        >
+                          {q.options.map((_, oi) => (
+                            <option key={oi} value={oi}>
+                              Opción {oi + 1}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
           </div>
         ))}
 

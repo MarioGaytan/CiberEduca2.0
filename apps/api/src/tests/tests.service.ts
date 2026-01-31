@@ -249,6 +249,18 @@ export class TestsService {
     return test.save();
   }
 
+  async listInReview(user: AuthUser) {
+    if (![Role.Admin, Role.Reviewer].includes(user.role)) {
+      throw new ForbiddenException('No tienes permisos.');
+    }
+
+    const schoolId = this.requireSchoolId(user);
+    return this.testModel
+      .find({ schoolId, status: TestStatus.InReview })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   async listForUser(user: AuthUser, workshopId: string) {
     const schoolId = this.requireSchoolId(user);
 
