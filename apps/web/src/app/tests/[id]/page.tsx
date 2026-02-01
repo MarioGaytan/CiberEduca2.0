@@ -172,13 +172,13 @@ export default function TestPage() {
       </div>
 
       {loading ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
       ) : error ? (
         <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">{error}</div>
       ) : !me || !me.authenticated ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
       ) : !test ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Test no encontrado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Test no encontrado.</div>
       ) : (
         <div className="mt-8 space-y-4">
           {role !== 'student' ? (
@@ -318,7 +318,7 @@ export default function TestPage() {
             {test.workshopId ? (
               <Link
                 href={`/talleres/${test.workshopId}`}
-                className="block text-center text-sm font-semibold text-indigo-300 hover:text-indigo-200"
+                className="block text-center text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200"
               >
                 Volver al taller
               </Link>

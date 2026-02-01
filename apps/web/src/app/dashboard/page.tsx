@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   if (loading || !me || !me.authenticated) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+      <div className="ce-card p-6 text-sm text-zinc-300">Cargando…</div>
     );
   }
 
@@ -76,21 +76,21 @@ export default function DashboardPage() {
 
           {role === 'student' ? (
             <>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="ce-card ce-card-hover p-5">
                 <div className="text-sm font-semibold text-zinc-200">Talleres</div>
                 <div className="mt-2 text-sm text-zinc-400">
                   Ver talleres aprobados y entrar por código cuando sea necesario.
                 </div>
-                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
                   Ver talleres
                 </Link>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="ce-card ce-card-hover p-5">
                 <div className="text-sm font-semibold text-zinc-200">Tests</div>
                 <div className="mt-2 text-sm text-zinc-400">
                   Responder tests de opción múltiple y abiertas.
                 </div>
-                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                <Link href="/talleres" className="mt-4 inline-block text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
                   Ver tests por taller
                 </Link>
               </div>

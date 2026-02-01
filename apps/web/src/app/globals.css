@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050510;
+  --foreground: #ededed;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -14,13 +15,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #050510;
     --foreground: #ededed;
   }
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(700px 500px at 50% -10%, rgba(217, 70, 239, 0.22), transparent 60%),
+    radial-gradient(600px 460px at 12% 25%, rgba(34, 211, 238, 0.18), transparent 58%),
+    radial-gradient(640px 520px at 88% 55%, rgba(99, 102, 241, 0.16), transparent 60%),
+    var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
@@ -93,7 +99,7 @@ body {
   }
 
   .ce-public-shell {
-    @apply min-h-screen bg-zinc-950 text-zinc-50;
+    @apply min-h-screen text-zinc-50;
   }
 
   .ce-public-bg {

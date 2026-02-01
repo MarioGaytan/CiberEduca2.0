@@ -174,7 +174,7 @@ export default function NuevoTestPage() {
     <div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Link href={`/talleres/${workshopId}`} className="text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+          <Link href={`/talleres/${workshopId}`} className="text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
             ← Volver al taller
           </Link>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Crear test</h1>
@@ -183,13 +183,13 @@ export default function NuevoTestPage() {
       </div>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="ce-card p-5">
           <div>
             <label className="text-sm font-semibold text-zinc-200">Título</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+              className="ce-field mt-2"
               required
               minLength={3}
             />
@@ -199,7 +199,7 @@ export default function NuevoTestPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-2 min-h-[90px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+              className="ce-field mt-2 min-h-[90px]"
             />
           </div>
         </div>
@@ -211,8 +211,8 @@ export default function NuevoTestPage() {
               onClick={() => setPreviewMode(false)}
               className={
                 !previewMode
-                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
-                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+                  ? 'ce-btn ce-btn-primary'
+                  : 'ce-btn ce-btn-ghost'
               }
             >
               Editar
@@ -222,8 +222,8 @@ export default function NuevoTestPage() {
               onClick={() => setPreviewMode(true)}
               className={
                 previewMode
-                  ? 'rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-zinc-100'
-                  : 'rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10'
+                  ? 'ce-btn ce-btn-primary'
+                  : 'ce-btn ce-btn-ghost'
               }
             >
               Preview alumno
@@ -235,14 +235,14 @@ export default function NuevoTestPage() {
               <button
                 type="button"
                 onClick={() => addQuestion('multiple_choice')}
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                className="ce-btn ce-btn-soft"
               >
                 + Opción múltiple
               </button>
               <button
                 type="button"
                 onClick={() => addQuestion('open')}
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                className="ce-btn ce-btn-soft"
               >
                 + Abierta
               </button>
@@ -251,7 +251,7 @@ export default function NuevoTestPage() {
         </div>
 
         {questions.map((q, idx) => (
-          <div key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div key={idx} className="ce-card ce-card-hover p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold text-zinc-200">
@@ -265,7 +265,7 @@ export default function NuevoTestPage() {
                     type="button"
                     onClick={() => moveQuestion(idx, idx - 1)}
                     disabled={idx === 0}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                    className="ce-btn ce-btn-ghost px-3 py-2 disabled:opacity-60"
                   >
                     ↑
                   </button>
@@ -273,21 +273,21 @@ export default function NuevoTestPage() {
                     type="button"
                     onClick={() => moveQuestion(idx, idx + 1)}
                     disabled={idx === questions.length - 1}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30 disabled:opacity-60"
+                    className="ce-btn ce-btn-ghost px-3 py-2 disabled:opacity-60"
                   >
                     ↓
                   </button>
                   <button
                     type="button"
                     onClick={() => duplicateQuestion(idx)}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
+                    className="ce-btn ce-btn-soft px-3 py-2"
                   >
                     Duplicar
                   </button>
                   <button
                     type="button"
                     onClick={() => removeQuestion(idx)}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
+                    className="ce-btn ce-btn-danger px-3 py-2"
                   >
                     Quitar
                   </button>
@@ -313,7 +313,7 @@ export default function NuevoTestPage() {
                       {q.options.map((o, optIdx) => (
                         <label
                           key={optIdx}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm hover:bg-black/30"
+                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm transition hover:-translate-y-0.5 hover:bg-black/30 active:translate-y-0"
                         >
                           <input
                             type="radio"
@@ -331,7 +331,7 @@ export default function NuevoTestPage() {
                       <textarea
                         value={previewOpenAnswers[idx] ?? ''}
                         onChange={(e) => setPreviewOpenAnswers((prev) => ({ ...prev, [idx]: e.target.value }))}
-                        className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                        className="ce-field min-h-[120px]"
                         placeholder="Escribe tu respuesta..."
                       />
                     </div>
@@ -354,7 +354,7 @@ export default function NuevoTestPage() {
                         return next;
                       });
                     }}
-                    className="mt-2 min-h-[90px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                    className="ce-field mt-2 min-h-[90px]"
                     required
                   />
                 </div>
@@ -374,7 +374,7 @@ export default function NuevoTestPage() {
                         return next;
                       });
                     }}
-                    className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                    className="ce-field mt-2"
                     min={0}
                     max={100}
                     required
@@ -405,7 +405,7 @@ export default function NuevoTestPage() {
                               return next;
                             });
                           }}
-                          className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                          className="ce-field"
                           placeholder={`Opción ${optIdx + 1}`}
                           required
                         />
@@ -428,7 +428,7 @@ export default function NuevoTestPage() {
                               return next;
                             });
                           }}
-                          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-black/30"
+                          className="ce-btn ce-btn-danger px-3 py-2"
                         >
                           X
                         </button>
@@ -447,7 +447,7 @@ export default function NuevoTestPage() {
                             }),
                           );
                         }}
-                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                        className="ce-btn ce-btn-soft"
                       >
                         + Opción
                       </button>
@@ -472,7 +472,7 @@ export default function NuevoTestPage() {
                               return next;
                             });
                           }}
-                          className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-indigo-500"
+                          className="ce-field mt-2"
                         >
                           {q.options.map((_, oi) => (
                             <option key={oi} value={oi}>
@@ -496,14 +496,14 @@ export default function NuevoTestPage() {
         <div className="flex gap-3">
           <Link
             href={`/talleres/${workshopId}`}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+            className="ce-btn ce-btn-ghost"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={loading || previewMode}
-            className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+            className="ce-btn ce-btn-primary disabled:opacity-60"
           >
             {loading ? 'Creando…' : 'Crear test'}
           </button>

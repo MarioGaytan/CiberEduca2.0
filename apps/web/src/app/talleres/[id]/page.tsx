@@ -139,13 +139,13 @@ export default function TallerDetallePage() {
       </div>
 
       {loading ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
       ) : error ? (
         <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">{error}</div>
       ) : !me || !me.authenticated ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
       ) : !workshop ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Taller no encontrado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Taller no encontrado.</div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="ce-card ce-card-hover p-5">

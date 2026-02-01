@@ -129,11 +129,11 @@ export default function AdminRevisionPage() {
       </div>
 
       {loading ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
       ) : !me || !me.authenticated ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
       ) : !canReview ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No tienes permisos.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No tienes permisos.</div>
       ) : (
         <>
           <div className="mt-8 flex flex-wrap gap-3">

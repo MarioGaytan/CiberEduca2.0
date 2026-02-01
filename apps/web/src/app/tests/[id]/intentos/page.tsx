@@ -157,7 +157,7 @@ export default function IntentosPage() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+      <div className="ce-card p-6 text-sm text-zinc-300">Cargando…</div>
     );
   }
 
@@ -190,15 +190,11 @@ export default function IntentosPage() {
         ) : null}
 
         {!me || !me.authenticated ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
         ) : role !== 'teacher' && role !== 'admin' ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            No tienes permisos para ver intentos.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No tienes permisos para ver intentos.</div>
         ) : attempts.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">
-            Aún no hay intentos.
-          </div>
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Aún no hay intentos.</div>
         ) : (
           <div className="mt-8 space-y-4">
             {attempts.map((a) => (

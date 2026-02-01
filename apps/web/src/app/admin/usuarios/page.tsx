@@ -142,11 +142,11 @@ export default function AdminUsuariosPage() {
       </div>
 
       {loading ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">Cargando…</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
       ) : !me || !me.authenticated ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No autenticado.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado.</div>
       ) : role !== 'admin' ? (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-300">No tienes permisos.</div>
+        <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No tienes permisos.</div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="ce-card p-5">
