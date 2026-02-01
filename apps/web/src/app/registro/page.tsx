@@ -9,12 +9,27 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const passwordsMatch = password === confirmPassword;
+  const passwordValid = password.length >= 8;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!passwordValid) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    if (!passwordsMatch) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch('/api/auth/register', {
@@ -68,7 +83,7 @@ export default function RegisterPage() {
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="ce-field"
+            className={"ce-field " + (password && !passwordValid ? 'border-red-500/50' : '')}
             placeholder="••••••••"
             type="password"
             autoComplete="new-password"
@@ -76,6 +91,23 @@ export default function RegisterPage() {
             required
           />
           <p className="mt-1 text-xs text-zinc-400">Mínimo 8 caracteres. Usa letras y números para mayor seguridad.</p>
+
+          <label className="mt-4 block text-sm font-medium text-zinc-200">Confirmar contraseña</label>
+          <input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={"ce-field " + (confirmPassword && !passwordsMatch ? 'border-red-500/50' : confirmPassword && passwordsMatch ? 'border-green-500/50' : '')}
+            placeholder="••••••••"
+            type="password"
+            autoComplete="new-password"
+            required
+          />
+          {confirmPassword && !passwordsMatch && (
+            <p className="mt-1 text-xs text-red-400">Las contraseñas no coinciden.</p>
+          )}
+          {confirmPassword && passwordsMatch && (
+            <p className="mt-1 text-xs text-green-400">✓ Las contraseñas coinciden.</p>
+          )}
 
           {error ? (
             <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">

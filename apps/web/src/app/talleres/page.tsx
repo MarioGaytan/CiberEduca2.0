@@ -22,27 +22,42 @@ export default function TalleresPage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'in_review' | 'approved'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
 
   const q = (searchParams?.get('q') ?? '').trim().toLowerCase();
+  const searchTerm = localSearch.trim().toLowerCase() || q;
   const filtered = useMemo(() => {
     let list = workshops;
     
     // Students only see approved workshops
     if (role === 'student') {
       list = list.filter((w) => w.status === 'approved');
+    } else if (statusFilter !== 'all') {
+      // Staff can filter by status
+      list = list.filter((w) => w.status === statusFilter);
     }
     
     // Apply search filter
-    if (q) {
+    if (searchTerm) {
       list = list.filter((w) => {
         const haystack = `${w.title ?? ''} ${w.description ?? ''}`.toLowerCase();
-        return haystack.includes(q);
+        return haystack.includes(searchTerm);
       });
     }
+
+    // Sort
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'name') return (a.title || '').localeCompare(b.title || '');
+      if (sortBy === 'oldest') return (a.createdAt || '').localeCompare(b.createdAt || '');
+      // newest (default)
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
     
     return list;
-  }, [q, workshops, role]);
+  }, [searchTerm, workshops, role, statusFilter, sortBy]);
 
   useEffect(() => {
     let alive = true;
@@ -73,23 +88,55 @@ export default function TalleresPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Talleres</h1>
-          <p className="mt-1 text-sm text-zinc-400">Lista de talleres disponibles según tu rol.</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            {role === 'student' ? 'Talleres disponibles para ti.' : 'Gestiona tus talleres.'}
+          </p>
         </div>
         <div className="flex gap-3">
-          <Link
-            href="/home"
-            className="ce-btn ce-btn-ghost"
-          >
-            Volver
-          </Link>
-          {role === 'teacher' || role === 'admin' ? (
+          {(role === 'teacher' || role === 'admin') && (
             <Link
               href="/talleres/nuevo"
               className="ce-btn ce-btn-primary"
             >
-              Crear taller
+              + Crear taller
             </Link>
-          ) : null}
+          )}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <input
+            type="text"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder="Buscar por nombre o descripción..."
+            className="ce-field mt-0 w-full"
+          />
+        </div>
+        <div className="flex gap-2">
+          {(role === 'teacher' || role === 'admin' || role === 'reviewer') && (
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="ce-field mt-0 w-auto min-w-[140px] cursor-pointer"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="draft">Borrador</option>
+              <option value="in_review">En revisión</option>
+              <option value="approved">Aprobado</option>
+            </select>
+          )}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="ce-field mt-0 w-auto min-w-[120px] cursor-pointer"
+          >
+            <option value="newest">Más reciente</option>
+            <option value="oldest">Más antiguo</option>
+            <option value="name">Por nombre</option>
+          </select>
         </div>
       </div>
 

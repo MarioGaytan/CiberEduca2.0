@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
+  ChevronRight,
   Home,
   Inbox,
   LayoutDashboard,
@@ -39,6 +40,67 @@ function navIcon(href: string) {
 }
 
 const PUBLIC_ROUTES = new Set(['/', '/login', '/registro']);
+
+// Breadcrumb configuration
+const BREADCRUMB_LABELS: Record<string, string> = {
+  home: 'Inicio',
+  dashboard: 'Dashboard',
+  talleres: 'Talleres',
+  nuevo: 'Nuevo',
+  tests: 'Tests',
+  intentos: 'Intentos',
+  perfil: 'Perfil',
+  admin: 'Admin',
+  revision: 'Revisión',
+  usuarios: 'Usuarios',
+  editar: 'Editar',
+};
+
+function getBreadcrumbs(pathname: string, role: string): { label: string; href: string }[] {
+  if (!pathname || pathname === '/') return [];
+  
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) return [];
+
+  const crumbs: { label: string; href: string }[] = [];
+  
+  // Add home/dashboard as first crumb based on role
+  if (role === 'student') {
+    crumbs.push({ label: 'Inicio', href: '/home' });
+  } else if (role === 'teacher' || role === 'admin' || role === 'reviewer') {
+    crumbs.push({ label: 'Dashboard', href: '/dashboard' });
+  }
+
+  // Build path progressively
+  let currentPath = '';
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    currentPath += '/' + segment;
+    
+    // Skip if it's the home/dashboard we already added
+    if ((segment === 'home' || segment === 'dashboard') && i === 0) continue;
+    
+    // Check if it looks like an ID (MongoDB ObjectId or UUID)
+    const isId = /^[a-f0-9]{24}$/.test(segment) || /^[a-f0-9-]{36}$/.test(segment);
+    
+    if (isId) {
+      // For IDs, we'll just show a generic label based on parent
+      const parent = segments[i - 1];
+      if (parent === 'talleres') {
+        crumbs.push({ label: 'Detalle', href: currentPath });
+      } else if (parent === 'tests') {
+        crumbs.push({ label: 'Test', href: currentPath });
+      } else {
+        crumbs.push({ label: 'Detalle', href: currentPath });
+      }
+    } else {
+      const label = BREADCRUMB_LABELS[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+      crumbs.push({ label, href: currentPath });
+    }
+  }
+
+  return crumbs;
+}
 
 const NAV: NavItem[] = [
   // Students see "Inicio", staff see "Dashboard"
@@ -453,7 +515,33 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             (sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72')
           }
         >
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">{children}</div>
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+            {/* Breadcrumbs */}
+            {(() => {
+              const crumbs = getBreadcrumbs(pathname || '', role);
+              if (crumbs.length <= 1) return null;
+              return (
+                <nav className="mb-4 flex items-center gap-1 text-sm text-zinc-400" aria-label="Breadcrumb">
+                  {crumbs.map((crumb, idx) => (
+                    <span key={crumb.href} className="flex items-center gap-1">
+                      {idx > 0 && <ChevronRight size={14} className="text-zinc-600" />}
+                      {idx === crumbs.length - 1 ? (
+                        <span className="text-zinc-200 font-medium">{crumb.label}</span>
+                      ) : (
+                        <Link
+                          href={crumb.href}
+                          className="hover:text-zinc-200 transition-colors"
+                        >
+                          {crumb.label}
+                        </Link>
+                      )}
+                    </span>
+                  ))}
+                </nav>
+              );
+            })()}
+            {children}
+          </div>
         </main>
       </div>
     </div>

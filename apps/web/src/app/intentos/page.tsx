@@ -26,8 +26,33 @@ export default function IntentosInboxPage() {
   const [attempts, setAttempts] = useState<InboxAttempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'score'>('newest');
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
+
+  const filtered = useMemo(() => {
+    let list = attempts;
+    
+    // Search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((a) => {
+        const haystack = `${a.testTitle ?? ''} ${a.studentUsername ?? ''} ${a.studentUserId}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    // Sort
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'score') return b.totalScore - a.totalScore;
+      if (sortBy === 'oldest') return (a.submittedAt || '').localeCompare(b.submittedAt || '');
+      // newest (default)
+      return (b.submittedAt || '').localeCompare(a.submittedAt || '');
+    });
+
+    return list;
+  }, [attempts, search, sortBy]);
 
   useEffect(() => {
     let alive = true;
@@ -68,17 +93,45 @@ export default function IntentosInboxPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Bandeja de intentos</h1>
-          <p className="mt-1 text-sm text-zinc-400">Intentos que requieren revisión manual.</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            {attempts.length > 0 ? `${attempts.length} intento${attempts.length === 1 ? '' : 's'} pendiente${attempts.length === 1 ? '' : 's'} de revisión.` : 'Intentos que requieren revisión manual.'}
+          </p>
         </div>
         <div className="flex gap-3">
           <Link
-            href="/home"
+            href="/dashboard"
             className="ce-btn ce-btn-ghost"
           >
-            Volver
+            Dashboard
           </Link>
         </div>
       </div>
+
+      {/* Filters - only show when there are attempts */}
+      {!loading && attempts.length > 0 && (
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por test o alumno..."
+              className="ce-field mt-0 w-full"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="ce-field mt-0 w-auto min-w-[140px] cursor-pointer"
+            >
+              <option value="newest">Más reciente</option>
+              <option value="oldest">Más antiguo</option>
+              <option value="score">Mayor puntaje</option>
+            </select>
+          </div>
+        </div>
+      )}
 
         {loading ? (
           <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
@@ -89,10 +142,18 @@ export default function IntentosInboxPage() {
         ) : role !== 'teacher' && role !== 'admin' ? (
           <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No tienes permisos para ver esta bandeja.</div>
         ) : attempts.length === 0 ? (
-          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay intentos pendientes.</div>
+          <div className="mt-8 ce-card p-6">
+            <div className="text-center">
+              <div className="text-4xl">🎉</div>
+              <div className="mt-3 text-sm font-semibold text-zinc-200">¡Todo al día!</div>
+              <div className="mt-1 text-sm text-zinc-400">No hay intentos pendientes de revisión.</div>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No se encontraron intentos con esos filtros.</div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {attempts.map((a) => (
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {filtered.map((a) => (
               <Link
                 key={a._id}
                 href={`/tests/${a.testId}/intentos`}
