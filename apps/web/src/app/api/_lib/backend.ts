@@ -29,17 +29,21 @@ function normalizeHeaders(init?: HeadersInit): Record<string, string> {
 async function fetchBackendWithAccess(path: string, access: string, init?: RequestInit) {
   const base = apiBaseUrl();
   const headers = normalizeHeaders(init?.headers);
-  const res = await fetch(`${base}${path}`, {
-    ...init,
-    headers: {
-      ...headers,
-      authorization: `Bearer ${access}`,
-    },
-    cache: 'no-store',
-  });
+  try {
+    const res = await fetch(`${base}${path}`, {
+      ...init,
+      headers: {
+        ...headers,
+        authorization: `Bearer ${access}`,
+      },
+      cache: 'no-store',
+    });
 
-  const data = (await res.json().catch(() => undefined)) as unknown;
-  return { res, data };
+    const data = (await res.json().catch(() => undefined)) as unknown;
+    return { ok: true as const, res, data };
+  } catch {
+    return { ok: false as const };
+  }
 }
 
 export async function proxyBackend(req: Request, path: string, init?: RequestInit) {
@@ -52,6 +56,9 @@ export async function proxyBackend(req: Request, path: string, init?: RequestIni
   }
 
   const first = await fetchBackendWithAccess(path, access, init);
+  if (!first.ok) {
+    return NextResponse.json({ error: 'Backend no disponible.' }, { status: 503 });
+  }
   if (first.res.status !== 401) {
     return NextResponse.json(first.data, { status: first.res.status });
   }
@@ -60,12 +67,17 @@ export async function proxyBackend(req: Request, path: string, init?: RequestIni
     return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
   }
 
-  const refreshRes = await fetch(`${apiBaseUrl()}/auth/refresh`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${refresh}` },
-  });
-
-  const refreshData = (await refreshRes.json().catch(() => undefined)) as unknown;
+  let refreshRes: Response;
+  let refreshData: unknown;
+  try {
+    refreshRes = await fetch(`${apiBaseUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${refresh}` },
+    });
+    refreshData = (await refreshRes.json().catch(() => undefined)) as unknown;
+  } catch {
+    return NextResponse.json({ error: 'Backend no disponible.' }, { status: 503 });
+  }
   if (!refreshRes.ok) {
     return NextResponse.json(refreshData, { status: refreshRes.status });
   }
@@ -87,5 +99,8 @@ export async function proxyBackend(req: Request, path: string, init?: RequestIni
   });
 
   const second = await fetchBackendWithAccess(path, tokens.accessToken, init);
+  if (!second.ok) {
+    return NextResponse.json({ error: 'Backend no disponible.' }, { status: 503 });
+  }
   return NextResponse.json(second.data, { status: second.res.status });
 }

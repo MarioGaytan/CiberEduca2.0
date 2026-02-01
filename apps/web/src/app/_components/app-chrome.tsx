@@ -3,7 +3,19 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Home, Inbox, LayoutDashboard, PanelLeftOpen, ShieldCheck, User, Users } from 'lucide-react';
+import {
+  BookOpen,
+  Home,
+  Inbox,
+  LayoutDashboard,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  ShieldCheck,
+  User,
+  Users,
+  X,
+} from 'lucide-react';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -46,8 +58,13 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const [search, setSearch] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const asideRef = useRef<HTMLElement | null>(null);
+  const lastScrollYRef = useRef(0);
+  const mainRef = useRef<HTMLElement | null>(null);
 
   const isPublic = useMemo(() => {
     if (!pathname) return true;
@@ -91,7 +108,65 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setSidebarOpen(false);
+    setMobileSearchOpen(false);
+    try {
+      mainRef.current?.scrollTo({ top: 0 });
+    } catch {
+      // ignore
+    }
   }, [pathname]);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    lastScrollYRef.current = el.scrollTop;
+    let ticking = false;
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const current = mainRef.current;
+        if (!current) {
+          ticking = false;
+          return;
+        }
+
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+          setHeaderHidden(false);
+          lastScrollYRef.current = current.scrollTop;
+          ticking = false;
+          return;
+        }
+
+        const y = current.scrollTop;
+        const lastY = lastScrollYRef.current;
+        const dy = y - lastY;
+
+        if (y < 24) {
+          setHeaderHidden(false);
+        } else {
+          if (dy > 0 && y > 96) setHeaderHidden(true);
+          if (dy < 0) setHeaderHidden(false);
+        }
+
+        lastScrollYRef.current = y;
+        ticking = false;
+      });
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  function goSearchTalleres() {
+    const q = search.trim();
+    if (!q) {
+      router.push('/talleres');
+      return;
+    }
+    router.push(`/talleres?q=${encodeURIComponent(q)}`);
+  }
 
   useEffect(() => {
     try {
@@ -160,16 +235,25 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen text-zinc-50">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-35">
+      {/* Background gradients - fixed so they don't scroll */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden opacity-35 -z-10">
         <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500 blur-3xl" />
         <div className="absolute top-32 left-10 h-72 w-72 rounded-full bg-cyan-400 blur-3xl" />
         <div className="absolute top-52 right-10 h-72 w-72 rounded-full bg-indigo-500 blur-3xl" />
       </div>
 
-      <div className="relative">
-        <header className="fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-zinc-950/70 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-3">
+      {/* Layout container */}
+      <div className="flex min-h-screen">
+        <header
+          className={
+            'fixed top-0 right-0 z-40 border-b border-white/10 bg-zinc-950/65 backdrop-blur transition-transform duration-200 ' +
+            (headerHidden ? '-translate-y-full' : 'translate-y-0') +
+            ' left-0 ' +
+            (sidebarCollapsed ? 'lg:left-20' : 'lg:left-72')
+          }
+        >
+          <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setSidebarOpen((s) => !s)}
                 className="ce-btn ce-btn-ghost px-3 py-2 text-xs lg:hidden"
@@ -178,18 +262,48 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
                 Menú
               </button>
               <Link href="/home" className="font-semibold tracking-tight">
-                <span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">
-                  CiberEduca
-                </span>
+                <span className="ce-title-gradient text-base sm:text-lg">CiberEduca</span>
               </Link>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="hidden text-xs text-zinc-300 sm:block">
-                <span className="font-semibold text-zinc-100">{me.user.username}</span>
-                <span className="mx-2 text-zinc-600">|</span>
-                <span className="capitalize">{me.user.role}</span>
-              </div>
+            <div className="hidden flex-1 lg:block">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  goSearchTalleres();
+                }}
+                className="relative"
+              >
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar talleres…"
+                  className="ce-field mt-0 w-full py-2 pl-9 pr-3"
+                />
+              </form>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileSearchOpen((v) => !v)}
+                className="ce-btn ce-btn-ghost px-3 py-2 text-xs lg:hidden"
+                aria-label={mobileSearchOpen ? 'Cerrar búsqueda' : 'Buscar talleres'}
+                title={mobileSearchOpen ? 'Cerrar búsqueda' : 'Buscar talleres'}
+              >
+                {mobileSearchOpen ? <X size={16} /> : <Search size={16} />}
+              </button>
+
+              <Link
+                href="/perfil"
+                className="ce-btn ce-btn-ghost px-3 py-2 text-xs"
+                title="Perfil"
+              >
+                <User size={16} />
+                <span className="hidden sm:inline">{me.user.username}</span>
+              </Link>
+              <span className="hidden text-xs text-zinc-400 sm:inline">{me.user.role}</span>
               <button
                 onClick={logout}
                 className="ce-btn ce-btn-ghost px-3 py-2 text-xs"
@@ -199,6 +313,26 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </div>
+
+          {mobileSearchOpen ? (
+            <div className="border-t border-white/10 bg-zinc-950/60 px-4 py-3 backdrop-blur lg:hidden">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  goSearchTalleres();
+                }}
+                className="relative"
+              >
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar talleres…"
+                  className="ce-field mt-0 w-full py-2 pl-9 pr-3"
+                />
+              </form>
+            </div>
+          ) : null}
         </header>
 
         {sidebarOpen ? (
@@ -210,30 +344,32 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
           />
         ) : null}
 
+        {/* Sidebar - fixed position, full height */}
         <aside
           ref={asideRef}
           className={
-            'fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-zinc-950/90 backdrop-blur transition-[transform,width] duration-200 ease-out lg:translate-x-0 lg:bg-zinc-950/70 lg:z-30 relative ' +
-            (sidebarOpen ? 'translate-x-0' : '-translate-x-full') +
-            ' lg:block ' +
+            'fixed top-0 bottom-0 left-0 z-50 flex flex-col w-72 border-r border-white/10 bg-zinc-950/90 backdrop-blur transition-[transform,width] duration-200 ease-out lg:translate-x-0 lg:bg-zinc-950/70 lg:z-30 ' +
+            (sidebarOpen ? 'translate-x-0' : '-translate-x-full ') +
             (sidebarCollapsed ? 'lg:w-20' : 'lg:w-72')
           }
         >
-          <div className="flex h-14 items-center justify-between gap-2 px-4">
+          <div
+            className={
+              'flex h-16 items-center gap-2 ' +
+              (sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4')
+            }
+          >
             <div className={"text-sm font-semibold text-zinc-100 " + (sidebarCollapsed ? 'lg:hidden' : '')}>
               Navegación
             </div>
             <button
               onClick={() => setSidebarCollapsed((v) => !v)}
-              className={
-                'ce-btn ce-btn-ghost px-3 py-2 text-xs hidden lg:inline-flex ' +
-                (sidebarCollapsed ? 'justify-center' : '')
-              }
+              className="ce-btn ce-btn-ghost hidden lg:inline-flex h-9 w-9 items-center justify-center p-0"
               type="button"
               title={sidebarCollapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
               aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
             >
-              {sidebarCollapsed ? '»' : '«'}
+              {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -244,19 +380,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          {sidebarCollapsed ? (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(false)}
-              className="hidden lg:inline-flex absolute top-16 -right-3 h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-950/80 text-xs font-semibold text-zinc-100 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_18px_60px_-30px_rgba(217,70,239,0.30)] backdrop-blur transition hover:bg-zinc-950"
-              aria-label="Expandir barra lateral"
-              title="Expandir"
-            >
-              <PanelLeftOpen size={18} className="text-zinc-100" />
-            </button>
-          ) : null}
-
-          <nav className={"px-3 py-3 " + (sidebarCollapsed ? 'lg:px-2' : '')}>
+          <nav className={"flex-1 overflow-y-auto px-3 py-3 " + (sidebarCollapsed ? 'lg:px-2' : '')}>
             <div className="space-y-1">
               {navItems.map((item) => {
                 const active = pathname === item.href || pathname?.startsWith(item.href + '/');
@@ -319,10 +443,19 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
 
-        <main className={"pt-14 " + (sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72')}>
+        {/* Main content area - takes remaining space, scrolls independently */}
+        <main
+          ref={mainRef}
+          className={
+            'flex-1 min-h-screen overflow-y-auto overscroll-contain transition-[margin] duration-200 ' +
+            (mobileSearchOpen ? 'pt-28 lg:pt-16 ' : 'pt-16 ') +
+            (sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72')
+          }
+        >
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">{children}</div>
         </main>
       </div>
     </div>
   );
+
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 type Workshop = {
@@ -17,10 +18,20 @@ type MeResponse =
   | { authenticated: false };
 
 export default function TalleresPage() {
+  const searchParams = useSearchParams();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [loading, setLoading] = useState(true);
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
+
+  const q = (searchParams?.get('q') ?? '').trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!q) return workshops;
+    return workshops.filter((w) => {
+      const haystack = `${w.title ?? ''} ${w.description ?? ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [q, workshops]);
 
   useEffect(() => {
     let alive = true;
@@ -75,11 +86,11 @@ export default function TalleresPage() {
           <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
         ) : !me || !me.authenticated ? (
           <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No autenticado. Inicia sesión para ver talleres.</div>
-        ) : workshops.length === 0 ? (
-          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay talleres todavía.</div>
+        ) : filtered.length === 0 ? (
+          <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay talleres para mostrar.</div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {workshops.map((w) => (
+            {filtered.map((w) => (
               <Link
                 key={w._id}
                 href={`/talleres/${w._id}`}

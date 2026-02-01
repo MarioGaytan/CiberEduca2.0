@@ -10,13 +10,17 @@ function apiBaseUrl() {
 }
 
 async function fetchMe(accessToken: string) {
-  const res = await fetch(`${apiBaseUrl()}/auth/me`, {
-    headers: { authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
+  try {
+    const res = await fetch(`${apiBaseUrl()}/auth/me`, {
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    });
 
-  const data = (await res.json()) as unknown;
-  return { res, data };
+    const data = (await res.json().catch(() => undefined)) as unknown;
+    return { ok: true as const, res, data };
+  } catch {
+    return { ok: false as const };
+  }
 }
 
 export async function GET() {
@@ -29,6 +33,9 @@ export async function GET() {
   }
 
   const first = await fetchMe(access);
+  if (!first.ok) {
+    return NextResponse.json({ authenticated: false }, { status: 200 });
+  }
   if (first.res.ok) {
     return NextResponse.json({ authenticated: true, user: first.data });
   }
@@ -37,12 +44,17 @@ export async function GET() {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const refreshRes = await fetch(`${apiBaseUrl()}/auth/refresh`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${refresh}` },
-  });
-
-  const refreshData = (await refreshRes.json()) as unknown;
+  let refreshRes: Response;
+  let refreshData: unknown;
+  try {
+    refreshRes = await fetch(`${apiBaseUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${refresh}` },
+    });
+    refreshData = (await refreshRes.json().catch(() => undefined)) as unknown;
+  } catch {
+    return NextResponse.json({ authenticated: false }, { status: 200 });
+  }
 
   if (!refreshRes.ok) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -66,7 +78,7 @@ export async function GET() {
   });
 
   const second = await fetchMe(tokens.accessToken);
-  if (!second.res.ok) {
+  if (!second.ok || !second.res.ok) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
