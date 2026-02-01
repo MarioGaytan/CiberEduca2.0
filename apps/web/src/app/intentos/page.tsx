@@ -13,6 +13,7 @@ type InboxAttempt = {
   workshopId?: string;
   testTitle?: string;
   studentUserId: string;
+  studentUsername?: string;
   autoScore: number;
   manualScore: number;
   totalScore: number;
@@ -98,10 +99,22 @@ export default function IntentosInboxPage() {
                 className="ce-card ce-card-hover block p-5"
               >
                 <div className="text-sm font-semibold text-zinc-100">{a.testTitle ?? 'Test'}</div>
-                <div className="mt-2 text-sm text-zinc-400">Alumno: {a.studentUserId}</div>
-                <div className="mt-2 text-xs text-zinc-500">Auto: {a.autoScore} | Total: {a.totalScore}</div>
-                <div className="mt-3 inline-block rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-xs text-zinc-300">
-                  Pendiente
+                <div className="mt-2 text-sm text-zinc-400">
+                  Alumno: <span className="font-medium text-zinc-200">{a.studentUsername || 'Usuario ' + a.studentUserId.slice(-6)}</span>
+                </div>
+                <div className="mt-2 flex items-center gap-3 text-xs text-zinc-500">
+                  <span>Puntaje auto: {a.autoScore}</span>
+                  <span>Total: {a.totalScore}</span>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="inline-block rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+                    Pendiente de revisión
+                  </span>
+                  {a.submittedAt && (
+                    <span className="text-xs text-zinc-500">
+                      {new Date(a.submittedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}

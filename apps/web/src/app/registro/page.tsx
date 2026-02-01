@@ -62,17 +62,20 @@ export default function RegisterPage() {
             placeholder="alumno@escuela.edu"
             autoComplete="email"
           />
+          <p className="mt-1 text-xs text-zinc-400">Solo necesario si tu escuela lo requiere para identificarte.</p>
 
           <label className="mt-4 block text-sm font-medium text-zinc-200">Contraseña</label>
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="ce-field"
-            placeholder="mínimo 8 caracteres"
+            placeholder="••••••••"
             type="password"
             autoComplete="new-password"
+            minLength={8}
             required
           />
+          <p className="mt-1 text-xs text-zinc-400">Mínimo 8 caracteres. Usa letras y números para mayor seguridad.</p>
 
           {error ? (
             <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">

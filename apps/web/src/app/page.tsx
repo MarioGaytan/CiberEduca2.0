@@ -10,7 +10,9 @@ export default function Home() {
             <span className="ce-title-gradient">CiberEduca</span>
           </h1>
           <p className="mt-4 text-base leading-7 text-zinc-300 sm:text-lg">
-            Talleres, tests y aprendizaje interactivo. Diseñado para usarse desde celular o computadora.
+            Talleres, tests y aprendizaje interactivo para alumnos y maestros de secundaria.
+            <br />
+            <span className="text-zinc-400">Diseñado para usarse desde celular o computadora.</span>
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -25,12 +27,6 @@ export default function Home() {
               className="ce-btn ce-btn-ghost px-5 py-3"
             >
               Crear cuenta
-            </Link>
-            <Link
-              href="/home"
-              className="ce-btn ce-btn-soft px-5 py-3 text-zinc-200"
-            >
-              Ir al inicio
             </Link>
           </div>
 

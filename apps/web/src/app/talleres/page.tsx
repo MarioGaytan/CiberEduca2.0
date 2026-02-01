@@ -26,12 +26,23 @@ export default function TalleresPage() {
 
   const q = (searchParams?.get('q') ?? '').trim().toLowerCase();
   const filtered = useMemo(() => {
-    if (!q) return workshops;
-    return workshops.filter((w) => {
-      const haystack = `${w.title ?? ''} ${w.description ?? ''}`.toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [q, workshops]);
+    let list = workshops;
+    
+    // Students only see approved workshops
+    if (role === 'student') {
+      list = list.filter((w) => w.status === 'approved');
+    }
+    
+    // Apply search filter
+    if (q) {
+      list = list.filter((w) => {
+        const haystack = `${w.title ?? ''} ${w.description ?? ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    
+    return list;
+  }, [q, workshops, role]);
 
   useEffect(() => {
     let alive = true;
