@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
+import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings } from 'lucide-react';
 import { buildDiceBearUrl, DiceBearConfig } from './DiceBearAvatar';
 
 type DiceBearOption = {
@@ -49,26 +50,32 @@ type Props = {
   onSave: (config: Partial<DiceBearConfig>) => Promise<void>;
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  skinColor: '👤',
-  hair: '💇',
-  hairColor: '🎨',
-  eyes: '👁️',
-  eyebrows: '🤨',
-  mouth: '👄',
-  glasses: '👓',
-  accessories: '✨',
-  earrings: '💎',
-  clothing: '👕',
-  backgroundColor: '🖼️',
-  features: '⭐',
-  top: '💇',
-  facialHair: '🧔',
-  nose: '👃',
-  beard: '🧔',
-  body: '🦴',
-  face: '😊',
+// Map category names to Lucide icon components
+const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  skinColor: User,
+  hair: Scissors,
+  hairColor: Palette,
+  eyes: Eye,
+  eyebrows: Eye,
+  mouth: User,
+  glasses: Glasses,
+  accessories: Sparkles,
+  earrings: Gem,
+  clothing: Shirt,
+  backgroundColor: Image,
+  features: Star,
+  top: Scissors,
+  facialHair: User,
+  nose: User,
+  beard: User,
+  body: User,
+  face: User,
 };
+
+function CategoryIcon({ name, className = 'h-4 w-4' }: { name: string; className?: string }) {
+  const IconComponent = CATEGORY_ICON_MAP[name] || Settings;
+  return <IconComponent className={className} />;
+}
 
 // Lazy loaded image with intersection observer
 const LazyImage = memo(function LazyImage({ 
@@ -375,13 +382,13 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
             <button
               key={`cat-${category.name}-${idx}`}
               onClick={() => setActiveCategory(category.name)}
-              className={`px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
                 activeCategory === category.name
                   ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-500/50'
                   : 'bg-zinc-800/50 text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-800'
               }`}
             >
-              {CATEGORY_ICONS[category.name] || '⚙️'} {category.displayName}
+              <CategoryIcon name={category.name} className="h-4 w-4" /> {category.displayName}
             </button>
           ))}
         </div>
@@ -395,8 +402,8 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
         </div>
       ) : currentCategory && (
         <div className="ce-card p-5">
-          <h4 className="text-sm font-semibold text-zinc-200 mb-4">
-            {CATEGORY_ICONS[currentCategory.name] || '⚙️'} {currentCategory.displayName}
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+            <CategoryIcon name={currentCategory.name} className="h-4 w-4" /> {currentCategory.displayName}
           </h4>
           
           {currentCategory.isColor ? (

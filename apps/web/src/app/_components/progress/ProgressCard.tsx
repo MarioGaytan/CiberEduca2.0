@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Flame } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import MedalBadge from './MedalBadge';
 import DiceBearAvatar from '../avatar/DiceBearAvatar';
@@ -93,7 +94,10 @@ export default function ProgressCard({ progress, compact = false }: Props) {
             <div className="text-xs text-zinc-400">Tests</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-amber-300">{progress.currentStreak}🔥</div>
+            <div className="flex items-center justify-center gap-1 text-xl font-bold text-amber-300">
+              {progress.currentStreak}
+              <Flame className="h-5 w-5 text-orange-500" />
+            </div>
             <div className="text-xs text-zinc-400">Racha</div>
           </div>
         </div>
@@ -129,7 +133,10 @@ export default function ProgressCard({ progress, compact = false }: Props) {
               <div className="text-sm text-zinc-400">{progress.totalXp.toLocaleString()} XP total</div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-semibold text-amber-300">{progress.currentStreak} 🔥</div>
+              <div className="flex items-center gap-1 text-lg font-semibold text-amber-300">
+                {progress.currentStreak}
+                <Flame className="h-5 w-5 text-orange-500" />
+              </div>
               <div className="text-xs text-zinc-400">Racha actual</div>
             </div>
           </div>

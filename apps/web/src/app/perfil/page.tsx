@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
@@ -187,7 +188,10 @@ export default function PerfilPage() {
               <div className="mt-1 text-xs text-zinc-400">Tests completados</div>
             </div>
             <div className="ce-card p-4 text-center">
-              <div className="text-3xl font-bold text-amber-300">{progress.currentStreak}🔥</div>
+              <div className="flex items-center justify-center gap-1 text-3xl font-bold text-amber-300">
+                {progress.currentStreak}
+                <Flame className="h-7 w-7 text-orange-500" />
+              </div>
               <div className="mt-1 text-xs text-zinc-400">Racha actual</div>
             </div>
             <div className="ce-card p-4 text-center">
@@ -238,7 +242,10 @@ export default function PerfilPage() {
         <div className="mt-6 space-y-6">
           {earnedMedals.length > 0 && (
             <div className="ce-card p-5">
-              <div className="text-sm font-semibold text-zinc-200 mb-4">🏆 Medallas ganadas ({earnedMedals.length})</div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+                <Trophy className="h-4 w-4 text-amber-400" />
+                Medallas ganadas ({earnedMedals.length})
+              </div>
               <div className="flex flex-wrap gap-4">
                 {earnedMedals.map((medal) => (
                   <MedalBadge key={medal.type} medal={medal} size="lg" />
@@ -249,7 +256,10 @@ export default function PerfilPage() {
 
           {unearnedMedals.length > 0 && (
             <div className="ce-card p-5">
-              <div className="text-sm font-semibold text-zinc-200 mb-4">🔒 Por desbloquear ({unearnedMedals.length})</div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+                <Lock className="h-4 w-4 text-zinc-400" />
+                Por desbloquear ({unearnedMedals.length})
+              </div>
               <div className="flex flex-wrap gap-4">
                 {unearnedMedals.map((medal) => (
                   <MedalBadge key={medal.type} medal={medal} size="lg" />
@@ -266,16 +276,19 @@ export default function PerfilPage() {
           <div className="ce-card p-5">
             <div className="text-sm font-semibold text-zinc-200">Accesos rápidos</div>
             <div className="mt-3 space-y-2">
-              <Link href="/talleres" className="block text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                📚 Talleres
+              <Link href="/talleres" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
+                <BookOpen className="h-4 w-4" />
+                Talleres
               </Link>
               {(role === 'teacher' || role === 'admin') && (
-                <Link href="/intentos" className="block text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                  📝 Bandeja de intentos
+                <Link href="/intentos" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
+                  <FileText className="h-4 w-4" />
+                  Bandeja de intentos
                 </Link>
               )}
-              <Link href="/dashboard" className="block text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                📊 Dashboard
+              <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
               </Link>
             </div>
           </div>

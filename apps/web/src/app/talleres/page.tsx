@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { BookOpen, Clock, Target, Lock, Unlock } from 'lucide-react';
 
 type Workshop = {
   _id: string;
@@ -169,7 +170,7 @@ export default function TalleresPage() {
                   </div>
                 ) : (
                   <div className="flex h-32 w-full items-center justify-center bg-gradient-to-br from-fuchsia-900/30 to-purple-900/30">
-                    <span className="text-4xl">📚</span>
+                    <BookOpen className="h-12 w-12 text-fuchsia-400" />
                   </div>
                 )}
                 
@@ -194,18 +195,18 @@ export default function TalleresPage() {
                   <div className="mt-3 flex items-center gap-3 text-xs text-zinc-500">
                     {w.estimatedMinutes && (
                       <span className="flex items-center gap-1">
-                        <span>⏱️</span>
+                        <Clock className="h-3 w-3" />
                         <span>{w.estimatedMinutes} min</span>
                       </span>
                     )}
                     {w.objectives && w.objectives.length > 0 && (
                       <span className="flex items-center gap-1">
-                        <span>🎯</span>
+                        <Target className="h-3 w-3" />
                         <span>{w.objectives.length} objetivos</span>
                       </span>
                     )}
                     <span className="flex items-center gap-1">
-                      {w.visibility === 'internal' ? '🔓' : '🔐'}
+                      {w.visibility === 'internal' ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
                       <span className="capitalize">{w.visibility}</span>
                     </span>
                   </div>

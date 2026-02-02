@@ -153,22 +153,23 @@ export class GamificationConfig {
 
 export const GamificationConfigSchema = SchemaFactory.createForClass(GamificationConfig);
 
-// Default medals to seed
+// Default medals to seed - using Lucide icon names instead of emojis
+// iconType: 'lucide' tells the frontend to render these as Lucide components
 export const DEFAULT_MEDALS: Omit<MedalDefinition, 'isActive' | 'sortOrder'>[] = [
-  { id: 'first_test', name: 'Primer Paso', description: 'Completa tu primer test', icon: '🎯', xpReward: 25, conditionType: 'tests_completed', conditionValue: 1 },
-  { id: 'tests_10', name: 'Estudiante Activo', description: 'Completa 10 tests', icon: '📝', xpReward: 50, conditionType: 'tests_completed', conditionValue: 10 },
-  { id: 'tests_50', name: 'Académico', description: 'Completa 50 tests', icon: '📚', xpReward: 150, conditionType: 'tests_completed', conditionValue: 50 },
-  { id: 'workshop_1', name: 'Explorador', description: 'Completa tu primer taller', icon: '🗺️', xpReward: 50, conditionType: 'workshops_completed', conditionValue: 1 },
-  { id: 'workshop_5', name: 'Aventurero', description: 'Completa 5 talleres', icon: '⭐', xpReward: 100, conditionType: 'workshops_completed', conditionValue: 5 },
-  { id: 'workshop_10', name: 'Dedicado', description: 'Completa 10 talleres', icon: '🌟', xpReward: 200, conditionType: 'workshops_completed', conditionValue: 10 },
-  { id: 'workshop_25', name: 'Maestro', description: 'Completa 25 talleres', icon: '👑', xpReward: 500, conditionType: 'workshops_completed', conditionValue: 25 },
-  { id: 'perfect_1', name: 'Perfección', description: 'Obtén 100% en un test', icon: '💎', xpReward: 30, conditionType: 'perfect_scores', conditionValue: 1 },
-  { id: 'perfect_10', name: 'Genio', description: 'Obtén 100% en 10 tests', icon: '🧠', xpReward: 150, conditionType: 'perfect_scores', conditionValue: 10 },
-  { id: 'streak_7', name: 'Constante', description: '7 días seguidos activo', icon: '🔥', xpReward: 100, conditionType: 'streak_days', conditionValue: 7 },
-  { id: 'streak_30', name: 'Imparable', description: '30 días seguidos activo', icon: '💪', xpReward: 300, conditionType: 'streak_days', conditionValue: 30 },
-  { id: 'top_10', name: 'Elite', description: 'Alcanza el Top 10', icon: '🏅', xpReward: 100, conditionType: 'ranking_position', conditionValue: 10, conditionOperator: 'lte' },
-  { id: 'top_3', name: 'Podio', description: 'Alcanza el Top 3', icon: '🥉', xpReward: 200, conditionType: 'ranking_position', conditionValue: 3, conditionOperator: 'lte' },
-  { id: 'first_place', name: 'Campeón', description: 'Alcanza el primer lugar', icon: '🏆', xpReward: 500, conditionType: 'ranking_position', conditionValue: 1, conditionOperator: 'eq' },
+  { id: 'first_test', name: 'Primer Paso', description: 'Completa tu primer test', icon: 'Target', iconType: 'lucide', iconColor: '#f472b6', bgColor: '#f472b620', xpReward: 25, conditionType: 'tests_completed', conditionValue: 1 },
+  { id: 'tests_10', name: 'Estudiante Activo', description: 'Completa 10 tests', icon: 'FileText', iconType: 'lucide', iconColor: '#60a5fa', bgColor: '#60a5fa20', xpReward: 50, conditionType: 'tests_completed', conditionValue: 10 },
+  { id: 'tests_50', name: 'Académico', description: 'Completa 50 tests', icon: 'BookOpen', iconType: 'lucide', iconColor: '#a78bfa', bgColor: '#a78bfa20', xpReward: 150, conditionType: 'tests_completed', conditionValue: 50 },
+  { id: 'workshop_1', name: 'Explorador', description: 'Completa tu primer taller', icon: 'Compass', iconType: 'lucide', iconColor: '#34d399', bgColor: '#34d39920', xpReward: 50, conditionType: 'workshops_completed', conditionValue: 1 },
+  { id: 'workshop_5', name: 'Aventurero', description: 'Completa 5 talleres', icon: 'Star', iconType: 'lucide', iconColor: '#fbbf24', bgColor: '#fbbf2420', xpReward: 100, conditionType: 'workshops_completed', conditionValue: 5 },
+  { id: 'workshop_10', name: 'Dedicado', description: 'Completa 10 talleres', icon: 'Sparkles', iconType: 'lucide', iconColor: '#f59e0b', bgColor: '#f59e0b20', xpReward: 200, conditionType: 'workshops_completed', conditionValue: 10 },
+  { id: 'workshop_25', name: 'Maestro', description: 'Completa 25 talleres', icon: 'Crown', iconType: 'lucide', iconColor: '#eab308', bgColor: '#eab30820', xpReward: 500, conditionType: 'workshops_completed', conditionValue: 25 },
+  { id: 'perfect_1', name: 'Perfección', description: 'Obtén 100% en un test', icon: 'Gem', iconType: 'lucide', iconColor: '#22d3ee', bgColor: '#22d3ee20', xpReward: 30, conditionType: 'perfect_scores', conditionValue: 1 },
+  { id: 'perfect_10', name: 'Genio', description: 'Obtén 100% en 10 tests', icon: 'Brain', iconType: 'lucide', iconColor: '#ec4899', bgColor: '#ec489920', xpReward: 150, conditionType: 'perfect_scores', conditionValue: 10 },
+  { id: 'streak_7', name: 'Constante', description: '7 días seguidos activo', icon: 'Flame', iconType: 'lucide', iconColor: '#f97316', bgColor: '#f9731620', xpReward: 100, conditionType: 'streak_days', conditionValue: 7 },
+  { id: 'streak_30', name: 'Imparable', description: '30 días seguidos activo', icon: 'Dumbbell', iconType: 'lucide', iconColor: '#ef4444', bgColor: '#ef444420', xpReward: 300, conditionType: 'streak_days', conditionValue: 30 },
+  { id: 'top_10', name: 'Elite', description: 'Alcanza el Top 10', icon: 'Medal', iconType: 'lucide', iconColor: '#a3a3a3', bgColor: '#a3a3a320', xpReward: 100, conditionType: 'ranking_position', conditionValue: 10, conditionOperator: 'lte' },
+  { id: 'top_3', name: 'Podio', description: 'Alcanza el Top 3', icon: 'Medal', iconType: 'lucide', iconColor: '#cd7f32', bgColor: '#cd7f3220', xpReward: 200, conditionType: 'ranking_position', conditionValue: 3, conditionOperator: 'lte' },
+  { id: 'first_place', name: 'Campeón', description: 'Alcanza el primer lugar', icon: 'Trophy', iconType: 'lucide', iconColor: '#fbbf24', bgColor: '#fbbf2420', xpReward: 500, conditionType: 'ranking_position', conditionValue: 1, conditionOperator: 'eq' },
 ];
 
 // Default avatar options for DiceBear

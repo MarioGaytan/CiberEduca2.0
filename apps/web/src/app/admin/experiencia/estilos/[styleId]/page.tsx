@@ -3,6 +3,11 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { 
+  User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, 
+  Settings, Square, Hexagon, Grid3X3, Smile, Hand, RefreshCw, Package, MapPin,
+  Shuffle, CircleDot, Layers
+} from 'lucide-react';
 
 type DiceBearOption = {
   value: string;
@@ -240,42 +245,47 @@ export default function StyleDetailPage() {
       .trim();
   }
 
-  // Category icons - expanded for all DiceBear categories
-  const CATEGORY_ICONS: Record<string, string> = {
+  // Map category names to Lucide icon components
+  const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     // Face & Head
-    skinColor: '👤', face: '😊', head: '🗣️', cheeks: '😊', freckles: '✨',
+    skinColor: User, face: Smile, head: User, cheeks: Smile, freckles: Sparkles,
     // Hair
-    hair: '💇', hairColor: '🎨', top: '💇', hairProbability: '💇',
+    hair: Scissors, hairColor: Palette, top: Scissors, hairProbability: Scissors,
     // Eyes
-    eyes: '👁️', eyebrows: '🤨', eyeColor: '👁️', eyesColor: '👁️', eyesShadow: '👁️',
+    eyes: Eye, eyebrows: Eye, eyeColor: Eye, eyesColor: Eye, eyesShadow: Eye,
     // Mouth & Nose
-    mouth: '👄', mouthColor: '👄', nose: '�', noseColor: '👃', lips: '�👄', lipColor: '💄',
+    mouth: User, mouthColor: Palette, nose: User, noseColor: Palette, lips: User, lipColor: Palette,
     // Facial Hair
-    facialHair: '🧔', facialHairColor: '🧔', beard: '🧔', beardColor: '🧔',
+    facialHair: User, facialHairColor: Palette, beard: User, beardColor: Palette,
     // Accessories
-    glasses: '👓', glassesProbability: '👓', accessories: '✨', accessoriesColor: '✨',
-    earrings: '💎', earringsProbability: '💎', hat: '🎩', hatColor: '🎩', hatProbability: '🎩',
-    mask: '😷', spectacles: '🤓',
+    glasses: Glasses, glassesProbability: Glasses, accessories: Sparkles, accessoriesColor: Palette,
+    earrings: Gem, earringsProbability: Gem, hat: User, hatColor: Palette, hatProbability: User,
+    mask: User, spectacles: Glasses,
     // Body & Clothing
-    body: '🦴', bodyColor: '🦴', clothing: '👕', clothingColor: '👕', clothingGraphic: '🎨',
-    shirt: '👔', shirtColor: '👔',
+    body: User, bodyColor: Palette, clothing: Shirt, clothingColor: Palette, clothingGraphic: Palette,
+    shirt: Shirt, shirtColor: Palette,
     // Background & Style
-    backgroundColor: '🖼️', backgroundType: '🖼️', backgroundRotation: '🔄',
+    backgroundColor: Image, backgroundType: Image, backgroundRotation: RefreshCw,
     // Emotions & Gestures
-    emotion: '😊', gesture: '🖐️', features: '⭐', featuresProbability: '⭐',
+    emotion: Smile, gesture: Hand, features: Star, featuresProbability: Star,
     // Colors
-    primaryColor: '🎨', secondaryColor: '🎨', tertiaryColor: '🎨', baseColor: '🎨',
-    cheeksColor: '🎨', frecklesColor: '🎨', blush: '😊', blushColor: '🎨',
+    primaryColor: Palette, secondaryColor: Palette, tertiaryColor: Palette, baseColor: Palette,
+    cheeksColor: Palette, frecklesColor: Palette, blush: Smile, blushColor: Palette,
     // Special
-    base: '📦', shape: '�', shapeColor: '🔷', pattern: '🔳', texture: '🧱',
-    icon: '📍', variant: '🔀', style: '🎭',
+    base: Package, shape: Hexagon, shapeColor: Palette, pattern: Grid3X3, texture: Layers,
+    icon: MapPin, variant: Shuffle, style: Palette,
     // Grid-based (identicon, etc)
-    row1: '1️⃣', row2: '2️⃣', row3: '3️⃣', row4: '4️⃣', row5: '5️⃣', sides: '↔️',
+    row1: Grid3X3, row2: Grid3X3, row3: Grid3X3, row4: Grid3X3, row5: Grid3X3, sides: RefreshCw,
     // Misc
-    mole: '⚫', moleProbability: '⚫', smile: '😊', smileProbability: '😊',
-    sideburn: '🧔', sideburnProbability: '�', wrinkles: '�', wrinklesProbability: '�',
-    tatoos: '🎨', tatoosProbability: '🎨', flip: '�',
+    mole: CircleDot, moleProbability: CircleDot, smile: Smile, smileProbability: Smile,
+    sideburn: User, sideburnProbability: User, wrinkles: User, wrinklesProbability: User,
+    tatoos: Palette, tatoosProbability: Palette, flip: RefreshCw,
   };
+
+  function CategoryIcon({ name, className = 'h-4 w-4' }: { name: string; className?: string }) {
+    const IconComponent = CATEGORY_ICON_MAP[name] || Settings;
+    return <IconComponent className={className} />;
+  }
 
   if (loading) {
     return (
@@ -401,13 +411,13 @@ export default function StyleDetailPage() {
           <button
             key={`cat-${category.name}-${idx}`}
             onClick={() => setActiveCategory(category.name)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
               activeCategory === category.name
                 ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20'
                 : 'bg-zinc-800/50 text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-800'
             }`}
           >
-            {CATEGORY_ICONS[category.name] || '⚙️'} {getCategoryDisplayName(category)}
+            <CategoryIcon name={category.name} className="h-4 w-4" /> {getCategoryDisplayName(category)}
             <span className="ml-2 text-xs opacity-60">({category.options.length})</span>
           </button>
         ))}
@@ -417,8 +427,8 @@ export default function StyleDetailPage() {
       {currentCategoryData && (
         <div className="ce-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-zinc-100">
-              {CATEGORY_ICONS[currentCategoryData.name] || '⚙️'} {getCategoryDisplayName(currentCategoryData)}
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-zinc-100">
+              <CategoryIcon name={currentCategoryData.name} className="h-5 w-5" /> {getCategoryDisplayName(currentCategoryData)}
             </h3>
             <div className="flex gap-2">
               {bulkEditMode ? (

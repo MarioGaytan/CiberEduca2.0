@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Star, BarChart3, Medal, Palette } from 'lucide-react';
 
 type XpRules = {
   testBaseXp: number;
@@ -332,35 +333,35 @@ export default function ExperienceManagerPage() {
       <div className="mt-6 flex gap-2 border-b border-zinc-700 pb-2">
         <button
           onClick={() => setActiveTab('xp')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`flex items-center gap-1 px-4 py-2 rounded-t-lg text-sm font-medium ${
             activeTab === 'xp' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          ⭐ Reglas de XP
+          <Star className="h-4 w-4" /> Reglas de XP
         </button>
         <button
           onClick={() => setActiveTab('levels')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`flex items-center gap-1 px-4 py-2 rounded-t-lg text-sm font-medium ${
             activeTab === 'levels' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          📊 Niveles
+          <BarChart3 className="h-4 w-4" /> Niveles
         </button>
         <button
           onClick={() => setActiveTab('medals')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`flex items-center gap-1 px-4 py-2 rounded-t-lg text-sm font-medium ${
             activeTab === 'medals' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          🏅 Medallas ({config.medals.length})
+          <Medal className="h-4 w-4" /> Medallas ({config.medals.length})
         </button>
         <button
           onClick={() => setActiveTab('styles')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`flex items-center gap-1 px-4 py-2 rounded-t-lg text-sm font-medium ${
             activeTab === 'styles' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          🎭 Estilos DiceBear ({dicebearStyles.length})
+          <Palette className="h-4 w-4" /> Estilos DiceBear ({dicebearStyles.length})
         </button>
       </div>
 

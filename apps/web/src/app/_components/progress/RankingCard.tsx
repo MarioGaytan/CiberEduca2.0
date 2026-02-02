@@ -1,5 +1,6 @@
 'use client';
 
+import { Trophy, Medal } from 'lucide-react';
 import DiceBearAvatar from '../avatar/DiceBearAvatar';
 
 type AvatarData = {
@@ -39,10 +40,10 @@ const POSITION_STYLES: Record<number, string> = {
   3: 'text-amber-600',
 };
 
-const POSITION_ICONS: Record<number, string> = {
-  1: '🥇',
-  2: '🥈',
-  3: '🥉',
+const POSITION_COLORS: Record<number, string> = {
+  1: 'text-yellow-400',
+  2: 'text-zinc-300',
+  3: 'text-amber-600',
 };
 
 export default function RankingCard({ ranking, maxEntries = 10 }: Props) {
@@ -59,7 +60,10 @@ export default function RankingCard({ ranking, maxEntries = 10 }: Props) {
   return (
     <div className="ce-card overflow-hidden">
       <div className="border-b border-white/10 px-5 py-3">
-        <div className="text-sm font-semibold text-zinc-200">🏆 Ranking</div>
+        <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <Trophy className="h-4 w-4 text-amber-400" />
+          Ranking
+        </div>
       </div>
       <div className="divide-y divide-white/5">
         {entries.map((entry) => (
@@ -69,8 +73,12 @@ export default function RankingCard({ ranking, maxEntries = 10 }: Props) {
               entry.isMe ? 'bg-fuchsia-500/10' : 'hover:bg-white/5'
             }`}
           >
-            <div className={`w-8 text-center font-bold ${POSITION_STYLES[entry.position] || 'text-zinc-500'}`}>
-              {POSITION_ICONS[entry.position] || `#${entry.position}`}
+            <div className={`w-8 flex items-center justify-center font-bold ${POSITION_STYLES[entry.position] || 'text-zinc-500'}`}>
+              {entry.position <= 3 ? (
+                <Medal className={`h-5 w-5 ${POSITION_COLORS[entry.position]}`} />
+              ) : (
+                `#${entry.position}`
+              )}
             </div>
             <DiceBearAvatar config={entry.avatar || {}} seed={entry.username} size="sm" className="bg-zinc-800" />
             <div className="flex-1 min-w-0">
@@ -90,7 +98,9 @@ export default function RankingCard({ ranking, maxEntries = 10 }: Props) {
             </div>
             <div className="text-right">
               <div className="text-sm font-semibold text-fuchsia-300">{entry.totalXp.toLocaleString()} XP</div>
-              <div className="text-xs text-zinc-500">{entry.medalCount} 🏅</div>
+              <div className="flex items-center justify-end gap-1 text-xs text-zinc-500">
+                {entry.medalCount} <Medal className="h-3 w-3" />
+              </div>
             </div>
           </div>
         ))}

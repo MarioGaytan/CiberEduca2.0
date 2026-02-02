@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { BookOpen, FileText, Star, Trophy, Medal, Palette, Pencil, Users, BarChart3, CheckCircle } from 'lucide-react';
 
 type AuthState = 
   | { status: 'loading' }
@@ -84,28 +85,28 @@ export default function LandingPage() {
           <h2 className="text-2xl font-semibold text-zinc-100">¿Cómo funciona?</h2>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="ce-card ce-card-hover p-5">
-              <div className="text-2xl">📚</div>
+              <BookOpen className="h-8 w-8 text-fuchsia-400" />
               <div className="mt-3 text-sm font-semibold text-zinc-200">Talleres</div>
               <div className="mt-2 text-sm text-zinc-400">
                 Contenido educativo con videos, imágenes y texto. Algunos requieren código de acceso.
               </div>
             </div>
             <div className="ce-card ce-card-hover p-5">
-              <div className="text-2xl">📝</div>
+              <FileText className="h-8 w-8 text-cyan-400" />
               <div className="mt-3 text-sm font-semibold text-zinc-200">Tests</div>
               <div className="mt-2 text-sm text-zinc-400">
                 Preguntas de opción múltiple y abiertas. Con pistas y explicaciones después de responder.
               </div>
             </div>
             <div className="ce-card ce-card-hover p-5">
-              <div className="text-2xl">⭐</div>
+              <Star className="h-8 w-8 text-amber-400" />
               <div className="mt-3 text-sm font-semibold text-zinc-200">Experiencia (XP)</div>
               <div className="mt-2 text-sm text-zinc-400">
                 Gana XP al completar tests. Sube de nivel y desbloquea avatares, colores y marcos.
               </div>
             </div>
             <div className="ce-card ce-card-hover p-5">
-              <div className="text-2xl">🏆</div>
+              <Trophy className="h-8 w-8 text-amber-400" />
               <div className="mt-3 text-sm font-semibold text-zinc-200">Ranking</div>
               <div className="mt-2 text-sm text-zinc-400">
                 Compite con tus compañeros. Los mejores reciben medallas especiales.
@@ -119,7 +120,10 @@ export default function LandingPage() {
           <h2 className="text-2xl font-semibold text-zinc-100">Sistema de Recompensas</h2>
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="ce-card p-6">
-              <h3 className="text-lg font-semibold text-fuchsia-300">🎨 Personaliza tu Avatar</h3>
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-fuchsia-300">
+                <Palette className="h-5 w-5" />
+                Personaliza tu Avatar
+              </h3>
               <p className="mt-2 text-sm text-zinc-400">
                 Desbloquea estilos, colores, accesorios y marcos exclusivos a medida que ganas experiencia.
               </p>
@@ -131,15 +135,18 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="ce-card p-6">
-              <h3 className="text-lg font-semibold text-amber-300">🏅 Gana Medallas</h3>
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-amber-300">
+                <Medal className="h-5 w-5" />
+                Gana Medallas
+              </h3>
               <p className="mt-2 text-sm text-zinc-400">
                 Obtén medallas por logros especiales y posiciones en el ranking.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs text-amber-300">🥇 Primer Lugar</span>
-                <span className="rounded-full bg-zinc-500/20 px-3 py-1 text-xs text-zinc-300">🥈 Top 3</span>
-                <span className="rounded-full bg-orange-500/20 px-3 py-1 text-xs text-orange-300">🥉 Top 10</span>
-                <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300">✅ Primer Test</span>
+                <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-xs text-amber-300"><Medal className="h-3 w-3" /> Primer Lugar</span>
+                <span className="flex items-center gap-1 rounded-full bg-zinc-500/20 px-3 py-1 text-xs text-zinc-300"><Medal className="h-3 w-3" /> Top 3</span>
+                <span className="flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-xs text-orange-300"><Medal className="h-3 w-3" /> Top 10</span>
+                <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300"><CheckCircle className="h-3 w-3" /> Primer Test</span>
               </div>
             </div>
           </div>
@@ -151,21 +158,21 @@ export default function LandingPage() {
           <div className="mt-6 ce-card p-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
-                <div className="text-xl">✏️</div>
+                <Pencil className="h-6 w-6 text-fuchsia-400" />
                 <h3 className="mt-2 font-semibold text-zinc-200">Crea Contenido</h3>
                 <p className="mt-1 text-sm text-zinc-400">
                   Diseña talleres con videos de YouTube, imágenes y bloques de texto enriquecido.
                 </p>
               </div>
               <div>
-                <div className="text-xl">👥</div>
+                <Users className="h-6 w-6 text-cyan-400" />
                 <h3 className="mt-2 font-semibold text-zinc-200">Colabora</h3>
                 <p className="mt-1 text-sm text-zinc-400">
                   Invita a otros maestros como colaboradores para crear contenido juntos.
                 </p>
               </div>
               <div>
-                <div className="text-xl">📊</div>
+                <BarChart3 className="h-6 w-6 text-amber-400" />
                 <h3 className="mt-2 font-semibold text-zinc-200">Califica</h3>
                 <p className="mt-1 text-sm text-zinc-400">
                   Revisa las respuestas de tus alumnos y califica preguntas abiertas.

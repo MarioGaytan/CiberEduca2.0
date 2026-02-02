@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Star, Medal } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import RankingCard from '../_components/progress/RankingCard';
 
@@ -185,7 +186,10 @@ export default function HomePage() {
 
           {/* How to earn XP section */}
           <div className="mt-6 ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200">⭐ ¿Cómo ganar experiencia (XP)?</div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+              <Star className="h-4 w-4 text-amber-400" />
+              ¿Cómo ganar experiencia (XP)?
+            </div>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-xl bg-black/20 p-3">
                 <div className="text-lg font-bold text-emerald-400">+XP</div>
@@ -200,7 +204,7 @@ export default function HomePage() {
                 <div className="text-xs text-zinc-400">Por día de racha activa</div>
               </div>
               <div className="rounded-xl bg-black/20 p-3">
-                <div className="text-lg font-bold text-cyan-400">🏅</div>
+                <Medal className="h-6 w-6 text-cyan-400" />
                 <div className="text-xs text-zinc-400">Medallas por logros especiales</div>
               </div>
             </div>
