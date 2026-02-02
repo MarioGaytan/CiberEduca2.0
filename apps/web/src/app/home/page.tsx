@@ -170,6 +170,35 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* How to earn XP section */}
+          <div className="mt-6 ce-card p-5">
+            <div className="text-sm font-semibold text-zinc-200">⭐ ¿Cómo ganar experiencia (XP)?</div>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl bg-black/20 p-3">
+                <div className="text-lg font-bold text-emerald-400">+XP</div>
+                <div className="text-xs text-zinc-400">Por cada punto en un test</div>
+              </div>
+              <div className="rounded-xl bg-black/20 p-3">
+                <div className="text-lg font-bold text-amber-400">+20 XP</div>
+                <div className="text-xs text-zinc-400">Bonus por test perfecto (100%)</div>
+              </div>
+              <div className="rounded-xl bg-black/20 p-3">
+                <div className="text-lg font-bold text-fuchsia-400">+5 XP</div>
+                <div className="text-xs text-zinc-400">Por día de racha activa</div>
+              </div>
+              <div className="rounded-xl bg-black/20 p-3">
+                <div className="text-lg font-bold text-cyan-400">🏅</div>
+                <div className="text-xs text-zinc-400">Medallas por logros especiales</div>
+              </div>
+            </div>
+            <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-500/10 to-cyan-500/10 p-3">
+              <div className="text-xs text-zinc-300">
+                <strong>Tip:</strong> Completa tests todos los días para mantener tu racha y ganar XP extra.
+                Personaliza tu avatar en tu <Link href="/perfil" className="text-fuchsia-300 hover:underline">perfil</Link>.
+              </div>
+            </div>
+          </div>
+
           {/* Workshops list */}
           <div className="mt-10">
             <div className="flex items-end justify-between gap-4">
