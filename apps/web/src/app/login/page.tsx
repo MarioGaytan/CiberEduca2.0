@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +10,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) {
+          const role = data.user?.role;
+          if (role === 'teacher' || role === 'admin' || role === 'reviewer') {
+            router.replace('/dashboard');
+          } else {
+            router.replace('/home');
+          }
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => setChecking(false));
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +51,16 @@ export default function LoginPage() {
     }
 
     router.replace('/home');
+  }
+
+  if (checking) {
+    return (
+      <div className="ce-public-shell ce-public-bg">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-zinc-400">Verificando sesión...</div>
+        </div>
+      </div>
+    );
   }
 
   return (

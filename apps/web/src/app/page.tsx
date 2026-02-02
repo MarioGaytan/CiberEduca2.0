@@ -1,6 +1,42 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+type AuthState = 
+  | { status: 'loading' }
+  | { status: 'guest' }
+  | { status: 'authenticated'; role: string; username: string };
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
+
+  useEffect(() => {
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setAuth({ status: 'authenticated', role: data.user.role, username: data.user.username });
+        } else {
+          setAuth({ status: 'guest' });
+        }
+      })
+      .catch(() => setAuth({ status: 'guest' }));
+  }, []);
+
+  const handleGoToApp = () => {
+    if (auth.status === 'authenticated') {
+      const role = auth.role;
+      if (role === 'teacher' || role === 'admin' || role === 'reviewer') {
+        router.push('/dashboard');
+      } else {
+        router.push('/home');
+      }
+    }
+  };
+
   return (
     <div className="ce-public-shell ce-public-bg">
       <div className="relative mx-auto w-full max-w-6xl px-6 py-14">
@@ -18,12 +54,27 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/login" className="ce-btn ce-btn-primary px-6 py-3">
-                Iniciar sesión
-              </Link>
-              <Link href="/registro" className="ce-btn ce-btn-ghost px-6 py-3">
-                Crear cuenta de alumno
-              </Link>
+              {auth.status === 'loading' ? (
+                <div className="text-zinc-400 py-3">Cargando...</div>
+              ) : auth.status === 'authenticated' ? (
+                <>
+                  <button onClick={handleGoToApp} className="ce-btn ce-btn-primary px-6 py-3">
+                    Ir a la plataforma
+                  </button>
+                  <span className="flex items-center text-sm text-zinc-400">
+                    Conectado como <span className="ml-1 font-semibold text-fuchsia-300">{auth.username}</span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="ce-btn ce-btn-primary px-6 py-3">
+                    Iniciar sesión
+                  </Link>
+                  <Link href="/registro" className="ce-btn ce-btn-ghost px-6 py-3">
+                    Crear cuenta de alumno
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -125,14 +176,26 @@ export default function LandingPage() {
         </div>
 
         {/* CTA */}
-        <div className="mt-16 mb-8 text-center">
-          <p className="text-zinc-400">¿Listo para empezar?</p>
-          <div className="mt-4 flex justify-center gap-4">
-            <Link href="/registro" className="ce-btn ce-btn-primary px-8 py-3">
-              Crear cuenta gratis
-            </Link>
+        {auth.status === 'guest' && (
+          <div className="mt-16 mb-8 text-center">
+            <p className="text-zinc-400">¿Listo para empezar?</p>
+            <div className="mt-4 flex justify-center gap-4">
+              <Link href="/registro" className="ce-btn ce-btn-primary px-8 py-3">
+                Crear cuenta gratis
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
+        {auth.status === 'authenticated' && (
+          <div className="mt-16 mb-8 text-center">
+            <p className="text-zinc-400">Ya tienes una cuenta activa</p>
+            <div className="mt-4 flex justify-center gap-4">
+              <button onClick={handleGoToApp} className="ce-btn ce-btn-primary px-8 py-3">
+                Continuar a la plataforma
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
