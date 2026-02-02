@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import ProgressCard from '../_components/progress/ProgressCard';
+import RankingCard from '../_components/progress/RankingCard';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -16,17 +18,45 @@ type Workshop = {
   visibility: 'internal' | 'code';
 };
 
-type InboxAttempt = {
-  _id: string;
-  testId: string;
-  testTitle?: string;
-  studentUserId: string;
+type ProgressData = {
+  userId: string;
+  username: string;
+  totalXp: number;
+  level: number;
+  xpProgress: number;
+  xpNeeded: number;
+  xpPercentage: number;
+  workshopsCompletedCount: number;
+  testsCompletedCount: number;
+  availableWorkshops: number;
+  completionPercentage: number;
+  currentStreak: number;
+  longestStreak: number;
+  rankingPosition: number;
+  totalStudents: number;
+  medals: Array<{ type: string; earnedAt: string }>;
+  avatar: { base: string; color: string; accessories: string[]; frame: string };
+};
+
+type RankingEntry = {
+  position: number;
+  userId: string;
+  username: string;
+  totalXp: number;
+  level: number;
+  workshopsCompleted: number;
+  testsCompleted: number;
+  medalCount: number;
+  avatar?: { base: string; color: string; accessories: string[]; frame: string };
+  isMe: boolean;
 };
 
 export default function HomePage() {
   const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
@@ -48,12 +78,28 @@ export default function HomePage() {
         }
       }
 
-      const wsRes = await fetch('/api/workshops', { cache: 'no-store' });
-      const wsData = (await wsRes.json().catch(() => undefined)) as any;
+      // Fetch workshops, progress, and ranking in parallel
+      const [wsRes, progressRes, rankingRes] = await Promise.all([
+        fetch('/api/workshops', { cache: 'no-store' }),
+        fetch('/api/progress/me', { cache: 'no-store' }),
+        fetch('/api/progress/ranking?limit=10', { cache: 'no-store' }),
+      ]);
+
       if (!alive) return;
-      // Students only see approved workshops
+
+      const wsData = (await wsRes.json().catch(() => [])) as any;
       const allWs = Array.isArray(wsData) ? (wsData as Workshop[]) : [];
       setWorkshops(allWs.filter((w) => w.status === 'approved'));
+
+      const progressData = (await progressRes.json().catch(() => null)) as any;
+      if (progressData && progressData.userId) {
+        setProgress(progressData);
+      }
+
+      const rankingData = (await rankingRes.json().catch(() => [])) as any;
+      if (Array.isArray(rankingData)) {
+        setRanking(rankingData);
+      }
 
       setLoading(false);
     })();
@@ -93,42 +139,36 @@ export default function HomePage() {
         <div className="mt-8 ce-card p-6 text-sm text-zinc-300">Cargando…</div>
       ) : (
         <>
-          {/* Quick stats for students */}
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="ce-card ce-card-hover p-5">
-              <div className="text-sm font-semibold text-zinc-200">Talleres disponibles</div>
-              <div className="mt-2 text-2xl font-semibold text-fuchsia-300">{workshops.length}</div>
-              <div className="mt-2 text-sm text-zinc-400">Talleres listos para explorar.</div>
+          {/* Progress and Ranking section */}
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <ProgressCard progress={progress} compact />
             </div>
-
-            <div className="ce-card ce-card-hover p-5">
-              <div className="text-sm font-semibold text-zinc-200">Tu progreso</div>
-              <div className="mt-2 text-sm text-zinc-400">Próximamente verás aquí tu avance en tests.</div>
-              <div className="mt-3">
-                <div className="h-2 w-full rounded-full bg-zinc-800">
-                  <div className="h-2 w-0 rounded-full bg-gradient-to-r from-fuchsia-500 to-cyan-400"></div>
-                </div>
-              </div>
+            <div>
+              <RankingCard ranking={ranking} maxEntries={5} />
             </div>
+          </div>
 
-            <div className="ce-card ce-card-hover p-5 sm:col-span-2 lg:col-span-1">
-              <div className="text-sm font-semibold text-zinc-200">¿Cómo empezar?</div>
+          {/* Quick guide for new users */}
+          {progress && progress.testsCompletedCount === 0 && (
+            <div className="mt-6 ce-card ce-card-hover p-5 border-l-4 border-fuchsia-500">
+              <div className="text-sm font-semibold text-zinc-200">🚀 ¿Primera vez aquí?</div>
               <ol className="mt-3 space-y-2 text-sm text-zinc-400">
                 <li className="flex items-start gap-2">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-fuchsia-500/20 text-xs font-bold text-fuchsia-300">1</span>
-                  <span>Elige un taller de la lista</span>
+                  <span>Elige un taller de la lista de abajo</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-fuchsia-500/20 text-xs font-bold text-fuchsia-300">2</span>
-                  <span>Abre un test y responde</span>
+                  <span>Abre un test y responde las preguntas</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-fuchsia-500/20 text-xs font-bold text-fuchsia-300">3</span>
-                  <span>Revisa tu puntaje</span>
+                  <span>¡Gana XP, sube de nivel y desbloquea medallas!</span>
                 </li>
               </ol>
             </div>
-          </div>
+          )}
 
           {/* Workshops list */}
           <div className="mt-10">

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
+import { ProgressService } from '../progress/progress.service';
 import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
 import { WorkshopStatus, WorkshopVisibility } from '../workshops/workshop.enums';
 import { AuthUser } from '../workshops/workshops.service';
@@ -24,6 +27,8 @@ export class TestsService {
     private readonly attemptModel: Model<TestAttemptDocument>,
     @InjectModel(Workshop.name)
     private readonly workshopModel: Model<WorkshopDocument>,
+    @Inject(forwardRef(() => ProgressService))
+    private readonly progressService: ProgressService,
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
@@ -377,7 +382,17 @@ export class TestsService {
       submittedAt: new Date(),
     });
 
-    return attempt.save();
+    const savedAttempt = await attempt.save();
+
+    // Calculate max possible score for this test
+    const maxScore = test.questions.reduce((sum, q) => sum + q.points, 0);
+
+    // Update student progress (async, don't wait)
+    this.progressService
+      .recordTestCompletion(user, testId, test.workshopId, autoScore, maxScore)
+      .catch((err) => console.error('Failed to record progress:', err));
+
+    return savedAttempt;
   }
 
   async gradeAttempt(user: AuthUser, attemptId: string, grades: { questionIndex: number; awardedPoints: number }[]) {
