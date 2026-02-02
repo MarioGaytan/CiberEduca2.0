@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User } from 'lucide-react';
+import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User, KeyRound, Mail, UserCircle } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
@@ -78,7 +78,20 @@ export default function PerfilPage() {
   const [medals, setMedals] = useState<Medal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'avatar' | 'medals'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'avatar' | 'medals' | 'settings'>('stats');
+
+  // Profile edit states
+  const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
   const isStudent = role === 'student';
@@ -111,6 +124,92 @@ export default function PerfilPage() {
 
     return () => { alive = false; };
   }, []);
+
+  // Initialize edit fields when user data loads
+  useEffect(() => {
+    if (me && me.authenticated) {
+      setEditUsername(me.user.username);
+    }
+  }, [me]);
+
+  async function onUpdateProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setProfileMessage(null);
+    setProfileSaving(true);
+
+    try {
+      const res = await fetch('/api/users/me/profile', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          username: editUsername.trim() || undefined,
+          email: editEmail.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setProfileMessage({ type: 'error', text: data.message || 'Error al actualizar el perfil.' });
+      } else {
+        setProfileMessage({ type: 'success', text: 'Perfil actualizado correctamente.' });
+        // Update local state
+        if (me && me.authenticated) {
+          setMe({
+            ...me,
+            user: { ...me.user, username: data.username || me.user.username },
+          });
+        }
+      }
+    } catch {
+      setProfileMessage({ type: 'error', text: 'Error de conexión.' });
+    }
+
+    setProfileSaving(false);
+  }
+
+  async function onChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordMessage(null);
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordMessage({ type: 'error', text: 'Las contraseñas no coinciden.' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordMessage({ type: 'error', text: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+      return;
+    }
+
+    setPasswordSaving(true);
+
+    try {
+      const res = await fetch('/api/users/me/password', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordMessage({ type: 'error', text: data.message || 'Error al cambiar la contraseña.' });
+      } else {
+        setPasswordMessage({ type: 'success', text: 'Contraseña actualizada correctamente.' });
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch {
+      setPasswordMessage({ type: 'error', text: 'Error de conexión.' });
+    }
+
+    setPasswordSaving(false);
+  }
 
   async function onLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -174,8 +273,30 @@ export default function PerfilPage() {
 
       {/* Tabs for students */}
       {isStudent && (
+        <div className="mt-8 flex gap-2 border-b border-white/10 pb-2 overflow-x-auto">
+          {(['stats', 'avatar', 'medals', 'settings'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
+                activeTab === tab
+                  ? 'bg-fuchsia-500/20 text-fuchsia-200 border-b-2 border-fuchsia-500'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {tab === 'stats' && <span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Estadísticas</span>}
+              {tab === 'avatar' && <span className="flex items-center gap-1.5"><Palette className="h-4 w-4" /> Avatar</span>}
+              {tab === 'medals' && <span className="flex items-center gap-1.5"><Award className="h-4 w-4" /> Medallas ({earnedMedals.length})</span>}
+              {tab === 'settings' && <span className="flex items-center gap-1.5"><Settings className="h-4 w-4" /> Ajustes</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs for staff */}
+      {!isStudent && (
         <div className="mt-8 flex gap-2 border-b border-white/10 pb-2">
-          {(['stats', 'avatar', 'medals'] as const).map((tab) => (
+          {(['stats', 'settings'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -185,9 +306,8 @@ export default function PerfilPage() {
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {tab === 'stats' && <span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Estadísticas</span>}
-              {tab === 'avatar' && <span className="flex items-center gap-1.5"><Palette className="h-4 w-4" /> Avatar</span>}
-              {tab === 'medals' && <span className="flex items-center gap-1.5"><Award className="h-4 w-4" /> Medallas ({earnedMedals.length})</span>}
+              {tab === 'stats' && <span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Información</span>}
+              {tab === 'settings' && <span className="flex items-center gap-1.5"><Settings className="h-4 w-4" /> Ajustes</span>}
             </button>
           ))}
         </div>
@@ -376,9 +496,9 @@ export default function PerfilPage() {
         </div>
       )}
 
-      {/* Staff view */}
-      {!isStudent && (
-        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Staff info view */}
+      {!isStudent && activeTab === 'stats' && (
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="ce-card p-5">
             <div className="text-sm font-semibold text-zinc-200">Accesos rápidos</div>
             <div className="mt-3 space-y-2">
@@ -405,7 +525,170 @@ export default function PerfilPage() {
               {role === 'teacher' && 'Puedes crear talleres, tests y calificar a tus alumnos.'}
               {role === 'admin' && 'Acceso completo a la plataforma.'}
               {role === 'reviewer' && 'Puedes revisar y aprobar talleres y tests.'}
+              {role === 'experience_manager' && 'Puedes gestionar la configuración de gamificación.'}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings tab - available for all users */}
+      {activeTab === 'settings' && (
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Profile Edit Form */}
+          <div className="ce-card p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+              <UserCircle className="h-4 w-4 text-fuchsia-400" />
+              Editar Perfil
+            </div>
+            <form onSubmit={onUpdateProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  Nombre de usuario
+                </label>
+                <input
+                  type="text"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  className="ce-field mt-0"
+                  placeholder="tu_usuario"
+                  minLength={3}
+                  disabled={profileSaving}
+                />
+                <p className="mt-1 text-xs text-zinc-500">Mínimo 3 caracteres, solo letras, números y guiones bajos.</p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  Correo electrónico (opcional)
+                </label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="ce-field mt-0"
+                  placeholder="correo@ejemplo.com"
+                  disabled={profileSaving}
+                />
+              </div>
+
+              {profileMessage && (
+                <div className={`p-3 rounded-xl text-sm ${
+                  profileMessage.type === 'success' 
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-200' 
+                    : 'bg-red-500/10 border border-red-500/20 text-red-200'
+                }`}>
+                  {profileMessage.text}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="ce-btn ce-btn-primary w-full"
+              >
+                {profileSaving ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </form>
+          </div>
+
+          {/* Password Change Form */}
+          <div className="ce-card p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+              <KeyRound className="h-4 w-4 text-cyan-400" />
+              Cambiar Contraseña
+            </div>
+            <form onSubmit={onChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  Contraseña actual
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="ce-field mt-0"
+                  placeholder="••••••••"
+                  required
+                  disabled={passwordSaving}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  Nueva contraseña
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="ce-field mt-0"
+                  placeholder="••••••••"
+                  minLength={8}
+                  required
+                  disabled={passwordSaving}
+                />
+                <p className="mt-1 text-xs text-zinc-500">Mínimo 8 caracteres.</p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  Confirmar nueva contraseña
+                </label>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className={"ce-field mt-0 " + (confirmNewPassword && newPassword !== confirmNewPassword ? 'border-red-500/50' : '')}
+                  placeholder="••••••••"
+                  required
+                  disabled={passwordSaving}
+                />
+                {confirmNewPassword && newPassword !== confirmNewPassword && (
+                  <p className="mt-1 text-xs text-red-400">Las contraseñas no coinciden.</p>
+                )}
+                {confirmNewPassword && newPassword === confirmNewPassword && (
+                  <p className="mt-1 text-xs text-green-400">✓ Las contraseñas coinciden.</p>
+                )}
+              </div>
+
+              {passwordMessage && (
+                <div className={`p-3 rounded-xl text-sm ${
+                  passwordMessage.type === 'success' 
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-200' 
+                    : 'bg-red-500/10 border border-red-500/20 text-red-200'
+                }`}>
+                  {passwordMessage.text}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={passwordSaving}
+                className="ce-btn ce-btn-primary w-full"
+              >
+                {passwordSaving ? 'Cambiando...' : 'Cambiar contraseña'}
+              </button>
+            </form>
+          </div>
+
+          {/* Privacy & Legal Links */}
+          <div className="ce-card p-5 lg:col-span-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
+              <Lock className="h-4 w-4 text-green-400" />
+              Privacidad y Legal
+            </div>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Link href="/terminos" className="text-fuchsia-300 hover:text-fuchsia-200 transition-colors">
+                Términos y Condiciones →
+              </Link>
+              <Link href="/privacidad" className="text-fuchsia-300 hover:text-fuchsia-200 transition-colors">
+                Política de Privacidad →
+              </Link>
+              <Link href="/cookies" className="text-fuchsia-300 hover:text-fuchsia-200 transition-colors">
+                Política de Cookies →
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-zinc-500">
+              Tus datos personales están protegidos de acuerdo con la Ley Federal de Protección de Datos 
+              Personales en Posesión de los Particulares (LFPDPPP).
+            </p>
           </div>
         </div>
       )}

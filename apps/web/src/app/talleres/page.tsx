@@ -31,8 +31,18 @@ export default function TalleresPage() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
 
-  const q = (searchParams?.get('q') ?? '').trim().toLowerCase();
-  const searchTerm = localSearch.trim().toLowerCase() || q;
+  const q = (searchParams?.get('q') ?? '').trim();
+  
+  // Initialize local search with URL query param
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (!initialized && q) {
+      setLocalSearch(q);
+      setInitialized(true);
+    }
+  }, [initialized, q]);
+
+  const searchTerm = localSearch.trim().toLowerCase();
   const filtered = useMemo(() => {
     let list = workshops;
     

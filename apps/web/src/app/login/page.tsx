@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Footer from '../_components/Footer';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,8 +65,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="ce-public-shell ce-public-bg">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
+    <div className="ce-public-shell ce-public-bg min-h-screen flex flex-col">
+      <div className="relative flex-1 mx-auto flex w-full max-w-md flex-col justify-center px-6 py-10">
         <div className="mb-6">
           <div className="ce-chip">Acceso</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">
@@ -122,6 +123,7 @@ export default function LoginPage() {
           Recomendación: usa el correo escolar si tu secundaria lo solicita.
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -1,9 +1,21 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '../common/roles.enum';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -44,5 +56,38 @@ export class UsersController {
       username: t.username,
       role: t.role,
     }));
+  }
+
+  @Patch('me/profile')
+  async updateMyProfile(
+    @Req() req: { user: { userId: string } },
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const updated = await this.usersService.updateProfile(req.user.userId, dto);
+    if (!updated) {
+      throw new BadRequestException('No se pudo actualizar el perfil.');
+    }
+    return {
+      _id: updated._id,
+      username: updated.username,
+      email: updated.email,
+      role: updated.role,
+    };
+  }
+
+  @Patch('me/password')
+  async changeMyPassword(
+    @Req() req: { user: { userId: string } },
+    @Body() dto: ChangePasswordDto,
+  ) {
+    const success = await this.usersService.changePassword(
+      req.user.userId,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+    if (!success) {
+      throw new BadRequestException('La contraseña actual es incorrecta.');
+    }
+    return { ok: true, message: 'Contraseña actualizada correctamente.' };
   }
 }

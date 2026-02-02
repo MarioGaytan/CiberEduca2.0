@@ -126,4 +126,70 @@ export class UsersService {
       .sort({ username: 1 })
       .exec();
   }
+
+  async updateProfile(
+    userId: string,
+    data: { username?: string; email?: string },
+  ): Promise<UserDocument | null> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) return null;
+
+    const updates: Record<string, unknown> = {};
+
+    if (data.username && data.username.trim()) {
+      const newUsername = data.username.trim().toLowerCase();
+      if (newUsername !== user.username) {
+        const existing = await this.userModel
+          .findOne({ username: newUsername, _id: { $ne: userId } })
+          .exec();
+        if (existing) {
+          throw new ConflictException('El nombre de usuario ya está en uso.');
+        }
+        updates.username = newUsername;
+      }
+    }
+
+    if (data.email !== undefined) {
+      const newEmail = data.email?.trim().toLowerCase() || null;
+      if (newEmail !== user.email) {
+        if (newEmail) {
+          const existing = await this.userModel
+            .findOne({ email: newEmail, _id: { $ne: userId } })
+            .exec();
+          if (existing) {
+            throw new ConflictException('El correo electrónico ya está en uso.');
+          }
+        }
+        updates.email = newEmail;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return user;
+    }
+
+    return this.userModel
+      .findByIdAndUpdate(userId, { $set: updates }, { new: true })
+      .select('-passwordHash -refreshTokenHash')
+      .exec();
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) return false;
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) return false;
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await this.userModel
+      .updateOne({ _id: userId }, { $set: { passwordHash: newHash } })
+      .exec();
+
+    return true;
+  }
 }

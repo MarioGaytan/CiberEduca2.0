@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Footer from '../_components/Footer';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -49,6 +51,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!acceptedTerms) {
+      setError('Debes aceptar los términos y condiciones para continuar.');
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch('/api/auth/register', {
@@ -79,8 +86,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="ce-public-shell ce-public-bg">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
+    <div className="ce-public-shell ce-public-bg min-h-screen flex flex-col">
+      <div className="relative flex-1 mx-auto flex w-full max-w-md flex-col justify-center px-6 py-10">
         <div className="mb-6">
           <div className="ce-chip">Registro</div>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">Crear cuenta</h1>
@@ -138,6 +145,40 @@ export default function RegisterPage() {
             <p className="mt-1 text-xs text-green-400">✓ Las contraseñas coinciden.</p>
           )}
 
+          {/* Checkbox de Términos y Condiciones */}
+          <div className="mt-6 p-4 rounded-xl bg-black/20 border border-white/10">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-black/30 text-fuchsia-500 focus:ring-fuchsia-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-sm text-zinc-300">
+                He leído y acepto los{' '}
+                <Link
+                  href="/terminos"
+                  target="_blank"
+                  className="text-fuchsia-300 hover:text-fuchsia-200 underline"
+                >
+                  Términos y Condiciones
+                </Link>
+                {' '}y la{' '}
+                <Link
+                  href="/privacidad"
+                  target="_blank"
+                  className="text-fuchsia-300 hover:text-fuchsia-200 underline"
+                >
+                  Política de Privacidad
+                </Link>
+                .
+              </span>
+            </label>
+            <p className="mt-2 text-xs text-zinc-500 ml-7">
+              Si eres menor de edad, confirmas que tu padre, madre o tutor legal ha autorizado tu registro.
+            </p>
+          </div>
+
           {error ? (
             <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {error}
@@ -160,6 +201,7 @@ export default function RegisterPage() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

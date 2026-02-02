@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BookOpen, FileText, Star, Trophy, Medal, Palette, Pencil, Users, BarChart3, CheckCircle } from 'lucide-react';
+import { BookOpen, FileText, Star, Trophy, Medal, Palette, Pencil, Users, BarChart3, CheckCircle, Shield, Lock } from 'lucide-react';
+import Footer from './_components/Footer';
 
 type AuthState = 
   | { status: 'loading' }
@@ -39,8 +40,8 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="ce-public-shell ce-public-bg">
-      <div className="relative mx-auto w-full max-w-6xl px-6 py-14">
+    <div className="ce-public-shell ce-public-bg min-h-screen flex flex-col">
+      <div className="relative flex-1 mx-auto w-full max-w-6xl px-6 py-14">
         {/* Hero Section */}
         <div className="flex min-h-[60vh] flex-col justify-center">
           <div className="max-w-2xl">
@@ -182,6 +183,47 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Security & Privacy Section */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-semibold text-zinc-100">Seguridad y Privacidad</h2>
+          <div className="mt-6 ce-card p-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <Shield className="h-6 w-6 text-green-400" />
+                <h3 className="mt-2 font-semibold text-zinc-200">Datos Protegidos</h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Tus datos están encriptados y protegidos. Cumplimos con la LFPDPPP (Ley Federal de Protección de Datos).
+                </p>
+              </div>
+              <div>
+                <Lock className="h-6 w-6 text-cyan-400" />
+                <h3 className="mt-2 font-semibold text-zinc-200">Plataforma Cerrada</h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Solo usuarios autorizados de tu escuela pueden acceder. Sin publicidad ni terceros.
+                </p>
+              </div>
+              <div>
+                <CheckCircle className="h-6 w-6 text-fuchsia-400" />
+                <h3 className="mt-2 font-semibold text-zinc-200">Cookies Mínimas</h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Solo usamos cookies técnicas necesarias para tu sesión. Sin rastreo ni marketing.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-xs text-zinc-400">
+              <Link href="/terminos" className="hover:text-zinc-200 transition-colors">
+                Términos y Condiciones →
+              </Link>
+              <Link href="/privacidad" className="hover:text-zinc-200 transition-colors">
+                Política de Privacidad →
+              </Link>
+              <Link href="/cookies" className="hover:text-zinc-200 transition-colors">
+                Política de Cookies →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* CTA */}
         {auth.status === 'guest' && (
           <div className="mt-16 mb-8 text-center">
@@ -204,6 +246,7 @@ export default function LandingPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import Footer from './Footer';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -41,7 +42,7 @@ function navIcon(href: string) {
   return LayoutDashboard;
 }
 
-const PUBLIC_ROUTES = new Set(['/', '/login', '/registro']);
+const PUBLIC_ROUTES = new Set(['/', '/login', '/registro', '/terminos', '/privacidad', '/cookies']);
 
 // Breadcrumb configuration
 const BREADCRUMB_LABELS: Record<string, string> = {
@@ -516,12 +517,12 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         <main
           ref={mainRef}
           className={
-            'flex-1 min-h-screen overflow-y-auto overscroll-contain transition-[margin] duration-200 ' +
+            'flex-1 min-h-screen overflow-y-auto overscroll-contain transition-[margin] duration-200 flex flex-col ' +
             (mobileSearchOpen ? 'pt-28 lg:pt-16 ' : 'pt-16 ') +
             (sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72')
           }
         >
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 flex-1">
             {/* Breadcrumbs */}
             {(() => {
               const crumbs = getBreadcrumbs(pathname || '', role);
@@ -548,6 +549,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             })()}
             {children}
           </div>
+          <Footer />
         </main>
       </div>
     </div>

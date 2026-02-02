@@ -49,7 +49,30 @@ export default function AdminUsuariosPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
+
+  // Filter users based on search and role filter
+  const filteredUsers = useMemo(() => {
+    let list = users;
+    
+    if (roleFilter !== 'all') {
+      list = list.filter(u => u.role === roleFilter);
+    }
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      list = list.filter(u => 
+        u.username.toLowerCase().includes(query) ||
+        (u.email && u.email.toLowerCase().includes(query))
+      );
+    }
+    
+    return list;
+  }, [users, searchQuery, roleFilter]);
 
   async function loadAll() {
     setError(null);
@@ -239,10 +262,12 @@ export default function AdminUsuariosPage() {
           </div>
 
           <div className="lg:col-span-2 ce-card p-5">
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="text-sm font-semibold text-zinc-200">Listado</div>
-                <div className="mt-1 text-sm text-zinc-400">Total: {users.length}</div>
+                <div className="mt-1 text-sm text-zinc-400">
+                  Mostrando {filteredUsers.length} de {users.length} usuarios
+                </div>
               </div>
               <button
                 type="button"
@@ -253,8 +278,35 @@ export default function AdminUsuariosPage() {
               </button>
             </div>
 
-            {users.length === 0 ? (
-              <div className="mt-4 text-sm text-zinc-400">No hay usuarios.</div>
+            {/* Search and filter controls */}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por nombre o email..."
+                  className="ce-field mt-0 w-full"
+                />
+              </div>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="ce-field mt-0 w-auto min-w-[160px]"
+              >
+                <option value="all">Todos los roles</option>
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABELS[r] || r}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {filteredUsers.length === 0 ? (
+              <div className="mt-4 text-sm text-zinc-400">
+                {users.length === 0 ? 'No hay usuarios.' : 'No se encontraron usuarios con esos filtros.'}
+              </div>
             ) : (
               <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
                 <div className="grid grid-cols-12 gap-2 border-b border-white/10 bg-black/20 px-4 py-3 text-xs font-semibold text-zinc-300">
@@ -263,11 +315,21 @@ export default function AdminUsuariosPage() {
                   <div className="col-span-2">Rol</div>
                   <div className="col-span-2">School</div>
                 </div>
-                {users.map((u) => (
-                  <div key={u._id} className="grid grid-cols-12 gap-2 px-4 py-3 text-sm text-zinc-200">
+                {filteredUsers.map((u) => (
+                  <div key={u._id} className="grid grid-cols-12 gap-2 px-4 py-3 text-sm text-zinc-200 hover:bg-white/5 transition-colors">
                     <div className="col-span-4 font-semibold text-zinc-100">{u.username}</div>
                     <div className="col-span-4 text-zinc-300">{u.email || '—'}</div>
-                    <div className="col-span-2">{ROLE_LABELS[u.role] || u.role}</div>
+                    <div className="col-span-2">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                        u.role === 'admin' ? 'bg-red-500/20 text-red-300' :
+                        u.role === 'teacher' ? 'bg-blue-500/20 text-blue-300' :
+                        u.role === 'reviewer' ? 'bg-amber-500/20 text-amber-300' :
+                        u.role === 'experience_manager' ? 'bg-purple-500/20 text-purple-300' :
+                        'bg-zinc-500/20 text-zinc-300'
+                      }`}>
+                        {ROLE_LABELS[u.role] || u.role}
+                      </span>
+                    </div>
                     <div className="col-span-2 text-zinc-400">{u.schoolId || '—'}</div>
                   </div>
                 ))}
