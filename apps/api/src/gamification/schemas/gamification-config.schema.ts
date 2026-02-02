@@ -72,6 +72,15 @@ export class MedalDefinition {
   @Prop({ required: false })
   bgColor?: string; // Hex color for background (e.g., '#fbbf2420')
 
+  @Prop({ required: false })
+  borderColor?: string; // Hex color for border (e.g., '#fbbf24')
+
+  @Prop({ required: false, default: 'circle' })
+  shape?: string; // 'circle' | 'shield' | 'star' | 'hexagon' | 'diamond' | 'badge'
+
+  @Prop({ required: false, default: false })
+  glow?: boolean; // Enable glow effect
+
   @Prop({ required: true, default: 0 })
   xpReward!: number; // XP granted when earned
 

@@ -5,7 +5,7 @@ import { LucideProps } from 'lucide-react';
 
 // Map of icon names to Lucide components
 // This allows dynamic icon rendering by name string
-const iconMap: Record<string, React.ComponentType<LucideProps>> = {
+export const ICON_MAP: Record<string, React.ComponentType<LucideProps>> = {
   // Awards & Achievements
   trophy: LucideIcons.Trophy,
   medal: LucideIcons.Medal,
@@ -160,23 +160,26 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   bicep: LucideIcons.Dumbbell,
 };
 
+// Type for icon names
+export type IconName = keyof typeof ICON_MAP | string;
+
 export interface IconProps extends Omit<LucideProps, 'ref'> {
   name: string;
   fallback?: string;
 }
 
 export default function Icon({ name, fallback = 'circle', className, ...props }: IconProps) {
-  const IconComponent = iconMap[name.toLowerCase()] || iconMap[fallback.toLowerCase()] || LucideIcons.Circle;
+  const IconComponent = ICON_MAP[name.toLowerCase()] || ICON_MAP[fallback.toLowerCase()] || LucideIcons.Circle;
   
   return <IconComponent className={className} {...props} />;
 }
 
 // Export icon names for autocomplete and validation
-export const ICON_NAMES = Object.keys(iconMap);
+export const ICON_NAMES = Object.keys(ICON_MAP);
 
 // Utility to check if icon exists
 export function iconExists(name: string): boolean {
-  return name.toLowerCase() in iconMap;
+  return name.toLowerCase() in ICON_MAP;
 }
 
 // Get all icons grouped by category

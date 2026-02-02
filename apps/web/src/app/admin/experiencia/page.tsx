@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Star, BarChart3, Medal, Palette } from 'lucide-react';
+import { Star, BarChart3, Medal, Palette, Plus, Edit2, Trash2, X, GripVertical, Download, Upload } from 'lucide-react';
+import MedalBadge from '../../_components/progress/MedalBadge';
+import MedalDesigner, { MedalDesign, MedalPreview } from '../../_components/medals/MedalDesigner';
 
 type XpRules = {
   testBaseXp: number;
@@ -20,6 +22,8 @@ type LevelConfig = {
   maxLevel: number;
 };
 
+type MedalShape = 'circle' | 'shield' | 'star' | 'hexagon' | 'diamond' | 'badge';
+
 type MedalDefinition = {
   id: string;
   name: string;
@@ -28,6 +32,9 @@ type MedalDefinition = {
   iconType?: 'emoji' | 'lucide' | 'svg';
   iconColor?: string;
   bgColor?: string;
+  borderColor?: string;
+  shape?: MedalShape;
+  glow?: boolean;
   xpReward: number;
   conditionType: string;
   conditionValue: number;
@@ -91,7 +98,7 @@ export default function ExperienceManagerPage() {
   // Medal editing
   const [editingMedal, setEditingMedal] = useState<MedalDefinition | null>(null);
   const [showMedalForm, setShowMedalForm] = useState(false);
-  
+  const [draggedMedalId, setDraggedMedalId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConfig();
@@ -268,6 +275,81 @@ export default function ExperienceManagerPage() {
       setError(e.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  function exportMedals() {
+    if (!config) return;
+    const data = JSON.stringify(config.medals, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `medallas-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setSuccess('Medallas exportadas correctamente');
+  }
+
+  function importMedals(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !config) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const medals = JSON.parse(e.target?.result as string) as MedalDefinition[];
+        if (!Array.isArray(medals)) throw new Error('Formato inválido');
+        
+        // Validate and import each medal
+        for (const medal of medals) {
+          if (!medal.name || !medal.description) continue;
+          medal.id = `medal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          medal.sortOrder = config.medals.length;
+          await saveMedal(medal);
+        }
+        
+        await fetchConfig();
+        setSuccess(`${medals.length} medallas importadas`);
+      } catch (err) {
+        setError('Error al importar: formato inválido');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+  }
+
+  async function reorderMedals(draggedId: string, targetId: string) {
+    if (!config || draggedId === targetId) return;
+    
+    const medals = [...config.medals];
+    const draggedIndex = medals.findIndex(m => m.id === draggedId);
+    const targetIndex = medals.findIndex(m => m.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    // Remove dragged item and insert at target position
+    const [draggedMedal] = medals.splice(draggedIndex, 1);
+    medals.splice(targetIndex, 0, draggedMedal);
+    
+    // Update sort orders
+    medals.forEach((m, i) => { m.sortOrder = i; });
+    
+    // Optimistic update
+    setConfig({ ...config, medals });
+    
+    // Save to backend
+    try {
+      const res = await fetch('/api/gamification/medals/reorder', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ medalIds: medals.map(m => m.id) }),
+      });
+      if (!res.ok) throw new Error('Error al reordenar');
+    } catch (e: any) {
+      // Revert on error
+      await fetchConfig();
+      setError(e.message);
     }
   }
 
@@ -547,171 +629,195 @@ export default function ExperienceManagerPage() {
       {/* Medals Tab */}
       {activeTab === 'medals' && (
         <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
             <h2 className="text-lg font-semibold text-zinc-100">Medallas</h2>
-            <button
-              onClick={() => {
-                setEditingMedal({
-                  id: `medal_${Date.now()}`,
-                  name: '',
-                  description: '',
-                  icon: '🏅',
-                  iconType: 'emoji',
-                  iconColor: '',
-                  bgColor: '',
-                  xpReward: 50,
-                  conditionType: 'tests_completed',
-                  conditionValue: 1,
-                  isActive: true,
-                  sortOrder: config.medals.length,
-                });
-                setShowMedalForm(true);
-              }}
-              className="ce-btn ce-btn-primary"
-            >
-              + Nueva medalla
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={exportMedals}
+                disabled={!config.medals.length}
+                className="ce-btn ce-btn-ghost flex items-center gap-1.5 text-sm"
+              >
+                <Download className="h-4 w-4" /> Exportar
+              </button>
+              <label className="ce-btn ce-btn-ghost flex items-center gap-1.5 text-sm cursor-pointer">
+                <Upload className="h-4 w-4" /> Importar
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importMedals}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={() => {
+                  setEditingMedal({
+                    id: `medal_${Date.now()}`,
+                    name: '',
+                    description: '',
+                    icon: 'Trophy',
+                    iconType: 'lucide',
+                    iconColor: '#fbbf24',
+                    bgColor: '#fbbf2420',
+                    borderColor: '#fbbf24',
+                    shape: 'circle',
+                    glow: false,
+                    xpReward: 50,
+                    conditionType: 'tests_completed',
+                    conditionValue: 1,
+                    isActive: true,
+                    sortOrder: config.medals.length,
+                  });
+                  setShowMedalForm(true);
+                }}
+                className="ce-btn ce-btn-primary flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" /> Nueva medalla
+              </button>
+            </div>
           </div>
 
           {showMedalForm && editingMedal && (
             <div className="ce-card p-6 mb-4 border border-fuchsia-500/30">
-              <h3 className="text-md font-semibold text-fuchsia-300 mb-4">
-                {editingMedal.name ? `Editar: ${editingMedal.name}` : 'Nueva medalla'}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-zinc-400">Tipo de icono</label>
-                  <select
-                    value={editingMedal.iconType || 'emoji'}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, iconType: e.target.value as 'emoji' | 'lucide' | 'svg' })}
-                    className="ce-field mt-1"
-                  >
-                    <option value="emoji">Emoji</option>
-                    <option value="lucide">Icono Lucide</option>
-                    <option value="svg">SVG personalizado</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">
-                    {editingMedal.iconType === 'lucide' ? 'Nombre del icono (ej: Trophy, Star, Award)' : 
-                     editingMedal.iconType === 'svg' ? 'Código SVG' : 'Emoji'}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingMedal.icon}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, icon: e.target.value })}
-                    className="ce-field mt-1"
-                    placeholder={editingMedal.iconType === 'lucide' ? 'Trophy' : editingMedal.iconType === 'svg' ? '<svg>...</svg>' : '🏅'}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <MedalPreview
+                    design={{
+                      shape: editingMedal.shape || 'circle',
+                      icon: editingMedal.icon,
+                      iconColor: editingMedal.iconColor || '#fbbf24',
+                      bgColor: editingMedal.bgColor || '#fbbf2420',
+                      borderColor: editingMedal.borderColor || '#fbbf24',
+                      borderWidth: 2,
+                      size: 'lg',
+                      glow: editingMedal.glow || false,
+                    }}
                   />
-                  {editingMedal.iconType === 'lucide' && (
-                    <p className="text-xs text-zinc-500 mt-1">
-                      <a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 hover:underline">
-                        Ver iconos disponibles →
-                      </a>
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Color del icono (opcional)</label>
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="color"
-                      value={editingMedal.iconColor || '#d946ef'}
-                      onChange={(e) => setEditingMedal({ ...editingMedal, iconColor: e.target.value })}
-                      className="h-10 w-12 rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={editingMedal.iconColor || ''}
-                      onChange={(e) => setEditingMedal({ ...editingMedal, iconColor: e.target.value })}
-                      className="ce-field flex-1"
-                      placeholder="#d946ef"
-                    />
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-100">
+                      {editingMedal.name || 'Nueva medalla'}
+                    </h3>
+                    <p className="text-sm text-zinc-400">{editingMedal.description || 'Sin descripción'}</p>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Color de fondo (opcional)</label>
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="color"
-                      value={editingMedal.bgColor || '#d946ef'}
-                      onChange={(e) => setEditingMedal({ ...editingMedal, bgColor: e.target.value + '30' })}
-                      className="h-10 w-12 rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={editingMedal.bgColor || ''}
-                      onChange={(e) => setEditingMedal({ ...editingMedal, bgColor: e.target.value })}
-                      className="ce-field flex-1"
-                      placeholder="#d946ef30"
-                    />
+                <button
+                  onClick={() => { setShowMedalForm(false); setEditingMedal(null); }}
+                  className="p-2 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-zinc-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left column: Basic info */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-zinc-300 border-b border-white/10 pb-2">Información</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-xs text-zinc-400 mb-1">Nombre *</label>
+                      <input
+                        type="text"
+                        value={editingMedal.name}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, name: e.target.value })}
+                        className="ce-field w-full"
+                        placeholder="Ej: Primer Paso"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs text-zinc-400 mb-1">Descripción *</label>
+                      <input
+                        type="text"
+                        value={editingMedal.description}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, description: e.target.value })}
+                        className="ce-field w-full"
+                        placeholder="Ej: Completa tu primer test"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">XP Recompensa</label>
+                      <input
+                        type="number"
+                        value={editingMedal.xpReward}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, xpReward: parseInt(e.target.value) || 0 })}
+                        className="ce-field w-full"
+                        min={0}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">Estado</label>
+                      <select
+                        value={editingMedal.isActive ? 'true' : 'false'}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, isActive: e.target.value === 'true' })}
+                        className="ce-field w-full"
+                      >
+                        <option value="true">Activa</option>
+                        <option value="false">Inactiva</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <h4 className="text-sm font-semibold text-zinc-300 border-b border-white/10 pb-2 pt-2">Condición</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">Tipo</label>
+                      <select
+                        value={editingMedal.conditionType}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, conditionType: e.target.value })}
+                        className="ce-field w-full"
+                      >
+                        {CONDITION_TYPES.map((ct) => (
+                          <option key={ct.value} value={ct.value}>{ct.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">Valor</label>
+                      <input
+                        type="number"
+                        value={editingMedal.conditionValue}
+                        onChange={(e) => setEditingMedal({ ...editingMedal, conditionValue: parseInt(e.target.value) || 1 })}
+                        className="ce-field w-full"
+                        min={1}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Nombre</label>
-                  <input
-                    type="text"
-                    value={editingMedal.name}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, name: e.target.value })}
-                    className="ce-field mt-1"
+
+                {/* Right column: Design */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-zinc-300 border-b border-white/10 pb-2">Diseño Visual</h4>
+                  <MedalDesigner
+                    initialDesign={{
+                      shape: editingMedal.shape || 'circle',
+                      icon: editingMedal.icon,
+                      iconColor: editingMedal.iconColor || '#fbbf24',
+                      bgColor: editingMedal.bgColor || '#fbbf2420',
+                      borderColor: editingMedal.borderColor || '#fbbf24',
+                      borderWidth: 2,
+                      size: 'lg',
+                      glow: editingMedal.glow || false,
+                    }}
+                    onChange={(design) => {
+                      setEditingMedal({
+                        ...editingMedal,
+                        icon: design.icon,
+                        iconType: 'lucide',
+                        iconColor: design.iconColor,
+                        bgColor: design.bgColor,
+                        borderColor: design.borderColor,
+                        shape: design.shape,
+                        glow: design.glow,
+                      });
+                    }}
+                    showPreviewSizes={false}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Descripción</label>
-                  <input
-                    type="text"
-                    value={editingMedal.description}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, description: e.target.value })}
-                    className="ce-field mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">XP de recompensa</label>
-                  <input
-                    type="number"
-                    value={editingMedal.xpReward}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, xpReward: parseInt(e.target.value) || 0 })}
-                    className="ce-field mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Condición</label>
-                  <select
-                    value={editingMedal.conditionType}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, conditionType: e.target.value })}
-                    className="ce-field mt-1"
-                  >
-                    {CONDITION_TYPES.map((ct) => (
-                      <option key={ct.value} value={ct.value}>{ct.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Valor requerido</label>
-                  <input
-                    type="number"
-                    value={editingMedal.conditionValue}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, conditionValue: parseInt(e.target.value) || 1 })}
-                    className="ce-field mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Activa</label>
-                  <select
-                    value={editingMedal.isActive ? 'true' : 'false'}
-                    onChange={(e) => setEditingMedal({ ...editingMedal, isActive: e.target.value === 'true' })}
-                    className="ce-field mt-1"
-                  >
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                  </select>
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
+
+              <div className="mt-6 flex gap-3 border-t border-white/10 pt-4">
                 <button
                   onClick={() => saveMedal(editingMedal)}
-                  disabled={saving || !editingMedal.name}
-                  className="ce-btn ce-btn-primary"
+                  disabled={saving || !editingMedal.name || !editingMedal.description}
+                  className="ce-btn ce-btn-primary flex-1"
                 >
                   {saving ? 'Guardando...' : 'Guardar medalla'}
                 </button>
@@ -726,38 +832,71 @@ export default function ExperienceManagerPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {config.medals.map((medal) => (
+            {config.medals
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((medal) => (
               <div
                 key={medal.id}
-                className={`ce-card p-4 ${!medal.isActive ? 'opacity-50' : ''}`}
+                draggable
+                onDragStart={() => setDraggedMedalId(medal.id)}
+                onDragEnd={() => setDraggedMedalId(null)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => {
+                  if (draggedMedalId && draggedMedalId !== medal.id) {
+                    reorderMedals(draggedMedalId, medal.id);
+                  }
+                }}
+                className={`ce-card p-4 transition-all cursor-grab active:cursor-grabbing ${
+                  !medal.isActive ? 'opacity-50' : ''
+                } ${draggedMedalId === medal.id ? 'opacity-50 scale-95' : ''} ${
+                  draggedMedalId && draggedMedalId !== medal.id ? 'ring-2 ring-fuchsia-500/30' : ''
+                }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{medal.icon}</span>
-                    <div>
-                      <div className="font-semibold text-zinc-100">{medal.name}</div>
-                      <div className="text-xs text-zinc-400">{medal.description}</div>
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="h-4 w-4 text-zinc-600 hover:text-zinc-400" />
+                    <MedalBadge
+                      medal={{
+                        type: medal.id,
+                        name: medal.name,
+                        description: medal.description,
+                        icon: medal.icon,
+                        iconType: medal.iconType || 'emoji',
+                        iconColor: medal.iconColor,
+                        bgColor: medal.bgColor,
+                        borderColor: medal.borderColor,
+                        shape: medal.shape,
+                        glow: medal.glow,
+                        xp: medal.xpReward,
+                        earned: true,
+                      }}
+                      size="md"
+                      showTooltip={false}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-zinc-100">{medal.name}</div>
+                    <div className="text-xs text-zinc-400 truncate">{medal.description}</div>
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      <span className="text-fuchsia-300">+{medal.xpReward} XP</span>
+                      <span className="text-zinc-500">
+                        {CONDITION_TYPES.find((ct) => ct.value === medal.conditionType)?.label}: {medal.conditionValue}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs">
-                  <span className="text-fuchsia-300">+{medal.xpReward} XP</span>
-                  <span className="text-zinc-500">
-                    {CONDITION_TYPES.find((ct) => ct.value === medal.conditionType)?.label}: {medal.conditionValue}
-                  </span>
-                </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex gap-2 border-t border-white/5 pt-3">
                   <button
                     onClick={() => { setEditingMedal(medal); setShowMedalForm(true); }}
-                    className="text-xs text-fuchsia-300 hover:text-fuchsia-200"
+                    className="flex items-center gap-1 text-xs text-fuchsia-300 hover:text-fuchsia-200"
                   >
-                    Editar
+                    <Edit2 className="h-3 w-3" /> Editar
                   </button>
                   <button
                     onClick={() => deleteMedal(medal.id)}
-                    className="text-xs text-red-400 hover:text-red-300"
+                    className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300"
                   >
-                    Eliminar
+                    <Trash2 className="h-3 w-3" /> Eliminar
                   </button>
                 </div>
               </div>

@@ -20,6 +20,8 @@ import {
   XpRules,
   LevelConfig,
 } from './schemas/gamification-config.schema';
+import { UpsertMedalDto } from './dto/upsert-medal.dto';
+import { ReorderMedalsDto } from './dto/reorder-medals.dto';
 
 @Controller('gamification')
 @UseGuards(JwtAccessGuard, RolesGuard)
@@ -114,10 +116,24 @@ export class GamificationController {
   @Post('medals')
   async upsertMedal(
     @Req() req: { user: any },
-    @Body() medal: MedalDefinition,
+    @Body() medal: UpsertMedalDto,
   ) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.upsertMedal(schoolId, medal, req.user.userId);
+    return this.gamificationService.upsertMedal(schoolId, medal as MedalDefinition, req.user.userId);
+  }
+
+  /**
+   * Reorder medals
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Put('medals/reorder')
+  async reorderMedals(
+    @Req() req: { user: any },
+    @Body() dto: ReorderMedalsDto,
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    await this.gamificationService.reorderMedals(schoolId, dto.medalIds, req.user.userId);
+    return { success: true };
   }
 
   /**

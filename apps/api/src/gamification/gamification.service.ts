@@ -321,6 +321,30 @@ export class GamificationService {
   }
 
   /**
+   * Reorder medals
+   */
+  async reorderMedals(schoolId: string, medalIds: string[], userId: string) {
+    const config = await this.getConfig(schoolId);
+    
+    // Create a map of id -> new sortOrder
+    const orderMap = new Map(medalIds.map((id, idx) => [id, idx]));
+    
+    // Update sort orders
+    config.medals.forEach(medal => {
+      const newOrder = orderMap.get(medal.id);
+      if (newOrder !== undefined) {
+        medal.sortOrder = newOrder;
+      }
+    });
+    
+    // Sort medals by new order
+    config.medals.sort((a, b) => a.sortOrder - b.sortOrder);
+    
+    config.lastModifiedByUserId = userId;
+    await config.save();
+  }
+
+  /**
    * Add or update an avatar option
    */
   async upsertAvatarOption(schoolId: string, option: AvatarOptionDefinition, userId: string) {
