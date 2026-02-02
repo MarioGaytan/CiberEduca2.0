@@ -205,46 +205,31 @@ export class ProgressService {
   }
 
   /**
-   * Update avatar configuration
+   * Update avatar configuration (DiceBear format)
    */
   async updateAvatar(user: AuthUser, avatarUpdate: Partial<AvatarConfig>) {
     const progress = await this.getOrCreateProgress(user);
-    const unlockedOptions = this.getUnlockedAvatarOptions(progress.totalXp);
-
-    // Validate that user has unlocked these options
-    if (avatarUpdate.base) {
-      const baseOption = unlockedOptions.bases.find(b => b.id === avatarUpdate.base);
-      if (!baseOption) {
-        throw new Error('Avatar base not unlocked');
-      }
-      progress.avatar.base = avatarUpdate.base;
-    }
-
-    if (avatarUpdate.color) {
-      const colorOption = unlockedOptions.colors.find(c => c.id === avatarUpdate.color);
-      if (!colorOption) {
-        throw new Error('Color not unlocked');
-      }
-      progress.avatar.color = avatarUpdate.color;
-    }
-
-    if (avatarUpdate.frame) {
-      const frameOption = unlockedOptions.frames.find(f => f.id === avatarUpdate.frame);
-      if (!frameOption) {
-        throw new Error('Frame not unlocked');
-      }
-      progress.avatar.frame = avatarUpdate.frame;
-    }
-
-    if (avatarUpdate.accessories) {
-      const unlockedAccessoryIds = unlockedOptions.accessories.map(a => a.id);
-      for (const acc of avatarUpdate.accessories) {
-        if (!unlockedAccessoryIds.includes(acc)) {
-          throw new Error(`Accessory ${acc} not unlocked`);
-        }
-      }
-      progress.avatar.accessories = avatarUpdate.accessories;
-    }
+    
+    // TODO: Add validation against GamificationConfig unlocked options
+    // For now, directly update the avatar config with provided values
+    
+    // DiceBear fields
+    if (avatarUpdate.style !== undefined) progress.avatar.style = avatarUpdate.style;
+    if (avatarUpdate.skinColor !== undefined) progress.avatar.skinColor = avatarUpdate.skinColor;
+    if (avatarUpdate.backgroundColor !== undefined) progress.avatar.backgroundColor = avatarUpdate.backgroundColor;
+    if (avatarUpdate.top !== undefined) progress.avatar.top = avatarUpdate.top;
+    if (avatarUpdate.hairColor !== undefined) progress.avatar.hairColor = avatarUpdate.hairColor;
+    if (avatarUpdate.eyes !== undefined) progress.avatar.eyes = avatarUpdate.eyes;
+    if (avatarUpdate.eyebrows !== undefined) progress.avatar.eyebrows = avatarUpdate.eyebrows;
+    if (avatarUpdate.mouth !== undefined) progress.avatar.mouth = avatarUpdate.mouth;
+    if (avatarUpdate.accessories !== undefined) progress.avatar.accessories = avatarUpdate.accessories;
+    if (avatarUpdate.clothing !== undefined) progress.avatar.clothing = avatarUpdate.clothing;
+    if (avatarUpdate.clothingColor !== undefined) progress.avatar.clothingColor = avatarUpdate.clothingColor;
+    
+    // Legacy fields (backwards compatibility)
+    if (avatarUpdate.base !== undefined) progress.avatar.base = avatarUpdate.base;
+    if (avatarUpdate.color !== undefined) progress.avatar.color = avatarUpdate.color;
+    if (avatarUpdate.frame !== undefined) progress.avatar.frame = avatarUpdate.frame;
 
     await progress.save();
     return progress.avatar;

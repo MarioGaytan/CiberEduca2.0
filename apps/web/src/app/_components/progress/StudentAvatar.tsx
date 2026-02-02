@@ -1,10 +1,16 @@
 'use client';
 
 type AvatarConfig = {
-  base: string;
-  color: string;
-  accessories: string[];
-  frame: string;
+  base?: string;
+  color?: string;
+  accessories?: string[] | string;
+  frame?: string;
+  style?: string;
+  skinColor?: string;
+  backgroundColor?: string;
+  top?: string;
+  eyes?: string;
+  mouth?: string;
 };
 
 type Props = {
@@ -40,15 +46,17 @@ const SIZE_CLASSES: Record<string, { container: string; emoji: string }> = {
 };
 
 export default function StudentAvatar({ avatar, username, size = 'md', showFrame = true }: Props) {
-  const config = avatar || { base: 'default', color: '#6366f1', accessories: [], frame: 'none' };
+  const base = avatar?.base || 'default';
+  const color = avatar?.color || '#6366f1';
+  const frame = avatar?.frame || 'none';
   const sizeClass = SIZE_CLASSES[size];
-  const frameClass = showFrame ? FRAME_STYLES[config.frame] || '' : '';
-  const emoji = AVATAR_EMOJIS[config.base] || '😊';
+  const frameClass = showFrame ? FRAME_STYLES[frame] || '' : '';
+  const emoji = AVATAR_EMOJIS[base] || '😊';
 
   return (
     <div
       className={`${sizeClass.container} ${frameClass} flex items-center justify-center rounded-full transition-all`}
-      style={{ backgroundColor: config.color }}
+      style={{ backgroundColor: color }}
       title={username}
     >
       <span className={sizeClass.emoji}>{emoji}</span>

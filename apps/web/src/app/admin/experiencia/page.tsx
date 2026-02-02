@@ -24,10 +24,24 @@ type MedalDefinition = {
   name: string;
   description: string;
   icon: string;
+  iconType?: 'emoji' | 'lucide' | 'svg';
+  iconColor?: string;
+  bgColor?: string;
   xpReward: number;
   conditionType: string;
   conditionValue: number;
   conditionOperator?: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+type AvatarOptionDefinition = {
+  id: string;
+  category: string;
+  value: string;
+  displayName: string;
+  requiredXp: number;
+  requiredLevel: number;
   isActive: boolean;
   sortOrder: number;
 };
@@ -37,6 +51,7 @@ type GamificationConfig = {
   xpRules: XpRules;
   levelConfig: LevelConfig;
   medals: MedalDefinition[];
+  avatarOptions: AvatarOptionDefinition[];
 };
 
 const CONDITION_TYPES = [
@@ -55,11 +70,15 @@ export default function ExperienceManagerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals'>('xp');
+  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals' | 'avatars'>('xp');
 
   // Medal editing
   const [editingMedal, setEditingMedal] = useState<MedalDefinition | null>(null);
   const [showMedalForm, setShowMedalForm] = useState(false);
+  
+  // Avatar option editing
+  const [editingAvatar, setEditingAvatar] = useState<AvatarOptionDefinition | null>(null);
+  const [showAvatarForm, setShowAvatarForm] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -160,6 +179,42 @@ export default function ExperienceManagerPage() {
     }
   }
 
+  async function saveAvatarOption(option: AvatarOptionDefinition) {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/gamification/avatar-options', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(option),
+      });
+      if (!res.ok) throw new Error('Error al guardar opción de avatar');
+      await fetchConfig();
+      setShowAvatarForm(false);
+      setEditingAvatar(null);
+      setSuccess('Opción de avatar guardada');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteAvatarOption(optionId: string) {
+    if (!confirm('¿Eliminar esta opción de avatar?')) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/gamification/avatar-options/delete/${optionId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar opción');
+      await fetchConfig();
+      setSuccess('Opción eliminada');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function updateXpRule(key: keyof XpRules, value: number) {
     if (!config) return;
     setConfig({
@@ -243,6 +298,14 @@ export default function ExperienceManagerPage() {
           }`}
         >
           🏅 Medallas ({config.medals.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('avatars')}
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+            activeTab === 'avatars' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          🎨 Avatares ({config.avatarOptions?.length || 0})
         </button>
       </div>
 
@@ -437,6 +500,9 @@ export default function ExperienceManagerPage() {
                   name: '',
                   description: '',
                   icon: '🏅',
+                  iconType: 'emoji',
+                  iconColor: '',
+                  bgColor: '',
                   xpReward: 50,
                   conditionType: 'tests_completed',
                   conditionValue: 1,
@@ -458,14 +524,72 @@ export default function ExperienceManagerPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-zinc-400">Icono (emoji)</label>
+                  <label className="block text-sm text-zinc-400">Tipo de icono</label>
+                  <select
+                    value={editingMedal.iconType || 'emoji'}
+                    onChange={(e) => setEditingMedal({ ...editingMedal, iconType: e.target.value as 'emoji' | 'lucide' | 'svg' })}
+                    className="ce-field mt-1"
+                  >
+                    <option value="emoji">Emoji</option>
+                    <option value="lucide">Icono Lucide</option>
+                    <option value="svg">SVG personalizado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">
+                    {editingMedal.iconType === 'lucide' ? 'Nombre del icono (ej: Trophy, Star, Award)' : 
+                     editingMedal.iconType === 'svg' ? 'Código SVG' : 'Emoji'}
+                  </label>
                   <input
                     type="text"
                     value={editingMedal.icon}
                     onChange={(e) => setEditingMedal({ ...editingMedal, icon: e.target.value })}
                     className="ce-field mt-1"
-                    maxLength={4}
+                    placeholder={editingMedal.iconType === 'lucide' ? 'Trophy' : editingMedal.iconType === 'svg' ? '<svg>...</svg>' : '🏅'}
                   />
+                  {editingMedal.iconType === 'lucide' && (
+                    <p className="text-xs text-zinc-500 mt-1">
+                      <a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 hover:underline">
+                        Ver iconos disponibles →
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Color del icono (opcional)</label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={editingMedal.iconColor || '#d946ef'}
+                      onChange={(e) => setEditingMedal({ ...editingMedal, iconColor: e.target.value })}
+                      className="h-10 w-12 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={editingMedal.iconColor || ''}
+                      onChange={(e) => setEditingMedal({ ...editingMedal, iconColor: e.target.value })}
+                      className="ce-field flex-1"
+                      placeholder="#d946ef"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Color de fondo (opcional)</label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={editingMedal.bgColor || '#d946ef'}
+                      onChange={(e) => setEditingMedal({ ...editingMedal, bgColor: e.target.value + '30' })}
+                      className="h-10 w-12 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={editingMedal.bgColor || ''}
+                      onChange={(e) => setEditingMedal({ ...editingMedal, bgColor: e.target.value })}
+                      className="ce-field flex-1"
+                      placeholder="#d946ef30"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-zinc-400">Nombre</label>
@@ -476,7 +600,7 @@ export default function ExperienceManagerPage() {
                     className="ce-field mt-1"
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm text-zinc-400">Descripción</label>
                   <input
                     type="text"
@@ -583,6 +707,193 @@ export default function ExperienceManagerPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Avatar Options Tab */}
+      {activeTab === 'avatars' && (
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-zinc-100">Opciones de Avatar (DiceBear)</h2>
+            <button
+              onClick={() => {
+                setEditingAvatar({
+                  id: `avatar_${Date.now()}`,
+                  category: 'style',
+                  value: '',
+                  displayName: '',
+                  requiredXp: 0,
+                  requiredLevel: 0,
+                  isActive: true,
+                  sortOrder: config.avatarOptions?.length || 0,
+                });
+                setShowAvatarForm(true);
+              }}
+              className="ce-btn ce-btn-primary"
+            >
+              + Nueva opción
+            </button>
+          </div>
+
+          <div className="ce-card p-4 mb-4 bg-zinc-800/50">
+            <p className="text-sm text-zinc-400">
+              Las opciones de avatar usan <a href="https://www.dicebear.com/styles/" target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 hover:underline">DiceBear API</a>. 
+              Cada categoría controla un aspecto del avatar que los estudiantes pueden personalizar según su XP y nivel.
+            </p>
+          </div>
+
+          {showAvatarForm && editingAvatar && (
+            <div className="ce-card p-6 mb-4 border border-fuchsia-500/30">
+              <h3 className="text-md font-semibold text-fuchsia-300 mb-4">
+                {editingAvatar.displayName ? `Editar: ${editingAvatar.displayName}` : 'Nueva opción de avatar'}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-zinc-400">Categoría</label>
+                  <select
+                    value={editingAvatar.category}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, category: e.target.value })}
+                    className="ce-field mt-1"
+                  >
+                    <option value="style">Estilo (style)</option>
+                    <option value="skinColor">Tono de piel (skinColor)</option>
+                    <option value="backgroundColor">Fondo (backgroundColor)</option>
+                    <option value="top">Cabello (top)</option>
+                    <option value="eyes">Ojos (eyes)</option>
+                    <option value="mouth">Boca (mouth)</option>
+                    <option value="accessories">Accesorios (accessories)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Nombre visible</label>
+                  <input
+                    type="text"
+                    value={editingAvatar.displayName}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, displayName: e.target.value })}
+                    className="ce-field mt-1"
+                    placeholder="Ej: Cabello Rizado"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Valor DiceBear</label>
+                  <input
+                    type="text"
+                    value={editingAvatar.value}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, value: e.target.value })}
+                    className="ce-field mt-1"
+                    placeholder="Ej: longHairCurly, f8d9c4, avataaars"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">Consulta la documentación de DiceBear para valores válidos</p>
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">XP requerido</label>
+                  <input
+                    type="number"
+                    value={editingAvatar.requiredXp}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, requiredXp: parseInt(e.target.value) || 0 })}
+                    className="ce-field mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Nivel requerido</label>
+                  <input
+                    type="number"
+                    value={editingAvatar.requiredLevel}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, requiredLevel: parseInt(e.target.value) || 0 })}
+                    className="ce-field mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-400">Activa</label>
+                  <select
+                    value={editingAvatar.isActive ? 'true' : 'false'}
+                    onChange={(e) => setEditingAvatar({ ...editingAvatar, isActive: e.target.value === 'true' })}
+                    className="ce-field mt-1"
+                  >
+                    <option value="true">Sí</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => saveAvatarOption(editingAvatar)}
+                  disabled={saving || !editingAvatar.displayName || !editingAvatar.value}
+                  className="ce-btn ce-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar opción'}
+                </button>
+                <button
+                  onClick={() => { setShowAvatarForm(false); setEditingAvatar(null); }}
+                  className="ce-btn ce-btn-ghost"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Group by category */}
+          {['style', 'skinColor', 'backgroundColor', 'top', 'eyes', 'mouth', 'accessories'].map((category) => {
+            const categoryOptions = config.avatarOptions?.filter(opt => opt.category === category) || [];
+            if (categoryOptions.length === 0) return null;
+            
+            const categoryLabels: Record<string, string> = {
+              style: '🎨 Estilos',
+              skinColor: '👤 Tonos de piel',
+              backgroundColor: '🖼️ Fondos',
+              top: '💇 Cabello',
+              eyes: '👁️ Ojos',
+              mouth: '👄 Boca',
+              accessories: '👓 Accesorios',
+            };
+            
+            return (
+              <div key={category} className="mb-6">
+                <h3 className="text-sm font-semibold text-fuchsia-300 mb-3">
+                  {categoryLabels[category]} ({categoryOptions.length})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {categoryOptions.map((option) => (
+                    <div
+                      key={option.id}
+                      className={`ce-card p-3 text-center ${!option.isActive ? 'opacity-50' : ''}`}
+                    >
+                      {category === 'backgroundColor' || category === 'skinColor' ? (
+                        <div
+                          className="w-full h-12 rounded-lg mb-2"
+                          style={{ backgroundColor: `#${option.value}` }}
+                        />
+                      ) : (
+                        <div className="text-2xl mb-2">
+                          {category === 'style' ? '🎭' : category === 'top' ? '💇' : category === 'eyes' ? '👁️' : category === 'mouth' ? '👄' : '👓'}
+                        </div>
+                      )}
+                      <div className="text-xs font-medium text-zinc-200 truncate">{option.displayName}</div>
+                      <div className="text-xs text-zinc-500 truncate">{option.value}</div>
+                      <div className="text-xs text-fuchsia-400 mt-1">
+                        {option.requiredXp} XP / Nv.{option.requiredLevel}
+                      </div>
+                      <div className="mt-2 flex justify-center gap-2">
+                        <button
+                          onClick={() => { setEditingAvatar(option); setShowAvatarForm(true); }}
+                          className="text-xs text-fuchsia-300 hover:text-fuchsia-200"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteAvatarOption(option.id)}
+                          className="text-xs text-red-400 hover:text-red-300"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -7,10 +7,18 @@ import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
 import ProgressBar from '../_components/progress/ProgressBar';
+import AvatarEditor from '../_components/avatar/AvatarEditor';
+import DiceBearAvatar, { DiceBearConfig } from '../_components/avatar/DiceBearAvatar';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
   | { authenticated: false };
+
+type AvatarData = Partial<DiceBearConfig> & {
+  base?: string;
+  color?: string;
+  frame?: string;
+};
 
 type ProgressData = {
   userId: string;
@@ -29,12 +37,7 @@ type ProgressData = {
   rankingPosition: number;
   totalStudents: number;
   medals: Array<{ type: string; earnedAt: string }>;
-  avatar: { base: string; color: string; accessories: string[]; frame: string };
-  avatarOptions?: {
-    bases: Array<{ id: string; name: string; requiredXp: number }>;
-    colors: Array<{ id: string; name: string; requiredXp: number }>;
-    frames: Array<{ id: string; name: string; requiredXp: number }>;
-  };
+  avatar: AvatarData;
 };
 
 type Medal = {
@@ -93,7 +96,7 @@ export default function PerfilPage() {
     router.replace('/login');
   }
 
-  async function updateAvatar(update: Partial<{ base: string; color: string; frame: string }>) {
+  async function updateAvatar(update: Partial<DiceBearConfig>) {
     if (!progress) return;
     setSaving(true);
     try {
@@ -126,10 +129,10 @@ export default function PerfilPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-4">
           {isStudent && progress ? (
-            <StudentAvatar avatar={progress.avatar} username={me.user.username} size="xl" />
+            <DiceBearAvatar config={progress.avatar} seed={me.user.username} size="xl" className="bg-zinc-800" />
           ) : (
             <div className="h-20 w-20 flex items-center justify-center rounded-full bg-zinc-800 text-3xl">
-              {role === 'teacher' ? '👨‍🏫' : role === 'admin' ? '⚙️' : '👤'}
+              {role === 'teacher' ? '👨‍🏫' : role === 'admin' ? '⚙️' : role === 'experience_manager' ? '🎮' : '👤'}
             </div>
           )}
           <div>
@@ -195,83 +198,16 @@ export default function PerfilPage() {
         </div>
       )}
 
-      {/* Avatar customization tab */}
-      {isStudent && activeTab === 'avatar' && progress && progress.avatarOptions && (
-        <div className="mt-6 space-y-6">
-          <div className="ce-card p-6">
-            <div className="flex items-center gap-6">
-              <StudentAvatar avatar={progress.avatar} username={me.user.username} size="xl" />
-              <div>
-                <div className="text-lg font-semibold text-zinc-100">Tu Avatar</div>
-                <div className="text-sm text-zinc-400">Personaliza tu avatar con XP</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Base selection */}
-          <div className="ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200 mb-4">Estilo base</div>
-            <div className="flex flex-wrap gap-3">
-              {progress.avatarOptions.bases.map((base) => (
-                <button
-                  key={base.id}
-                  onClick={() => updateAvatar({ base: base.id })}
-                  disabled={saving}
-                  className={`p-3 rounded-xl border transition-all ${
-                    progress.avatar.base === base.id
-                      ? 'border-fuchsia-500 bg-fuchsia-500/20'
-                      : 'border-white/10 bg-white/5 hover:bg-white/10'
-                  }`}
-                >
-                  <StudentAvatar avatar={{ ...progress.avatar, base: base.id }} size="md" showFrame={false} />
-                  <div className="mt-2 text-xs text-zinc-300">{base.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Color selection */}
-          <div className="ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200 mb-4">Color</div>
-            <div className="flex flex-wrap gap-2">
-              {progress.avatarOptions.colors.map((color) => (
-                <button
-                  key={color.id}
-                  onClick={() => updateAvatar({ color: color.id })}
-                  disabled={saving}
-                  className={`h-10 w-10 rounded-full border-2 transition-all ${
-                    progress.avatar.color === color.id
-                      ? 'border-white scale-110'
-                      : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: color.id }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Frame selection */}
-          <div className="ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200 mb-4">Marco</div>
-            <div className="flex flex-wrap gap-3">
-              {progress.avatarOptions.frames.map((frame) => (
-                <button
-                  key={frame.id}
-                  onClick={() => updateAvatar({ frame: frame.id })}
-                  disabled={saving}
-                  className={`p-3 rounded-xl border transition-all ${
-                    progress.avatar.frame === frame.id
-                      ? 'border-fuchsia-500 bg-fuchsia-500/20'
-                      : 'border-white/10 bg-white/5 hover:bg-white/10'
-                  }`}
-                >
-                  <StudentAvatar avatar={{ ...progress.avatar, frame: frame.id }} size="md" />
-                  <div className="mt-2 text-xs text-zinc-300">{frame.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Avatar customization tab - DiceBear Editor */}
+      {isStudent && activeTab === 'avatar' && progress && (
+        <div className="mt-6">
+          <AvatarEditor
+            currentConfig={progress.avatar}
+            username={me.user.username}
+            userXp={progress.totalXp}
+            userLevel={progress.level}
+            onSave={updateAvatar}
+          />
         </div>
       )}
 

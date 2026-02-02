@@ -61,7 +61,16 @@ export class MedalDefinition {
   description!: string;
 
   @Prop({ required: true })
-  icon!: string; // Emoji or icon identifier
+  icon!: string; // Emoji, Lucide icon name, or SVG string
+
+  @Prop({ required: false, default: 'emoji' })
+  iconType?: string; // 'emoji' | 'lucide' | 'svg'
+
+  @Prop({ required: false })
+  iconColor?: string; // Hex color for icon (e.g., '#fbbf24')
+
+  @Prop({ required: false })
+  bgColor?: string; // Hex color for background (e.g., '#fbbf2420')
 
   @Prop({ required: true, default: 0 })
   xpReward!: number; // XP granted when earned

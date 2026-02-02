@@ -47,17 +47,49 @@ export const MedalSchema = SchemaFactory.createForClass(Medal);
 
 @Schema({ _id: false })
 export class AvatarConfig {
-  @Prop({ required: true, default: 'default' })
-  base!: string; // base avatar style
+  // DiceBear configuration
+  @Prop({ required: true, default: 'avataaars' })
+  style!: string; // DiceBear style: avataaars, lorelei, notionists, etc.
 
-  @Prop({ required: true, default: '#6366f1' })
-  color!: string; // primary color
+  @Prop({ required: false })
+  skinColor?: string; // Skin color hex (without #)
 
-  @Prop({ required: true, default: [] })
-  accessories!: string[]; // unlocked accessories
+  @Prop({ required: false })
+  backgroundColor?: string; // Background color hex (without #)
 
-  @Prop({ required: true, default: 'none' })
-  frame!: string; // profile frame
+  @Prop({ required: false })
+  top?: string; // Hair style
+
+  @Prop({ required: false })
+  hairColor?: string;
+
+  @Prop({ required: false })
+  eyes?: string;
+
+  @Prop({ required: false })
+  eyebrows?: string;
+
+  @Prop({ required: false })
+  mouth?: string;
+
+  @Prop({ required: false })
+  accessories?: string;
+
+  @Prop({ required: false })
+  clothing?: string;
+
+  @Prop({ required: false })
+  clothingColor?: string;
+
+  // Legacy fields (for backwards compatibility)
+  @Prop({ required: false, default: 'default' })
+  base?: string;
+
+  @Prop({ required: false, default: '#6366f1' })
+  color?: string;
+
+  @Prop({ required: false, default: 'none' })
+  frame?: string;
 }
 
 export const AvatarConfigSchema = SchemaFactory.createForClass(AvatarConfig);

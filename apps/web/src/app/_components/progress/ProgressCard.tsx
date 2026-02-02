@@ -1,9 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import StudentAvatar from './StudentAvatar';
 import ProgressBar from './ProgressBar';
 import MedalBadge from './MedalBadge';
+import DiceBearAvatar from '../avatar/DiceBearAvatar';
+
+type AvatarData = {
+  style?: string;
+  skinColor?: string;
+  backgroundColor?: string;
+  top?: string;
+  eyes?: string;
+  mouth?: string;
+  accessories?: string;
+  base?: string;
+  color?: string;
+  frame?: string;
+};
 
 type ProgressData = {
   userId: string;
@@ -25,12 +38,7 @@ type ProgressData = {
     type: string;
     earnedAt: string;
   }>;
-  avatar: {
-    base: string;
-    color: string;
-    accessories: string[];
-    frame: string;
-  };
+  avatar: AvatarData;
 };
 
 type Props = {
@@ -51,7 +59,7 @@ export default function ProgressCard({ progress, compact = false }: Props) {
     return (
       <div className="ce-card ce-card-hover p-5">
         <div className="flex items-center gap-4">
-          <StudentAvatar avatar={progress.avatar} username={progress.username} size="lg" />
+          <DiceBearAvatar config={progress.avatar} seed={progress.username} size="lg" className="bg-zinc-800" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold text-zinc-100">Nivel {progress.level}</span>
@@ -103,7 +111,7 @@ export default function ProgressCard({ progress, compact = false }: Props) {
     <div className="ce-card p-6">
       <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
         <div className="text-center">
-          <StudentAvatar avatar={progress.avatar} username={progress.username} size="xl" />
+          <DiceBearAvatar config={progress.avatar} seed={progress.username} size="xl" className="bg-zinc-800" />
           <div className="mt-3 text-lg font-semibold text-zinc-100">{progress.username}</div>
           <div className="flex items-center justify-center gap-2 mt-1">
             <span className="text-sm text-zinc-400">Ranking</span>

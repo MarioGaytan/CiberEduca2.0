@@ -18,6 +18,19 @@ type Workshop = {
   visibility: 'internal' | 'code';
 };
 
+type AvatarData = {
+  style?: string;
+  skinColor?: string;
+  backgroundColor?: string;
+  top?: string;
+  eyes?: string;
+  mouth?: string;
+  accessories?: string;
+  base?: string;
+  color?: string;
+  frame?: string;
+};
+
 type ProgressData = {
   userId: string;
   username: string;
@@ -35,7 +48,7 @@ type ProgressData = {
   rankingPosition: number;
   totalStudents: number;
   medals: Array<{ type: string; earnedAt: string }>;
-  avatar: { base: string; color: string; accessories: string[]; frame: string };
+  avatar: AvatarData;
 };
 
 type RankingEntry = {
@@ -47,7 +60,7 @@ type RankingEntry = {
   workshopsCompleted: number;
   testsCompleted: number;
   medalCount: number;
-  avatar?: { base: string; color: string; accessories: string[]; frame: string };
+  avatar?: AvatarData;
   isMe: boolean;
 };
 

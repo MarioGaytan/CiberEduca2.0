@@ -1,10 +1,15 @@
 'use client';
 
+import * as LucideIcons from 'lucide-react';
+
 type Medal = {
   type: string;
   name: string;
   description: string;
   icon: string;
+  iconType?: 'emoji' | 'lucide' | 'svg';
+  iconColor?: string;
+  bgColor?: string;
   xp: number;
   earned: boolean;
   earnedAt?: string;
@@ -16,25 +21,63 @@ type Props = {
   showTooltip?: boolean;
 };
 
-const SIZE_CLASSES: Record<string, { container: string; icon: string }> = {
-  sm: { container: 'h-10 w-10', icon: 'text-lg' },
-  md: { container: 'h-14 w-14', icon: 'text-2xl' },
-  lg: { container: 'h-20 w-20', icon: 'text-4xl' },
+const SIZE_CLASSES: Record<string, { container: string; icon: string; lucideSize: number }> = {
+  sm: { container: 'h-10 w-10', icon: 'text-lg', lucideSize: 18 },
+  md: { container: 'h-14 w-14', icon: 'text-2xl', lucideSize: 24 },
+  lg: { container: 'h-20 w-20', icon: 'text-4xl', lucideSize: 36 },
 };
+
+function renderIcon(icon: string, iconType: string | undefined, size: string, color?: string) {
+  const sizeClass = SIZE_CLASSES[size];
+  
+  if (iconType === 'lucide') {
+    const IconComponent = (LucideIcons as Record<string, any>)[icon];
+    if (IconComponent) {
+      return (
+        <IconComponent 
+          size={sizeClass.lucideSize} 
+          className={color ? '' : 'text-current'}
+          style={color ? { color } : undefined}
+        />
+      );
+    }
+    return <span className={sizeClass.icon}>🏅</span>;
+  }
+  
+  if (iconType === 'svg' && icon.startsWith('<svg')) {
+    return (
+      <div 
+        className={sizeClass.icon}
+        style={color ? { color } : undefined}
+        dangerouslySetInnerHTML={{ __html: icon }}
+      />
+    );
+  }
+  
+  return <span className={sizeClass.icon}>{icon}</span>;
+}
 
 export default function MedalBadge({ medal, size = 'md', showTooltip = true }: Props) {
   const sizeClass = SIZE_CLASSES[size];
+  const bgStyle = medal.bgColor && medal.earned ? { backgroundColor: medal.bgColor } : undefined;
+  const borderColor = medal.bgColor && medal.earned ? medal.bgColor : undefined;
 
   return (
     <div className="group relative">
       <div
         className={`${sizeClass.container} flex items-center justify-center rounded-full border transition-all ${
           medal.earned
-            ? 'border-fuchsia-500/50 bg-fuchsia-500/20 shadow-[0_0_12px_rgba(217,70,239,0.3)]'
+            ? borderColor 
+              ? 'shadow-lg' 
+              : 'border-fuchsia-500/50 bg-fuchsia-500/20 shadow-[0_0_12px_rgba(217,70,239,0.3)]'
             : 'border-zinc-700 bg-zinc-800/50 opacity-40 grayscale'
         }`}
+        style={medal.earned ? {
+          ...bgStyle,
+          borderColor: borderColor ? `${borderColor}80` : undefined,
+        } : undefined}
       >
-        <span className={sizeClass.icon}>{medal.icon}</span>
+        {renderIcon(medal.icon, medal.iconType, size, medal.earned ? medal.iconColor : undefined)}
       </div>
 
       {showTooltip && (

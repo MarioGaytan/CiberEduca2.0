@@ -1,6 +1,19 @@
 'use client';
 
-import StudentAvatar from './StudentAvatar';
+import DiceBearAvatar from '../avatar/DiceBearAvatar';
+
+type AvatarData = {
+  style?: string;
+  skinColor?: string;
+  backgroundColor?: string;
+  top?: string;
+  eyes?: string;
+  mouth?: string;
+  accessories?: string;
+  base?: string;
+  color?: string;
+  frame?: string;
+};
 
 type RankingEntry = {
   position: number;
@@ -11,12 +24,7 @@ type RankingEntry = {
   workshopsCompleted: number;
   testsCompleted: number;
   medalCount: number;
-  avatar?: {
-    base: string;
-    color: string;
-    accessories: string[];
-    frame: string;
-  };
+  avatar?: AvatarData;
   isMe: boolean;
 };
 
@@ -64,7 +72,7 @@ export default function RankingCard({ ranking, maxEntries = 10 }: Props) {
             <div className={`w-8 text-center font-bold ${POSITION_STYLES[entry.position] || 'text-zinc-500'}`}>
               {POSITION_ICONS[entry.position] || `#${entry.position}`}
             </div>
-            <StudentAvatar avatar={entry.avatar} username={entry.username} size="sm" />
+            <DiceBearAvatar config={entry.avatar || {}} seed={entry.username} size="sm" className="bg-zinc-800" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className={`truncate text-sm font-medium ${entry.isMe ? 'text-fuchsia-200' : 'text-zinc-200'}`}>

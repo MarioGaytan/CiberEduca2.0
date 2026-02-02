@@ -44,7 +44,24 @@ export class ProgressController {
   @Patch('avatar')
   async updateAvatar(
     @Req() req: { user: any },
-    @Body() body: { base?: string; color?: string; frame?: string; accessories?: string[] },
+    @Body() body: {
+      // DiceBear fields
+      style?: string;
+      skinColor?: string;
+      backgroundColor?: string;
+      top?: string;
+      hairColor?: string;
+      eyes?: string;
+      eyebrows?: string;
+      mouth?: string;
+      accessories?: string;
+      clothing?: string;
+      clothingColor?: string;
+      // Legacy fields
+      base?: string;
+      color?: string;
+      frame?: string;
+    },
   ) {
     return this.progressService.updateAvatar(req.user, body);
   }
