@@ -99,9 +99,10 @@ export class ProgressService {
         testsCompleted: [],
         medals: [],
         avatar: {
+          style: 'avataaars',
           base: 'default',
           color: '#6366f1',
-          accessories: [],
+          accessories: '',
           frame: 'none',
         },
         currentStreak: 0,

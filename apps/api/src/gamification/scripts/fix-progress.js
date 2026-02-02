@@ -2,11 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 async function fixStudentProgress() {
-  const uri = process.env.MONGO_URI;
-  if (!uri) {
-    console.error('MONGO_URI not found');
-    process.exit(1);
-  }
+  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/cibereduca';
 
   console.log('Connecting to MongoDB...');
   await mongoose.connect(uri);

@@ -171,53 +171,87 @@ export const DEFAULT_MEDALS: Omit<MedalDefinition, 'isActive' | 'sortOrder'>[] =
   { id: 'first_place', name: 'Campeón', description: 'Alcanza el primer lugar', icon: '🏆', xpReward: 500, conditionType: 'ranking_position', conditionValue: 1, conditionOperator: 'eq' },
 ];
 
-// Default avatar options for DiceBear (avataaars style)
+// Default avatar options for DiceBear
+// Por defecto: avataaars y adventurer con cabello y tonos de piel GRATIS
+// Accesorios y expresiones especiales requieren XP
 export const DEFAULT_AVATAR_OPTIONS: Omit<AvatarOptionDefinition, 'isActive' | 'sortOrder'>[] = [
-  // Styles (DiceBear styles)
+  // ========== ESTILOS (2 gratis, resto desbloqueables) ==========
   { id: 'style_avataaars', category: 'style', value: 'avataaars', displayName: 'Avataaars', requiredXp: 0, requiredLevel: 0 },
-  { id: 'style_lorelei', category: 'style', value: 'lorelei', displayName: 'Lorelei', requiredXp: 500, requiredLevel: 5 },
+  { id: 'style_adventurer', category: 'style', value: 'adventurer', displayName: 'Adventurer', requiredXp: 0, requiredLevel: 0 },
+  { id: 'style_lorelei', category: 'style', value: 'lorelei', displayName: 'Lorelei', requiredXp: 300, requiredLevel: 3 },
+  { id: 'style_bigSmile', category: 'style', value: 'big-smile', displayName: 'Big Smile', requiredXp: 500, requiredLevel: 5 },
+  { id: 'style_micah', category: 'style', value: 'micah', displayName: 'Micah', requiredXp: 800, requiredLevel: 8 },
   { id: 'style_notionists', category: 'style', value: 'notionists', displayName: 'Notionists', requiredXp: 1000, requiredLevel: 10 },
-  { id: 'style_openPeeps', category: 'style', value: 'open-peeps', displayName: 'Open Peeps', requiredXp: 2000, requiredLevel: 15 },
-  { id: 'style_pixelArt', category: 'style', value: 'pixel-art', displayName: 'Pixel Art', requiredXp: 3000, requiredLevel: 20 },
+  { id: 'style_openPeeps', category: 'style', value: 'open-peeps', displayName: 'Open Peeps', requiredXp: 1500, requiredLevel: 12 },
+  { id: 'style_pixelArt', category: 'style', value: 'pixel-art', displayName: 'Pixel Art', requiredXp: 2000, requiredLevel: 15 },
+  { id: 'style_funEmoji', category: 'style', value: 'fun-emoji', displayName: 'Fun Emoji', requiredXp: 2500, requiredLevel: 18 },
+  { id: 'style_bottts', category: 'style', value: 'bottts', displayName: 'Robots', requiredXp: 3000, requiredLevel: 20 },
   
-  // Skin colors (free)
-  { id: 'skin_light', category: 'skinColor', value: 'f8d9c4', displayName: 'Claro', requiredXp: 0, requiredLevel: 0 },
+  // ========== TONOS DE PIEL (TODOS GRATIS) ==========
+  { id: 'skin_pale', category: 'skinColor', value: 'f2d3b1', displayName: 'Pálido', requiredXp: 0, requiredLevel: 0 },
+  { id: 'skin_light', category: 'skinColor', value: 'ecad80', displayName: 'Claro', requiredXp: 0, requiredLevel: 0 },
   { id: 'skin_medium', category: 'skinColor', value: 'd4a574', displayName: 'Medio', requiredXp: 0, requiredLevel: 0 },
   { id: 'skin_tan', category: 'skinColor', value: 'c68642', displayName: 'Bronceado', requiredXp: 0, requiredLevel: 0 },
-  { id: 'skin_dark', category: 'skinColor', value: '8d5524', displayName: 'Oscuro', requiredXp: 0, requiredLevel: 0 },
+  { id: 'skin_brown', category: 'skinColor', value: '9e5622', displayName: 'Moreno', requiredXp: 0, requiredLevel: 0 },
+  { id: 'skin_dark', category: 'skinColor', value: '763900', displayName: 'Oscuro', requiredXp: 0, requiredLevel: 0 },
   
-  // Background colors
-  { id: 'bg_blue', category: 'backgroundColor', value: 'b6e3f4', displayName: 'Azul', requiredXp: 0, requiredLevel: 0 },
-  { id: 'bg_green', category: 'backgroundColor', value: 'c0f4c4', displayName: 'Verde', requiredXp: 0, requiredLevel: 0 },
-  { id: 'bg_purple', category: 'backgroundColor', value: 'd1c4f4', displayName: 'Morado', requiredXp: 100, requiredLevel: 2 },
-  { id: 'bg_pink', category: 'backgroundColor', value: 'f4c4d4', displayName: 'Rosa', requiredXp: 100, requiredLevel: 2 },
-  { id: 'bg_yellow', category: 'backgroundColor', value: 'f4e9c4', displayName: 'Amarillo', requiredXp: 200, requiredLevel: 3 },
-  { id: 'bg_gradient', category: 'backgroundColor', value: 'gradient_rainbow', displayName: 'Arcoíris', requiredXp: 1000, requiredLevel: 10 },
+  // ========== CABELLO BÁSICO (GRATIS - hombre y mujer) ==========
+  // Cortos (típicamente masculinos)
+  { id: 'hair_short_flat', category: 'top', value: 'shortHairShortFlat', displayName: 'Corto Liso', requiredXp: 0, requiredLevel: 0 },
+  { id: 'hair_short_curly', category: 'top', value: 'shortHairShortCurly', displayName: 'Corto Rizado', requiredXp: 0, requiredLevel: 0 },
+  { id: 'hair_short_waved', category: 'top', value: 'shortHairShortWaved', displayName: 'Corto Ondulado', requiredXp: 0, requiredLevel: 0 },
+  // Largos (típicamente femeninos)
+  { id: 'hair_long_straight', category: 'top', value: 'longHairStraight', displayName: 'Largo Lacio', requiredXp: 0, requiredLevel: 0 },
+  { id: 'hair_long_straight2', category: 'top', value: 'longHairStraight2', displayName: 'Largo Lacio 2', requiredXp: 0, requiredLevel: 0 },
+  { id: 'hair_long_curly', category: 'top', value: 'longHairCurly', displayName: 'Largo Rizado', requiredXp: 0, requiredLevel: 0 },
+  { id: 'hair_long_bob', category: 'top', value: 'longHairBob', displayName: 'Bob', requiredXp: 0, requiredLevel: 0 },
   
-  // Eyes (avataaars)
+  // ========== CABELLO ESPECIAL (DESBLOQUEABLE) ==========
+  { id: 'hair_bun', category: 'top', value: 'longHairBun', displayName: 'Chongo', requiredXp: 100, requiredLevel: 2 },
+  { id: 'hair_frida', category: 'top', value: 'longHairFrida', displayName: 'Frida', requiredXp: 200, requiredLevel: 3 },
+  { id: 'hair_dreads', category: 'top', value: 'longHairDreads', displayName: 'Rastas', requiredXp: 300, requiredLevel: 4 },
+  { id: 'hair_mohawk', category: 'top', value: 'shortHairDreads01', displayName: 'Mohawk', requiredXp: 400, requiredLevel: 5 },
+  { id: 'hair_fro', category: 'top', value: 'longHairFro', displayName: 'Afro', requiredXp: 500, requiredLevel: 6 },
+  { id: 'hair_mia_wallace', category: 'top', value: 'longHairMiaWallace', displayName: 'Mia Wallace', requiredXp: 750, requiredLevel: 8 },
+  
+  // ========== OJOS BÁSICOS (GRATIS) ==========
   { id: 'eyes_default', category: 'eyes', value: 'default', displayName: 'Normal', requiredXp: 0, requiredLevel: 0 },
   { id: 'eyes_happy', category: 'eyes', value: 'happy', displayName: 'Feliz', requiredXp: 0, requiredLevel: 0 },
+  
+  // ========== OJOS ESPECIALES (DESBLOQUEABLES) ==========
   { id: 'eyes_wink', category: 'eyes', value: 'wink', displayName: 'Guiño', requiredXp: 50, requiredLevel: 1 },
   { id: 'eyes_surprised', category: 'eyes', value: 'surprised', displayName: 'Sorprendido', requiredXp: 100, requiredLevel: 2 },
-  { id: 'eyes_hearts', category: 'eyes', value: 'hearts', displayName: 'Corazones', requiredXp: 500, requiredLevel: 5 },
-  { id: 'eyes_stars', category: 'eyes', value: 'xDizzy', displayName: 'Estrellas', requiredXp: 1000, requiredLevel: 10 },
+  { id: 'eyes_side', category: 'eyes', value: 'side', displayName: 'De Lado', requiredXp: 150, requiredLevel: 3 },
+  { id: 'eyes_squint', category: 'eyes', value: 'squint', displayName: 'Entrecerrados', requiredXp: 200, requiredLevel: 4 },
+  { id: 'eyes_hearts', category: 'eyes', value: 'hearts', displayName: 'Corazones', requiredXp: 500, requiredLevel: 6 },
+  { id: 'eyes_dizzy', category: 'eyes', value: 'xDizzy', displayName: 'Mareado', requiredXp: 800, requiredLevel: 8 },
   
-  // Mouth
-  { id: 'mouth_smile', category: 'mouth', value: 'smile', displayName: 'Sonrisa', requiredXp: 0, requiredLevel: 0 },
+  // ========== BOCA BÁSICA (GRATIS) ==========
   { id: 'mouth_default', category: 'mouth', value: 'default', displayName: 'Normal', requiredXp: 0, requiredLevel: 0 },
-  { id: 'mouth_twinkle', category: 'mouth', value: 'twinkle', displayName: 'Brillo', requiredXp: 100, requiredLevel: 2 },
-  { id: 'mouth_tongue', category: 'mouth', value: 'tongue', displayName: 'Lengua', requiredXp: 200, requiredLevel: 3 },
+  { id: 'mouth_smile', category: 'mouth', value: 'smile', displayName: 'Sonrisa', requiredXp: 0, requiredLevel: 0 },
   
-  // Accessories
-  { id: 'acc_none', category: 'accessories', value: 'none', displayName: 'Ninguno', requiredXp: 0, requiredLevel: 0 },
+  // ========== BOCA ESPECIAL (DESBLOQUEABLE) ==========
+  { id: 'mouth_twinkle', category: 'mouth', value: 'twinkle', displayName: 'Brillo', requiredXp: 100, requiredLevel: 2 },
+  { id: 'mouth_serious', category: 'mouth', value: 'serious', displayName: 'Serio', requiredXp: 150, requiredLevel: 3 },
+  { id: 'mouth_tongue', category: 'mouth', value: 'tongue', displayName: 'Lengua', requiredXp: 200, requiredLevel: 4 },
+  { id: 'mouth_scream', category: 'mouth', value: 'screamOpen', displayName: 'Grito', requiredXp: 400, requiredLevel: 5 },
+  { id: 'mouth_eating', category: 'mouth', value: 'eating', displayName: 'Comiendo', requiredXp: 600, requiredLevel: 7 },
+  
+  // ========== ACCESORIOS (TODOS DESBLOQUEABLES) ==========
+  { id: 'acc_none', category: 'accessories', value: '', displayName: 'Ninguno', requiredXp: 0, requiredLevel: 0 },
   { id: 'acc_glasses_round', category: 'accessories', value: 'round', displayName: 'Lentes Redondos', requiredXp: 100, requiredLevel: 2 },
   { id: 'acc_glasses_square', category: 'accessories', value: 'prescription02', displayName: 'Lentes Cuadrados', requiredXp: 200, requiredLevel: 3 },
-  { id: 'acc_sunglasses', category: 'accessories', value: 'sunglasses', displayName: 'Lentes de Sol', requiredXp: 500, requiredLevel: 5 },
+  { id: 'acc_glasses_wayfarers', category: 'accessories', value: 'wayfarers', displayName: 'Wayfarers', requiredXp: 300, requiredLevel: 4 },
+  { id: 'acc_sunglasses', category: 'accessories', value: 'sunglasses', displayName: 'Lentes de Sol', requiredXp: 500, requiredLevel: 6 },
+  { id: 'acc_kurt', category: 'accessories', value: 'kurt', displayName: 'Kurt', requiredXp: 800, requiredLevel: 8 },
   
-  // Hair (avataaars)
-  { id: 'hair_short', category: 'top', value: 'shortHairShortFlat', displayName: 'Corto', requiredXp: 0, requiredLevel: 0 },
-  { id: 'hair_long', category: 'top', value: 'longHairStraight', displayName: 'Largo Lacio', requiredXp: 0, requiredLevel: 0 },
-  { id: 'hair_curly', category: 'top', value: 'longHairCurly', displayName: 'Rizado', requiredXp: 100, requiredLevel: 2 },
-  { id: 'hair_mohawk', category: 'top', value: 'shortHairDreads01', displayName: 'Mohawk', requiredXp: 300, requiredLevel: 4 },
-  { id: 'hair_bun', category: 'top', value: 'longHairBun', displayName: 'Chongo', requiredXp: 200, requiredLevel: 3 },
+  // ========== FONDOS (algunos gratis, otros desbloqueables) ==========
+  { id: 'bg_blue', category: 'backgroundColor', value: 'b6e3f4', displayName: 'Azul Cielo', requiredXp: 0, requiredLevel: 0 },
+  { id: 'bg_mint', category: 'backgroundColor', value: 'c0f4c4', displayName: 'Menta', requiredXp: 0, requiredLevel: 0 },
+  { id: 'bg_lavender', category: 'backgroundColor', value: 'c0aede', displayName: 'Lavanda', requiredXp: 100, requiredLevel: 2 },
+  { id: 'bg_pink', category: 'backgroundColor', value: 'ffd5dc', displayName: 'Rosa', requiredXp: 100, requiredLevel: 2 },
+  { id: 'bg_peach', category: 'backgroundColor', value: 'ffdfbf', displayName: 'Durazno', requiredXp: 200, requiredLevel: 3 },
+  { id: 'bg_yellow', category: 'backgroundColor', value: 'fff4c4', displayName: 'Amarillo', requiredXp: 200, requiredLevel: 3 },
+  { id: 'bg_coral', category: 'backgroundColor', value: 'ff9f9f', displayName: 'Coral', requiredXp: 400, requiredLevel: 5 },
+  { id: 'bg_purple', category: 'backgroundColor', value: 'd1d4f9', displayName: 'Púrpura', requiredXp: 600, requiredLevel: 7 },
 ];

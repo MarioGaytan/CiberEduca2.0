@@ -102,7 +102,8 @@ export class GamificationController {
   @Roles(Role.Admin, Role.ExperienceManager)
   @Get('medals')
   async getMedals(@Req() req: { user: any }) {
-    const config = await this.gamificationService.getFullConfig(req.user.schoolId);
+    const schoolId = req.user.schoolId ?? 'default';
+    const config = await this.gamificationService.getFullConfig(schoolId);
     return config.medals;
   }
 
@@ -178,5 +179,75 @@ export class GamificationController {
   async resetToDefaults(@Req() req: { user: any }) {
     const schoolId = req.user.schoolId ?? 'default';
     return this.gamificationService.resetToDefaults(schoolId, req.user.userId);
+  }
+
+  // ========== DICEBEAR STYLES ENDPOINTS ==========
+
+  /**
+   * Get all DiceBear styles (public list)
+   */
+  @Roles(Role.Student, Role.Teacher, Role.Admin, Role.ExperienceManager)
+  @Get('dicebear/styles')
+  async getDiceBearStyles() {
+    return this.gamificationService.getDiceBearStyles(true);
+  }
+
+  /**
+   * Get all DiceBear styles with user unlock status
+   */
+  @Roles(Role.Student, Role.Teacher, Role.Admin, Role.ExperienceManager)
+  @Get('dicebear/styles/user/:xp/:level')
+  async getStylesForUser(
+    @Req() req: { user: any },
+    @Param('xp') xp: string,
+    @Param('level') level: string,
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.getAllStylesForUser(
+      schoolId,
+      parseInt(xp, 10) || 0,
+      parseInt(level, 10) || 1,
+    );
+  }
+
+  /**
+   * Get a single DiceBear style with all options
+   */
+  @Roles(Role.Student, Role.Teacher, Role.Admin, Role.ExperienceManager)
+  @Get('dicebear/styles/:styleId')
+  async getDiceBearStyle(@Param('styleId') styleId: string) {
+    return this.gamificationService.getDiceBearStyle(styleId);
+  }
+
+  /**
+   * Get style options with unlock status for user
+   */
+  @Roles(Role.Student, Role.Teacher, Role.Admin, Role.ExperienceManager)
+  @Get('dicebear/styles/:styleId/user/:xp/:level')
+  async getStyleOptionsForUser(
+    @Req() req: { user: any },
+    @Param('styleId') styleId: string,
+    @Param('xp') xp: string,
+    @Param('level') level: string,
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.getStyleOptionsForUser(
+      schoolId,
+      styleId,
+      parseInt(xp, 10) || 0,
+      parseInt(level, 10) || 1,
+    );
+  }
+
+  /**
+   * Update DiceBear style settings (admin only)
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Put('dicebear/styles/:styleId')
+  async updateDiceBearStyle(
+    @Param('styleId') styleId: string,
+    @Body() updates: { isActive?: boolean; sortOrder?: number },
+  ) {
+    return this.gamificationService.updateDiceBearStyle(styleId, updates);
   }
 }

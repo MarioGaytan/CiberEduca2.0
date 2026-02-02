@@ -6,11 +6,16 @@ import {
   GamificationConfig,
   GamificationConfigSchema,
 } from './schemas/gamification-config.schema';
+import {
+  DiceBearStyle,
+  DiceBearStyleSchema,
+} from './schemas/dicebear-style.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: GamificationConfig.name, schema: GamificationConfigSchema },
+      { name: DiceBearStyle.name, schema: DiceBearStyleSchema },
     ]),
   ],
   controllers: [GamificationController],

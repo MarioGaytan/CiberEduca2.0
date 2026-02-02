@@ -54,6 +54,17 @@ type GamificationConfig = {
   avatarOptions: AvatarOptionDefinition[];
 };
 
+type DiceBearStyleSummary = {
+  styleId: string;
+  displayName: string;
+  creator: string;
+  apiUrl: string;
+  categoriesCount: number;
+  optionsCount: number;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 const CONDITION_TYPES = [
   { value: 'tests_completed', label: 'Tests completados' },
   { value: 'workshops_completed', label: 'Talleres completados' },
@@ -70,7 +81,11 @@ export default function ExperienceManagerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals' | 'avatars'>('xp');
+  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals' | 'avatars' | 'styles'>('xp');
+
+  // DiceBear styles
+  const [dicebearStyles, setDicebearStyles] = useState<DiceBearStyleSummary[]>([]);
+  const [loadingStyles, setLoadingStyles] = useState(false);
 
   // Medal editing
   const [editingMedal, setEditingMedal] = useState<MedalDefinition | null>(null);
@@ -83,6 +98,84 @@ export default function ExperienceManagerPage() {
   useEffect(() => {
     fetchConfig();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'styles') {
+      fetchDiceBearStyles();
+    }
+  }, [activeTab]);
+
+  async function fetchDiceBearStyles() {
+    setLoadingStyles(true);
+    try {
+      const res = await fetch('/api/gamification/dicebear/styles');
+      if (res.ok) {
+        const data = await res.json();
+        setDicebearStyles(data);
+      }
+    } catch (e) {
+      console.error('Error fetching DiceBear styles:', e);
+    } finally {
+      setLoadingStyles(false);
+    }
+  }
+
+  async function updateStyleUnlockRequirements(styleId: string, requiredXp: number, requiredLevel: number) {
+    setSaving(true);
+    setError(null);
+    try {
+      // Find or create avatar option for this style
+      const existingOption = config?.avatarOptions?.find(
+        opt => opt.category === 'style' && opt.value === styleId
+      );
+      
+      const option: AvatarOptionDefinition = existingOption || {
+        id: `style_${styleId}`,
+        category: 'style',
+        value: styleId,
+        displayName: dicebearStyles.find(s => s.styleId === styleId)?.displayName || styleId,
+        requiredXp: 0,
+        requiredLevel: 0,
+        isActive: true,
+        sortOrder: config?.avatarOptions?.length || 0,
+      };
+      
+      option.requiredXp = requiredXp;
+      option.requiredLevel = requiredLevel;
+      
+      const res = await fetch('/api/gamification/avatar-options', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(option),
+      });
+      
+      if (!res.ok) throw new Error('Error al guardar requisitos');
+      await fetchConfig();
+      setSuccess(`Requisitos de ${styleId} actualizados`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleStyleActive(styleId: string, isActive: boolean) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/gamification/dicebear/styles/${styleId}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) throw new Error('Error al actualizar estilo');
+      await fetchDiceBearStyles();
+      setSuccess(`Estilo ${isActive ? 'activado' : 'desactivado'}`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function fetchConfig() {
     try {
@@ -306,6 +399,14 @@ export default function ExperienceManagerPage() {
           }`}
         >
           🎨 Avatares ({config.avatarOptions?.length || 0})
+        </button>
+        <button
+          onClick={() => setActiveTab('styles')}
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+            activeTab === 'styles' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          🎭 Estilos DiceBear ({dicebearStyles.length})
         </button>
       </div>
 
@@ -894,6 +995,128 @@ export default function ExperienceManagerPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* DiceBear Styles Tab */}
+      {activeTab === 'styles' && (
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-zinc-100">Estilos de Avatar DiceBear</h2>
+            <button
+              onClick={fetchDiceBearStyles}
+              disabled={loadingStyles}
+              className="ce-btn ce-btn-ghost text-sm"
+            >
+              {loadingStyles ? '⏳ Cargando...' : '🔄 Actualizar'}
+            </button>
+          </div>
+
+          <div className="ce-card p-4 mb-4 bg-zinc-800/50">
+            <p className="text-sm text-zinc-400">
+              Configura qué estilos de avatar están disponibles y los requisitos de XP/Nivel para desbloquearlos.
+              Los estilos con 0 XP y Nivel 0 están disponibles para todos desde el inicio.
+            </p>
+          </div>
+
+          {loadingStyles ? (
+            <div className="ce-card p-6 text-center text-zinc-400">
+              <div className="animate-spin w-8 h-8 border-2 border-fuchsia-500 border-t-transparent rounded-full mx-auto mb-3" />
+              Cargando estilos de DiceBear...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dicebearStyles.map((style) => {
+                const styleOption = config?.avatarOptions?.find(
+                  opt => opt.category === 'style' && opt.value === style.styleId
+                );
+                const requiredXp = styleOption?.requiredXp ?? 0;
+                const requiredLevel = styleOption?.requiredLevel ?? 0;
+                
+                return (
+                  <div
+                    key={style.styleId}
+                    className={`ce-card p-4 ${!style.isActive ? 'opacity-50' : ''}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={`${style.apiUrl}?seed=preview&size=64`}
+                        alt={style.displayName}
+                        className="w-16 h-16 rounded-lg bg-zinc-700"
+                        loading="lazy"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-zinc-100 truncate">{style.displayName}</h3>
+                        <p className="text-xs text-zinc-500">{style.creator}</p>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          {style.categoriesCount} categorías • {style.optionsCount} opciones
+                        </p>
+                      </div>
+                      <label className="flex items-center gap-1">
+                        <input
+                          type="checkbox"
+                          checked={style.isActive}
+                          onChange={(e) => toggleStyleActive(style.styleId, e.target.checked)}
+                          className="rounded border-zinc-600"
+                        />
+                        <span className="text-xs text-zinc-400">Activo</span>
+                      </label>
+                    </div>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-zinc-500">XP requerido</label>
+                        <input
+                          type="number"
+                          defaultValue={requiredXp}
+                          onBlur={(e) => {
+                            const newXp = parseInt(e.target.value) || 0;
+                            if (newXp !== requiredXp) {
+                              updateStyleUnlockRequirements(style.styleId, newXp, requiredLevel);
+                            }
+                          }}
+                          className="ce-field mt-1 text-sm"
+                          min={0}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500">Nivel requerido</label>
+                        <input
+                          type="number"
+                          defaultValue={requiredLevel}
+                          onBlur={(e) => {
+                            const newLevel = parseInt(e.target.value) || 0;
+                            if (newLevel !== requiredLevel) {
+                              updateStyleUnlockRequirements(style.styleId, requiredXp, newLevel);
+                            }
+                          }}
+                          className="ce-field mt-1 text-sm"
+                          min={0}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 text-center">
+                      {requiredXp === 0 && requiredLevel === 0 ? (
+                        <span className="text-xs text-green-400">✅ Disponible desde inicio</span>
+                      ) : (
+                        <span className="text-xs text-fuchsia-400">🔒 {requiredXp} XP / Nivel {requiredLevel}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          
+          {!loadingStyles && dicebearStyles.length === 0 && (
+            <div className="ce-card p-6 text-center text-zinc-400">
+              <p>No hay estilos de DiceBear sincronizados.</p>
+              <p className="text-sm mt-2">
+                Ejecuta <code className="bg-zinc-800 px-2 py-1 rounded">npm run sync-dicebear -w api</code> para sincronizar los estilos.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

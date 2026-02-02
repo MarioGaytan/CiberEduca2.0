@@ -7,7 +7,7 @@ import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
 import ProgressBar from '../_components/progress/ProgressBar';
-import AvatarEditor from '../_components/avatar/AvatarEditor';
+import AvatarEditorV2 from '../_components/avatar/AvatarEditorV2';
 import DiceBearAvatar, { DiceBearConfig } from '../_components/avatar/DiceBearAvatar';
 
 type MeResponse =
@@ -201,7 +201,7 @@ export default function PerfilPage() {
       {/* Avatar customization tab - DiceBear Editor */}
       {isStudent && activeTab === 'avatar' && progress && (
         <div className="mt-6">
-          <AvatarEditor
+          <AvatarEditorV2
             currentConfig={progress.avatar}
             username={me.user.username}
             userXp={progress.totalXp}

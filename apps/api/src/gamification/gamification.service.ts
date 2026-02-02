@@ -12,6 +12,10 @@ import {
   DEFAULT_MEDALS,
   DEFAULT_AVATAR_OPTIONS,
 } from './schemas/gamification-config.schema';
+import {
+  DiceBearStyle,
+  DiceBearStyleDocument,
+} from './schemas/dicebear-style.schema';
 
 @Injectable()
 export class GamificationService {
@@ -19,6 +23,8 @@ export class GamificationService {
     private readonly config: ConfigService,
     @InjectModel(GamificationConfig.name)
     private readonly configModel: Model<GamificationConfigDocument>,
+    @InjectModel(DiceBearStyle.name)
+    private readonly dicebearStyleModel: Model<DiceBearStyleDocument>,
   ) {}
 
   private getDefaultSchoolId(): string {
@@ -29,7 +35,7 @@ export class GamificationService {
    * Get or create gamification config for a school
    */
   async getConfig(schoolId?: string): Promise<GamificationConfigDocument> {
-    const id = schoolId ?? this.getDefaultSchoolId();
+    const id = schoolId && schoolId.trim() ? schoolId : this.getDefaultSchoolId();
     
     let config = await this.configModel.findOne({ schoolId: id }).exec();
     
@@ -358,5 +364,126 @@ export class GamificationService {
     
     await config.save();
     return config;
+  }
+
+  // ========== DICEBEAR STYLES METHODS ==========
+
+  /**
+   * Get all DiceBear styles
+   */
+  async getDiceBearStyles(activeOnly = true) {
+    const query = activeOnly ? { isActive: true } : {};
+    return this.dicebearStyleModel
+      .find(query)
+      .sort({ sortOrder: 1 })
+      .exec();
+  }
+
+  /**
+   * Get a single DiceBear style by ID
+   */
+  async getDiceBearStyle(styleId: string) {
+    const style = await this.dicebearStyleModel.findOne({ styleId }).exec();
+    if (!style) {
+      throw new NotFoundException(`Style ${styleId} not found`);
+    }
+    return style;
+  }
+
+  /**
+   * Update DiceBear style settings (enable/disable, sort order)
+   */
+  async updateDiceBearStyle(styleId: string, updates: { isActive?: boolean; sortOrder?: number }) {
+    const style = await this.dicebearStyleModel.findOneAndUpdate(
+      { styleId },
+      { $set: updates },
+      { new: true }
+    ).exec();
+    
+    if (!style) {
+      throw new NotFoundException(`Style ${styleId} not found`);
+    }
+    return style;
+  }
+
+  /**
+   * Get avatar configuration for a specific style with unlock requirements
+   * This combines the DiceBear style data with school-specific unlock settings
+   */
+  async getStyleOptionsForUser(schoolId: string, styleId: string, userXp: number, userLevel: number) {
+    const style = await this.getDiceBearStyle(styleId);
+    const config = await this.getConfig(schoolId);
+    
+    // Get unlock requirements for this style from avatar options
+    const styleOption = config.avatarOptions.find(
+      opt => opt.category === 'style' && opt.value === styleId
+    );
+    
+    const isStyleUnlocked = !styleOption || 
+      (styleOption.requiredXp <= userXp && styleOption.requiredLevel <= userLevel);
+    
+    // Build categories with unlock status
+    const categoriesWithStatus = style.categories.map(category => {
+      const optionsWithStatus = category.options.map(option => {
+        // Find if there's a specific unlock requirement for this option
+        const optionConfig = config.avatarOptions.find(
+          opt => opt.category === category.name && opt.value === option.value
+        );
+        
+        const requiredXp = optionConfig?.requiredXp ?? 0;
+        const requiredLevel = optionConfig?.requiredLevel ?? 0;
+        const isUnlocked = requiredXp <= userXp && requiredLevel <= userLevel;
+        
+        return {
+          ...option,
+          requiredXp,
+          requiredLevel,
+          isUnlocked,
+        };
+      });
+      
+      return {
+        ...category,
+        options: optionsWithStatus,
+      };
+    });
+    
+    return {
+      ...style.toObject(),
+      isUnlocked: isStyleUnlocked,
+      requiredXp: styleOption?.requiredXp ?? 0,
+      requiredLevel: styleOption?.requiredLevel ?? 0,
+      categories: categoriesWithStatus,
+    };
+  }
+
+  /**
+   * Get all styles with their unlock status for a user
+   */
+  async getAllStylesForUser(schoolId: string, userXp: number, userLevel: number) {
+    const styles = await this.getDiceBearStyles(true);
+    const config = await this.getConfig(schoolId);
+    
+    return styles.map(style => {
+      const styleOption = config.avatarOptions.find(
+        opt => opt.category === 'style' && opt.value === style.styleId
+      );
+      
+      const requiredXp = styleOption?.requiredXp ?? 0;
+      const requiredLevel = styleOption?.requiredLevel ?? 0;
+      const isUnlocked = requiredXp <= userXp && requiredLevel <= userLevel;
+      
+      return {
+        styleId: style.styleId,
+        displayName: style.displayName,
+        creator: style.creator,
+        apiUrl: style.apiUrl,
+        categoriesCount: style.categories.length,
+        optionsCount: style.categories.reduce((sum, c) => sum + c.options.length, 0),
+        requiredXp,
+        requiredLevel,
+        isUnlocked,
+      };
+    });
   }
 }
