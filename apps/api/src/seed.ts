@@ -84,28 +84,35 @@ async function main() {
       .exec();
 
     if (!workshop) {
-      workshop = await workshopsService.create(teacherAuth, {
+      const created = await workshopsService.create(teacherAuth, {
         title: workshopTitle,
         description: 'Taller de ejemplo para probar la UI de CiberEduca.',
         visibility: WorkshopVisibility.Internal,
       });
+      // Re-fetch from DB to get the document type
+      workshop = await workshopModel.findById(created._id).exec();
     }
 
-    if (workshop.status === WorkshopStatus.Draft) {
+    if (workshop && workshop.status === WorkshopStatus.Draft) {
       await workshopsService.submitForReview(teacherAuth, String(workshop._id));
-      workshop = (await workshopModel.findById(workshop._id).exec())!;
+      workshop = await workshopModel.findById(workshop._id).exec();
     }
 
-    if (workshop.status === WorkshopStatus.InReview) {
+    if (workshop && workshop.status === WorkshopStatus.InReview) {
       await workshopsService.approve(adminAuth, String(workshop._id), 'Aprobado (seed)');
-      workshop = (await workshopModel.findById(workshop._id).exec())!;
+      workshop = await workshopModel.findById(workshop._id).exec();
     }
 
+    if (!workshop) {
+      throw new Error('Failed to create or retrieve workshop');
+    }
+
+    const workshopId = String(workshop._id);
     const testTitle = 'Test Base: Seguridad Básica';
     let test = await testModel
       .findOne({
         schoolId: defaultSchoolId,
-        workshopId: String(workshop._id),
+        workshopId,
         title: testTitle,
         createdByUserId: teacherAuth.userId,
       })
@@ -113,7 +120,7 @@ async function main() {
 
     if (!test) {
       test = await testsService.create(teacherAuth, {
-        workshopId: String(workshop._id),
+        workshopId,
         title: testTitle,
         description: 'Test de ejemplo con opción múltiple y pregunta abierta.',
         questions: [

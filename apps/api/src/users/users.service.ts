@@ -108,4 +108,22 @@ export class UsersService {
   async validatePassword(user: UserDocument, password: string): Promise<boolean> {
     return bcrypt.compare(password, user.passwordHash);
   }
+
+  async searchTeachers(schoolId?: string, query?: string): Promise<UserDocument[]> {
+    const filter: Record<string, unknown> = {
+      role: { $in: [Role.Teacher, Role.Admin, Role.Reviewer] },
+      isActive: true,
+    };
+    if (schoolId) filter.schoolId = schoolId;
+    if (query && query.trim()) {
+      filter.username = { $regex: query.trim(), $options: 'i' };
+    }
+
+    return this.userModel
+      .find(filter)
+      .select('_id username role')
+      .limit(20)
+      .sort({ username: 1 })
+      .exec();
+  }
 }

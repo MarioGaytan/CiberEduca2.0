@@ -8,18 +8,20 @@ type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
   | { authenticated: false };
 
-type Question =
-  | {
-      type: 'multiple_choice';
-      prompt: string;
-      points: number;
-      options: { text: string }[];
-    }
-  | {
-      type: 'open';
-      prompt: string;
-      points: number;
-    };
+type QuestionOption = {
+  text: string;
+  imageUrl?: string;
+};
+
+type Question = {
+  type: 'multiple_choice' | 'open';
+  prompt: string;
+  points: number;
+  options?: QuestionOption[];
+  mediaUrl?: string;
+  hint?: string;
+  explanation?: string;
+};
 
 type Test = {
   _id: string;
@@ -259,7 +261,38 @@ export default function TestPage() {
                 </div>
                 <div className="mt-1 text-xs text-zinc-500">Puntos: {q.points}</div>
 
-                {q.type === 'multiple_choice' ? (
+                {/* Media (video/image) */}
+                {q.mediaUrl && (
+                  <div className="mt-3">
+                    {q.mediaUrl.includes('youtube.com') || q.mediaUrl.includes('youtu.be') ? (
+                      <div className="aspect-video w-full overflow-hidden rounded-lg">
+                        <iframe
+                          src={q.mediaUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                          className="h-full w-full"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={q.mediaUrl}
+                        alt="Media de la pregunta"
+                        className="max-h-64 rounded-lg object-contain"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Hint */}
+                {q.hint && (
+                  <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+                    <span className="text-xs font-medium text-amber-300">💡 Pista:</span>
+                    <span className="ml-2 text-sm text-amber-200">{q.hint}</span>
+                  </div>
+                )}
+
+                {q.type === 'multiple_choice' && q.options ? (
                   <div className="mt-4 space-y-2">
                     {q.options.map((o, optIdx) => (
                       <label
@@ -274,7 +307,12 @@ export default function TestPage() {
                           onChange={() => setMcAnswers((prev) => ({ ...prev, [idx]: optIdx }))}
                           disabled={role !== 'student'}
                         />
-                        <span className="text-zinc-100">{o.text}</span>
+                        <div className="flex items-center gap-2">
+                          {o.imageUrl && (
+                            <img src={o.imageUrl} alt="" className="h-8 w-8 rounded object-cover" />
+                          )}
+                          <span className="text-zinc-100">{o.text}</span>
+                        </div>
                       </label>
                     ))}
                   </div>
@@ -287,6 +325,14 @@ export default function TestPage() {
                       placeholder="Escribe tu respuesta..."
                       disabled={role !== 'student'}
                     />
+                  </div>
+                )}
+
+                {/* Explanation - shown after result */}
+                {result && q.explanation && (
+                  <div className="mt-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 px-3 py-2">
+                    <span className="text-xs font-medium text-cyan-300">📝 Explicación:</span>
+                    <p className="mt-1 text-sm text-cyan-200">{q.explanation}</p>
                   </div>
                 )}
               </div>

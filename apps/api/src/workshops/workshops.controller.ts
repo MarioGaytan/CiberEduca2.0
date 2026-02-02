@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -14,6 +15,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '../common/roles.enum';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { AddCollaboratorDto, RemoveCollaboratorDto, RequestReasonDto } from './dto/collaborator.dto';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { ReviewFeedbackDto } from './dto/review-feedback.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
@@ -81,6 +83,12 @@ export class WorkshopsController {
     return this.workshopsService.listInReview(req.user);
   }
 
+  @Roles(Role.Teacher, Role.Reviewer, Role.Admin)
+  @Get('my-editable')
+  listEditable(@Req() req: { user: any }) {
+    return this.workshopsService.listEditableForUser(req.user);
+  }
+
   @Roles(Role.Student, Role.Teacher, Role.Reviewer, Role.Admin)
   @Get(':id')
   getById(@Req() req: { user: any }, @Param('id') id: string) {
@@ -98,5 +106,65 @@ export class WorkshopsController {
       throw new BadRequestException('Falta el parámetro code.');
     }
     return this.workshopsService.getByCode(req.user, id, code);
+  }
+
+  // ==================== NEW ENDPOINTS ====================
+
+  @Roles(Role.Reviewer, Role.Admin)
+  @Get('admin/pending-requests')
+  listPendingRequests(@Req() req: { user: any }) {
+    return this.workshopsService.listPendingRequests(req.user);
+  }
+
+  @Roles(Role.Teacher, Role.Admin)
+  @Post(':id/request-edit')
+  requestEdit(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Body() dto: RequestReasonDto,
+  ) {
+    return this.workshopsService.requestEdit(req.user, id, dto.reason);
+  }
+
+  @Roles(Role.Reviewer, Role.Admin)
+  @Post(':id/approve-edit')
+  approveEditRequest(@Req() req: { user: any }, @Param('id') id: string) {
+    return this.workshopsService.approveEditRequest(req.user, id);
+  }
+
+  @Roles(Role.Teacher, Role.Admin)
+  @Post(':id/request-delete')
+  requestDelete(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Body() dto: RequestReasonDto,
+  ) {
+    return this.workshopsService.requestDelete(req.user, id, dto.reason);
+  }
+
+  @Roles(Role.Reviewer, Role.Admin)
+  @Delete(':id')
+  approveDelete(@Req() req: { user: any }, @Param('id') id: string) {
+    return this.workshopsService.approveDelete(req.user, id);
+  }
+
+  @Roles(Role.Teacher, Role.Admin)
+  @Post(':id/collaborators')
+  addCollaborator(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Body() dto: AddCollaboratorDto,
+  ) {
+    return this.workshopsService.addCollaborator(req.user, id, dto.userId, dto.role);
+  }
+
+  @Roles(Role.Teacher, Role.Admin)
+  @Delete(':id/collaborators/:userId')
+  removeCollaborator(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.workshopsService.removeCollaborator(req.user, id, userId);
   }
 }

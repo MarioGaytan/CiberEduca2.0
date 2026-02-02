@@ -8,11 +8,11 @@ import { UsersService } from './users.service';
 
 @Controller('users')
 @UseGuards(JwtAccessGuard, RolesGuard)
-@Roles(Role.Admin)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @Roles(Role.Admin)
   async create(@Body() dto: CreateUserDto) {
     const created = await this.usersService.createUser(dto);
     const obj = created.toObject();
@@ -22,11 +22,27 @@ export class UsersController {
   }
 
   @Get()
+  @Roles(Role.Admin)
   list(
     @Req() req: { user: { schoolId?: string } },
     @Query('schoolId') schoolId?: string,
   ) {
     const effectiveSchoolId = schoolId ?? req.user.schoolId;
     return this.usersService.listUsers({ schoolId: effectiveSchoolId });
+  }
+
+  @Get('teachers')
+  @Roles(Role.Teacher, Role.Admin)
+  async searchTeachers(
+    @Req() req: { user: { schoolId?: string } },
+    @Query('q') query?: string,
+  ) {
+    const schoolId = req.user.schoolId;
+    const teachers = await this.usersService.searchTeachers(schoolId, query);
+    return teachers.map((t) => ({
+      _id: t._id,
+      username: t.username,
+      role: t.role,
+    }));
   }
 }

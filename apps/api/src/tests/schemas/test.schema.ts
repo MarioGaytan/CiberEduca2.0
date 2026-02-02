@@ -6,8 +6,11 @@ export type TestDocument = Test & Document;
 
 @Schema({ _id: false })
 export class TestQuestionOption {
-  @Prop({ required: true, trim: true, maxlength: 300 })
+  @Prop({ required: true, trim: true, maxlength: 500 })
   text!: string;
+
+  @Prop({ required: false, trim: true })
+  imageUrl?: string; // Optional image for the option
 }
 
 export const TestQuestionOptionSchema = SchemaFactory.createForClass(TestQuestionOption);
@@ -17,11 +20,20 @@ export class TestQuestion {
   @Prop({ required: true, enum: QuestionType })
   type!: QuestionType;
 
-  @Prop({ required: true, trim: true, maxlength: 2000 })
+  @Prop({ required: true, trim: true, maxlength: 3000 })
   prompt!: string;
 
   @Prop({ required: true, min: 0, max: 100 })
   points!: number;
+
+  @Prop({ required: false, trim: true })
+  mediaUrl?: string; // Image or video URL for the question
+
+  @Prop({ required: false, trim: true, maxlength: 2000 })
+  explanation?: string; // Explanation shown after answering (for learning)
+
+  @Prop({ required: false, trim: true, maxlength: 200 })
+  hint?: string; // Optional hint for students
 
   @Prop({ required: false, type: [TestQuestionOptionSchema] })
   options?: TestQuestionOption[];

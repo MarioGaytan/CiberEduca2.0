@@ -125,4 +125,3 @@ export const StudentProgressSchema = SchemaFactory.createForClass(StudentProgres
 
 // Index for ranking queries
 StudentProgressSchema.index({ schoolId: 1, totalXp: -1 });
-StudentProgressSchema.index({ userId: 1 }, { unique: true });

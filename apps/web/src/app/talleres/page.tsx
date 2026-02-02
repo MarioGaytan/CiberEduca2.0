@@ -8,6 +8,9 @@ type Workshop = {
   _id: string;
   title: string;
   description?: string;
+  coverImageUrl?: string;
+  estimatedMinutes?: number;
+  objectives?: string[];
   status: 'draft' | 'in_review' | 'approved';
   visibility: 'internal' | 'code';
   createdAt?: string;
@@ -147,28 +150,65 @@ export default function TalleresPage() {
         ) : filtered.length === 0 ? (
           <div className="mt-8 ce-card p-6 text-sm text-zinc-300">No hay talleres para mostrar.</div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((w) => (
               <Link
                 key={w._id}
                 href={`/talleres/${w._id}`}
-                className="ce-card ce-card-hover block p-5"
+                className="ce-card ce-card-hover block overflow-hidden"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-200">{w.title}</div>
-                    {w.description ? (
-                      <div className="mt-2 text-sm text-zinc-400 line-clamp-3">{w.description}</div>
-                    ) : null}
+                {/* Cover image */}
+                {w.coverImageUrl ? (
+                  <div className="h-32 w-full overflow-hidden bg-zinc-900">
+                    <img
+                      src={w.coverImageUrl}
+                      alt={w.title}
+                      className="h-full w-full object-cover transition-transform hover:scale-105"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
                   </div>
-                  <div className="text-xs text-zinc-400">
-                    <div className="rounded-lg border border-white/10 bg-black/20 px-2 py-1 capitalize">
+                ) : (
+                  <div className="flex h-32 w-full items-center justify-center bg-gradient-to-br from-fuchsia-900/30 to-purple-900/30">
+                    <span className="text-4xl">📚</span>
+                  </div>
+                )}
+                
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-sm font-semibold text-zinc-100 line-clamp-1">{w.title}</div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      w.status === 'approved' 
+                        ? 'bg-green-500/20 text-green-300' 
+                        : w.status === 'in_review'
+                        ? 'bg-amber-500/20 text-amber-300'
+                        : 'bg-zinc-500/20 text-zinc-300'
+                    }`}>
                       {w.status.replace('_', ' ')}
-                    </div>
+                    </span>
                   </div>
-                </div>
-                <div className="mt-3 text-xs text-zinc-500">
-                  Visibilidad: {w.visibility}
+                  
+                  {w.description && (
+                    <div className="mt-2 text-xs text-zinc-400 line-clamp-2">{w.description}</div>
+                  )}
+                  
+                  <div className="mt-3 flex items-center gap-3 text-xs text-zinc-500">
+                    {w.estimatedMinutes && (
+                      <span className="flex items-center gap-1">
+                        <span>⏱️</span>
+                        <span>{w.estimatedMinutes} min</span>
+                      </span>
+                    )}
+                    {w.objectives && w.objectives.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <span>🎯</span>
+                        <span>{w.objectives.length} objetivos</span>
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      {w.visibility === 'internal' ? '🔓' : '🔐'}
+                      <span className="capitalize">{w.visibility}</span>
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

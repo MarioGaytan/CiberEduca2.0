@@ -20,6 +20,10 @@ export class UpdateTestQuestionOptionDto {
   @MinLength(1)
   @MaxLength(300)
   text!: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class UpdateTestQuestionDto {
@@ -48,6 +52,20 @@ export class UpdateTestQuestionDto {
   @IsInt()
   @Min(0)
   correctOptionIndex?: number;
+
+  @IsOptional()
+  @IsString()
+  mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  explanation?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  hint?: string;
 }
 
 export class UpdateTestDto {

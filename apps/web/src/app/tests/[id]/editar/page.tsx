@@ -8,18 +8,29 @@ type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
   | { authenticated: false };
 
+type QuestionOption = {
+  text: string;
+  imageUrl?: string;
+};
+
 type Question =
   | {
       type: 'multiple_choice';
       prompt: string;
       points: number;
-      options: { text: string }[];
+      mediaUrl?: string;
+      explanation?: string;
+      hint?: string;
+      options: QuestionOption[];
       correctOptionIndex: number;
     }
   | {
       type: 'open';
       prompt: string;
       points: number;
+      mediaUrl?: string;
+      explanation?: string;
+      hint?: string;
     };
 
 type Test = {
@@ -38,13 +49,19 @@ type QuestionDraft =
       type: 'multiple_choice';
       prompt: string;
       points: number;
-      options: { text: string }[];
+      mediaUrl?: string;
+      explanation?: string;
+      hint?: string;
+      options: QuestionOption[];
       correctOptionIndex: number;
     }
   | {
       type: 'open';
       prompt: string;
       points: number;
+      mediaUrl?: string;
+      explanation?: string;
+      hint?: string;
     };
 
 export default function EditarTestPage() {
@@ -67,6 +84,7 @@ export default function EditarTestPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [questionErrors, setQuestionErrors] = useState<Record<number, string[]>>({});
+  const [showAdvanced, setShowAdvanced] = useState<Record<number, boolean>>({});
 
   const role = useMemo(() => (me && me.authenticated ? me.user.role : ''), [me]);
   const canEdit = role === 'teacher' || role === 'admin';
@@ -485,6 +503,79 @@ export default function EditarTestPage() {
                     disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
                   />
                 </div>
+
+                {/* Advanced options toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                  className="mt-4 text-sm text-fuchsia-300 hover:text-fuchsia-200"
+                  disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                >
+                  {showAdvanced[idx] ? '▼ Ocultar opciones avanzadas' : '▶ Mostrar opciones avanzadas'}
+                </button>
+
+                {showAdvanced[idx] && (
+                  <div className="mt-4 space-y-4 rounded-xl border border-white/10 bg-black/20 p-4">
+                    <div>
+                      <label className="text-sm font-medium text-zinc-300">Imagen o video (URL)</label>
+                      <input
+                        type="url"
+                        value={q.mediaUrl || ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, mediaUrl: v } as any) : it)));
+                        }}
+                        className="ce-field mt-1"
+                        placeholder="https://ejemplo.com/imagen.jpg o URL de YouTube"
+                        disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                      />
+                      {q.mediaUrl && (
+                        <div className="mt-2">
+                          {q.mediaUrl.includes('youtube.com') || q.mediaUrl.includes('youtu.be') ? (
+                            <div className="text-xs text-green-400">✓ Video de YouTube detectado</div>
+                          ) : (
+                            <img
+                              src={q.mediaUrl}
+                              alt="Preview"
+                              className="h-24 rounded-lg object-cover"
+                              onError={(e) => (e.currentTarget.style.display = 'none')}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-zinc-300">Pista para el estudiante</label>
+                      <input
+                        value={q.hint || ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, hint: v } as any) : it)));
+                        }}
+                        className="ce-field mt-1"
+                        placeholder="Una pista opcional que ayude al estudiante"
+                        maxLength={200}
+                        disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-zinc-300">Explicación (se muestra después de responder)</label>
+                      <textarea
+                        value={q.explanation || ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setQuestions((prev) => prev.map((it, i) => (i === idx ? ({ ...it, explanation: v } as any) : it)));
+                        }}
+                        className="ce-field mt-1 min-h-[80px]"
+                        placeholder="Explica por qué la respuesta es correcta (para aprendizaje)"
+                        maxLength={2000}
+                        disabled={!canEdit || (test.status ?? 'draft') !== 'draft'}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {q.type === 'multiple_choice' ? (
                   <div className="mt-4 space-y-3">

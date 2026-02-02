@@ -39,6 +39,8 @@ type AttemptAnswer = {
 type Attempt = {
   _id: string;
   studentUserId: string;
+  studentName?: string;
+  studentUsername?: string;
   answers: AttemptAnswer[];
   autoScore: number;
   manualScore: number;
@@ -201,13 +203,50 @@ export default function IntentosPage() {
               <div key={a._id} className="ce-card p-5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-zinc-200">Alumno</div>
-                    <div className="mt-1 text-sm text-zinc-400">{a.studentUserId}</div>
-                    <div className="mt-2 text-xs text-zinc-500">
-                      Auto: {a.autoScore} | Manual: {a.manualScore} | Total: {a.totalScore}
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 text-lg font-bold text-white">
+                        {(a.studentName || a.studentUsername || 'E')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-zinc-100">
+                          {a.studentName || a.studentUsername || 'Estudiante'}
+                        </div>
+                        {a.studentUsername && a.studentName && (
+                          <div className="text-xs text-zinc-500">@{a.studentUsername}</div>
+                        )}
+                      </div>
                     </div>
-                    <div className="mt-1 text-xs text-zinc-500">
-                      {a.needsManualReview ? 'Requiere revisión manual' : 'Calificado'}
+                    <div className="mt-3 flex flex-wrap gap-3">
+                      <div className="rounded-lg bg-cyan-500/20 px-3 py-1">
+                        <span className="text-xs text-zinc-400">Auto:</span>
+                        <span className="ml-1 text-sm font-bold text-cyan-300">{a.autoScore}</span>
+                      </div>
+                      <div className="rounded-lg bg-amber-500/20 px-3 py-1">
+                        <span className="text-xs text-zinc-400">Manual:</span>
+                        <span className="ml-1 text-sm font-bold text-amber-300">{a.manualScore}</span>
+                      </div>
+                      <div className="rounded-lg bg-green-500/20 px-3 py-1">
+                        <span className="text-xs text-zinc-400">Total:</span>
+                        <span className="ml-1 text-sm font-bold text-green-300">{a.totalScore}</span>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      {a.needsManualReview ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">
+                          ⏳ Requiere revisión manual
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-300">
+                          ✓ Calificado
+                        </span>
+                      )}
+                      {a.submittedAt && (
+                        <span className="ml-2 text-xs text-zinc-500">
+                          {new Date(a.submittedAt).toLocaleDateString('es-MX', { 
+                            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                          })}
+                        </span>
+                      )}
                     </div>
                   </div>
 

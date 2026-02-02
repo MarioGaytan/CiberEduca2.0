@@ -1,4 +1,18 @@
-import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ContentBlockDto } from './create-workshop.dto';
 import { WorkshopVisibility } from '../workshop.enums';
 
 export class UpdateWorkshopDto {
@@ -22,4 +36,26 @@ export class UpdateWorkshopDto {
   @MinLength(4)
   @MaxLength(32)
   accessCode?: string;
+
+  @IsOptional()
+  @IsUrl()
+  coverImageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  objectives?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(480)
+  estimatedMinutes?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ContentBlockDto)
+  content?: ContentBlockDto[];
 }

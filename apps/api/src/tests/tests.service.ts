@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
 import { ProgressService } from '../progress/progress.service';
+import { User, UserDocument } from '../users/schemas/user.schema';
 import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
 import { WorkshopStatus, WorkshopVisibility } from '../workshops/workshop.enums';
 import { AuthUser } from '../workshops/workshops.service';
@@ -27,6 +28,8 @@ export class TestsService {
     private readonly attemptModel: Model<TestAttemptDocument>,
     @InjectModel(Workshop.name)
     private readonly workshopModel: Model<WorkshopDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
     @Inject(forwardRef(() => ProgressService))
     private readonly progressService: ProgressService,
   ) {}
@@ -460,9 +463,26 @@ export class TestsService {
       throw new ForbiddenException('No tienes permisos.');
     }
 
-    return this.attemptModel
+    const attempts = await this.attemptModel
       .find({ testId })
       .sort({ submittedAt: -1 })
+      .lean()
       .exec();
+
+    // Enrich with student info
+    const studentIds = [...new Set(attempts.map(a => a.studentUserId))];
+    const students = await this.userModel
+      .find({ _id: { $in: studentIds } })
+      .select('_id username')
+      .lean()
+      .exec();
+    
+    const studentMap = new Map(students.map(s => [s._id.toString(), s]));
+
+    return attempts.map(a => ({
+      ...a,
+      studentName: studentMap.get(a.studentUserId)?.username || 'Estudiante desconocido',
+      studentUsername: studentMap.get(a.studentUserId)?.username || '',
+    }));
   }
 }
