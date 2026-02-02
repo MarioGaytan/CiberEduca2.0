@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { ClipboardCheck, BookOpen, Target, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 import CollaboratorManager from '../../_components/workshop/CollaboratorManager';
 import ContentBlockViewer, { ContentBlock } from '../../_components/workshop/ContentBlockViewer';
 
@@ -159,7 +160,7 @@ export default function TallerDetallePage() {
               onClick={() => actionPost(`/api/workshops/${id}/request-edit`, { reason: 'Solicitud de edición' })}
               className="ce-btn ce-btn-soft"
             >
-              ✏️ Solicitar edición
+              Solicitar edición
             </button>
           ) : null}
 
@@ -173,7 +174,7 @@ export default function TallerDetallePage() {
               }}
               className="ce-btn ce-btn-ghost text-red-400 hover:text-red-300"
             >
-              🗑️ Solicitar eliminación
+              Solicitar eliminación
             </button>
           ) : null}
 
@@ -183,7 +184,7 @@ export default function TallerDetallePage() {
               onClick={() => actionPost(`/api/workshops/${id}/approve-edit`)}
               className="ce-btn ce-btn-primary"
             >
-              ✅ Aprobar edición
+              Aprobar edición
             </button>
           ) : null}
 
@@ -197,7 +198,7 @@ export default function TallerDetallePage() {
               }}
               className="ce-btn ce-btn-danger"
             >
-              🗑️ Confirmar eliminación
+              Confirmar eliminación
             </button>
           ) : null}
         </div>
@@ -308,12 +309,12 @@ export default function TallerDetallePage() {
                 <div className="mt-3 flex gap-2">
                   {workshop.editRequested && (
                     <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-300">
-                      ✏️ Solicitud de edición pendiente
+                      Solicitud de edición pendiente
                     </span>
                   )}
                   {workshop.deleteRequested && (
                     <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-300">
-                      🗑️ Solicitud de eliminación pendiente
+                      Solicitud de eliminación pendiente
                     </span>
                   )}
                 </div>
@@ -358,7 +359,7 @@ export default function TallerDetallePage() {
           {/* Objectives */}
           {workshop.objectives && workshop.objectives.length > 0 && (
             <div className="ce-card p-5">
-              <div className="text-sm font-semibold text-zinc-200 mb-3">🎯 Objetivos de aprendizaje</div>
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-200 mb-3"><Target className="h-4 w-4" /> Objetivos de aprendizaje</div>
               <ul className="space-y-2">
                 {workshop.objectives.map((obj, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-sm text-zinc-300">
@@ -375,7 +376,7 @@ export default function TallerDetallePage() {
           {/* Content blocks - for students and staff */}
           {workshop.content && workshop.content.length > 0 && (
             <div className="ce-card p-5">
-              <div className="text-sm font-semibold text-zinc-200 mb-4">📖 Contenido del taller</div>
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-200 mb-4"><BookOpen className="h-4 w-4" /> Contenido del taller</div>
               <ContentBlockViewer blocks={workshop.content} />
             </div>
           )}
@@ -384,7 +385,7 @@ export default function TallerDetallePage() {
           <div className="ce-card p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold text-zinc-200">📝 Tests</div>
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-200"><ClipboardCheck className="h-4 w-4" /> Tests</div>
                 <div className="mt-1 text-sm text-zinc-400">
                   {role === 'student' 
                     ? 'Completa los tests para ganar XP y avanzar.'

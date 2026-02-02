@@ -958,7 +958,7 @@ export default function ExperienceManagerPage() {
             </div>
           ) : dicebearStyles.length === 0 ? (
             <div className="ce-card p-8 text-center">
-              <div className="text-4xl mb-4">🎨</div>
+              <Palette className="h-10 w-10 mx-auto mb-4 text-fuchsia-400" />
               <p className="text-zinc-300 font-medium">No hay estilos sincronizados</p>
               <p className="text-sm text-zinc-500 mt-2">
                 Ejecuta el comando de sincronización para importar los estilos de DiceBear:
@@ -1031,7 +1031,7 @@ export default function ExperienceManagerPage() {
                         {isFree ? (
                           <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">✓ Gratis</span>
                         ) : (
-                          <span className="text-xs text-fuchsia-300 bg-fuchsia-500/10 px-2 py-0.5 rounded-full">🔒 Bloqueado</span>
+                          <span className="text-xs text-fuchsia-300 bg-fuchsia-500/10 px-2 py-0.5 rounded-full">Bloqueado</span>
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-2">

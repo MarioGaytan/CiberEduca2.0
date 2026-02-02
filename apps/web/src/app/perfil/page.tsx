@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard } from 'lucide-react';
+import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
@@ -41,14 +41,34 @@ type ProgressData = {
   avatar: AvatarData;
 };
 
+type MedalShape = 'circle' | 'shield' | 'star' | 'hexagon' | 'diamond' | 'badge';
+
 type Medal = {
   type: string;
   name: string;
   description: string;
   icon: string;
+  iconType?: 'emoji' | 'lucide' | 'svg';
+  iconColor?: string;
+  bgColor?: string;
+  borderColor?: string;
+  shape?: MedalShape;
+  glow?: boolean;
   xp: number;
   earned: boolean;
   earnedAt?: string;
+  conditionType?: string;
+  conditionValue?: number;
+};
+
+const CONDITION_LABELS: Record<string, string> = {
+  tests_completed: 'Tests completados',
+  workshops_completed: 'Talleres completados',
+  perfect_scores: 'Puntuaciones perfectas',
+  streak_days: 'Días de racha',
+  ranking_position: 'Posición en ranking',
+  total_xp: 'XP total',
+  level_reached: 'Nivel alcanzado',
 };
 
 export default function PerfilPage() {
@@ -133,7 +153,7 @@ export default function PerfilPage() {
             <DiceBearAvatar config={progress.avatar} seed={me.user.username} size="xl" className="bg-zinc-800" />
           ) : (
             <div className="h-20 w-20 flex items-center justify-center rounded-full bg-zinc-800 text-3xl">
-              {role === 'teacher' ? '👨‍🏫' : role === 'admin' ? '⚙️' : role === 'experience_manager' ? '🎮' : '👤'}
+              {role === 'teacher' ? <GraduationCap className="h-10 w-10 text-fuchsia-400" /> : role === 'admin' ? <Settings className="h-10 w-10 text-cyan-400" /> : role === 'experience_manager' ? <Gamepad2 className="h-10 w-10 text-amber-400" /> : <User className="h-10 w-10 text-zinc-400" />}
             </div>
           )}
           <div>
@@ -165,9 +185,9 @@ export default function PerfilPage() {
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {tab === 'stats' && '📊 Estadísticas'}
-              {tab === 'avatar' && '🎨 Avatar'}
-              {tab === 'medals' && `🏅 Medallas (${earnedMedals.length})`}
+              {tab === 'stats' && <span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Estadísticas</span>}
+              {tab === 'avatar' && <span className="flex items-center gap-1.5"><Palette className="h-4 w-4" /> Avatar</span>}
+              {tab === 'medals' && <span className="flex items-center gap-1.5"><Award className="h-4 w-4" /> Medallas ({earnedMedals.length})</span>}
             </button>
           ))}
         </div>
@@ -238,33 +258,119 @@ export default function PerfilPage() {
       )}
 
       {/* Medals tab */}
-      {isStudent && activeTab === 'medals' && (
+      {isStudent && activeTab === 'medals' && progress && (
         <div className="mt-6 space-y-6">
+          {/* Stats Header */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="ce-card p-4 bg-gradient-to-br from-fuchsia-500/10 to-purple-500/10">
+              <div className="flex items-center gap-2 text-fuchsia-300">
+                <Trophy className="h-5 w-5" />
+                <span className="text-2xl font-bold">{earnedMedals.length}</span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">Medallas obtenidas</p>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
+              <div className="flex items-center gap-2 text-amber-300">
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-2xl font-bold">{earnedMedals.reduce((sum, m) => sum + m.xp, 0)}</span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">XP de medallas</p>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+              <div className="flex items-center gap-2 text-green-300">
+                <CheckCircle className="h-5 w-5" />
+                <span className="text-2xl font-bold">{medals.length > 0 ? Math.round((earnedMedals.length / medals.length) * 100) : 0}%</span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">Progreso total</p>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-zinc-500/10 to-zinc-600/10">
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Lock className="h-5 w-5" />
+                <span className="text-2xl font-bold">{unearnedMedals.length}</span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">Por desbloquear</p>
+            </div>
+          </div>
+
+          {/* Earned Medals */}
           {earnedMedals.length > 0 && (
             <div className="ce-card p-5">
               <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
                 <Trophy className="h-4 w-4 text-amber-400" />
                 Medallas ganadas ({earnedMedals.length})
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {earnedMedals.map((medal) => (
-                  <MedalBadge key={medal.type} medal={medal} size="lg" />
+                  <div key={medal.type} className="ce-card p-4 text-center bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
+                    <div className="flex justify-center mb-3">
+                      <MedalBadge medal={medal} size="lg" showTooltip={false} />
+                    </div>
+                    <h4 className="font-semibold text-zinc-100 text-sm">{medal.name}</h4>
+                    <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{medal.description}</p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-xs text-fuchsia-300">
+                      <CheckCircle className="h-3 w-3" />
+                      <span>+{medal.xp} XP</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* Unearned Medals with Progress */}
           {unearnedMedals.length > 0 && (
             <div className="ce-card p-5">
               <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200 mb-4">
                 <Lock className="h-4 w-4 text-zinc-400" />
                 Por desbloquear ({unearnedMedals.length})
               </div>
-              <div className="flex flex-wrap gap-4">
-                {unearnedMedals.map((medal) => (
-                  <MedalBadge key={medal.type} medal={medal} size="lg" />
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {unearnedMedals.map((medal) => {
+                  const currentProgress = medal.conditionType ? (
+                    medal.conditionType === 'tests_completed' ? progress.testsCompletedCount :
+                    medal.conditionType === 'workshops_completed' ? progress.workshopsCompletedCount :
+                    medal.conditionType === 'streak_days' ? progress.currentStreak :
+                    medal.conditionType === 'ranking_position' ? progress.rankingPosition :
+                    medal.conditionType === 'total_xp' ? progress.totalXp :
+                    medal.conditionType === 'level_reached' ? progress.level : 0
+                  ) : 0;
+                  const progressPercent = medal.conditionValue 
+                    ? Math.min(100, (currentProgress / medal.conditionValue) * 100) 
+                    : 0;
+
+                  return (
+                    <div key={medal.type} className="ce-card p-4 text-center opacity-70 hover:opacity-100 transition-opacity">
+                      <div className="flex justify-center mb-3">
+                        <MedalBadge medal={medal} size="lg" showTooltip={false} />
+                      </div>
+                      <h4 className="font-semibold text-zinc-100 text-sm">{medal.name}</h4>
+                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{medal.description}</p>
+                      
+                      {medal.conditionType && medal.conditionValue && (
+                        <div className="mt-3">
+                          <div className="flex justify-between text-xs text-zinc-500 mb-1">
+                            <span>{CONDITION_LABELS[medal.conditionType] || medal.conditionType}</span>
+                            <span>{currentProgress}/{medal.conditionValue}</span>
+                          </div>
+                          <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full transition-all"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+          )}
+
+          {medals.length === 0 && (
+            <div className="text-center py-12 text-zinc-500">
+              <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>No hay medallas disponibles</p>
             </div>
           )}
         </div>

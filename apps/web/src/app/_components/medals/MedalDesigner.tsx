@@ -261,55 +261,76 @@ export default function MedalDesigner({
         </div>
 
         {/* Custom Colors */}
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="text-xs text-zinc-400 mb-1 block">Color Icono</label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={design.iconColor}
-                onChange={(e) => updateDesign({ iconColor: e.target.value })}
-                className="w-10 h-10 rounded-lg cursor-pointer border-0"
-              />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-zinc-700/50">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-300 block">Color Icono</label>
+            <div className="flex items-center gap-2">
+              <div className="relative shrink-0 w-12 h-12">
+                <input
+                  type="color"
+                  value={design.iconColor}
+                  onChange={(e) => updateDesign({ iconColor: e.target.value })}
+                  className="absolute inset-0 w-full h-full rounded-lg cursor-pointer border-2 border-zinc-600 hover:border-zinc-500 transition-colors opacity-0"
+                />
+                <div 
+                  className="w-full h-full rounded-lg border-2 border-zinc-600 pointer-events-none"
+                  style={{ backgroundColor: design.iconColor }}
+                />
+              </div>
               <input
                 type="text"
                 value={design.iconColor}
                 onChange={(e) => updateDesign({ iconColor: e.target.value })}
-                className="flex-1 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700"
+                className="flex-1 min-w-0 h-10 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700 focus:border-fuchsia-500/50 focus:outline-none font-mono"
+                placeholder="#fbbf24"
               />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-zinc-400 mb-1 block">Color Fondo</label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={design.bgColor.replace(/[0-9a-f]{2}$/i, '')}
-                onChange={(e) => updateDesign({ bgColor: e.target.value + '20' })}
-                className="w-10 h-10 rounded-lg cursor-pointer border-0"
-              />
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-300 block">Color Fondo</label>
+            <div className="flex items-center gap-2">
+              <div className="relative shrink-0 w-12 h-12">
+                <input
+                  type="color"
+                  value={design.bgColor.replace(/[0-9a-f]{2}$/i, '')}
+                  onChange={(e) => updateDesign({ bgColor: e.target.value + '20' })}
+                  className="absolute inset-0 w-full h-full rounded-lg cursor-pointer border-2 border-zinc-600 hover:border-zinc-500 transition-colors opacity-0"
+                />
+                <div 
+                  className="w-full h-full rounded-lg border-2 border-zinc-600 pointer-events-none"
+                  style={{ backgroundColor: design.bgColor }}
+                />
+              </div>
               <input
                 type="text"
                 value={design.bgColor}
                 onChange={(e) => updateDesign({ bgColor: e.target.value })}
-                className="flex-1 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700"
+                className="flex-1 min-w-0 h-10 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700 focus:border-fuchsia-500/50 focus:outline-none font-mono"
+                placeholder="#fbbf2420"
               />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-zinc-400 mb-1 block">Color Borde</label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={design.borderColor}
-                onChange={(e) => updateDesign({ borderColor: e.target.value })}
-                className="w-10 h-10 rounded-lg cursor-pointer border-0"
-              />
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-300 block">Color Borde</label>
+            <div className="flex items-center gap-2">
+              <div className="relative shrink-0 w-12 h-12">
+                <input
+                  type="color"
+                  value={design.borderColor}
+                  onChange={(e) => updateDesign({ borderColor: e.target.value })}
+                  className="absolute inset-0 w-full h-full rounded-lg cursor-pointer border-2 border-zinc-600 hover:border-zinc-500 transition-colors opacity-0"
+                />
+                <div 
+                  className="w-full h-full rounded-lg border-2 border-zinc-600 pointer-events-none"
+                  style={{ backgroundColor: design.borderColor }}
+                />
+              </div>
               <input
                 type="text"
                 value={design.borderColor}
                 onChange={(e) => updateDesign({ borderColor: e.target.value })}
-                className="flex-1 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700"
+                className="flex-1 min-w-0 h-10 bg-zinc-800 rounded-lg px-3 text-sm text-zinc-200 border border-zinc-700 focus:border-fuchsia-500/50 focus:outline-none font-mono"
+                placeholder="#fbbf24"
               />
             </div>
           </div>

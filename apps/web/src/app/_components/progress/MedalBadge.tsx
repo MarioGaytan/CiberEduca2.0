@@ -67,7 +67,8 @@ function renderIcon(icon: string, iconType: string | undefined, size: string, co
         />
       );
     }
-    return <span className={sizeClass.icon}>🏅</span>;
+    const FallbackIcon = LucideIcons.Award;
+    return <FallbackIcon size={sizeClass.lucideSize} className="text-amber-400" />;
   }
   
   if (iconType === 'svg' && icon.startsWith('<svg')) {

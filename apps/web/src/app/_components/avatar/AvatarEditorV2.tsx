@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings } from 'lucide-react';
+import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings, Lock } from 'lucide-react';
 import { buildDiceBearUrl, DiceBearConfig } from './DiceBearAvatar';
 
 type DiceBearOption = {
@@ -333,7 +333,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
 
       {/* Style Selector */}
       <div className="ce-card p-5">
-        <h4 className="text-sm font-semibold text-zinc-200 mb-4">🎨 Estilo de Avatar</h4>
+        <h4 className="text-sm font-semibold text-zinc-200 mb-4">Estilo de Avatar</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {styles.map((style) => (
             <button
@@ -359,7 +359,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
               {!style.isUnlocked && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
                   <span className="text-xs text-zinc-300 px-2 py-1 bg-black/70 rounded">
-                    🔒 {style.requiredXp} XP
+                    {style.requiredXp} XP
                   </span>
                 </div>
               )}
@@ -429,7 +429,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                     title={option.displayName}
                   >
                     {!option.isUnlocked && (
-                      <span className="absolute inset-0 flex items-center justify-center text-xs">🔒</span>
+                      <Lock className="absolute inset-0 m-auto h-4 w-4 text-zinc-400" />
                     )}
                   </button>
                 );
@@ -490,7 +490,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                     {!option.isUnlocked && (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="bg-black/70 text-xs px-2 py-1 rounded text-zinc-300">
-                          🔒 {option.requiredXp} XP
+                          {option.requiredXp} XP
                         </span>
                       </div>
                     )}

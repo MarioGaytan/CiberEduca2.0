@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Heading, FileText, Video, ImageIcon } from 'lucide-react';
 
 export type ContentBlockType = 'text' | 'youtube' | 'image' | 'heading';
 
@@ -140,10 +141,10 @@ export default function ContentBlockEditor({ blocks, onChange, disabled }: Props
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-zinc-400">
-                {block.type === 'heading' && '📝 Encabezado'}
-                {block.type === 'text' && '📄 Texto'}
-                {block.type === 'youtube' && '🎬 Video YouTube'}
-                {block.type === 'image' && '🖼️ Imagen'}
+                {block.type === 'heading' && <><Heading className="h-3.5 w-3.5 inline mr-1" /> Encabezado</>}
+                {block.type === 'text' && <><FileText className="h-3.5 w-3.5 inline mr-1" /> Texto</>}
+                {block.type === 'youtube' && <><Video className="h-3.5 w-3.5 inline mr-1" /> Video YouTube</>}
+                {block.type === 'image' && <><ImageIcon className="h-3.5 w-3.5 inline mr-1" /> Imagen</>}
               </span>
               <span className="text-xs text-zinc-600">#{idx + 1}</span>
             </div>

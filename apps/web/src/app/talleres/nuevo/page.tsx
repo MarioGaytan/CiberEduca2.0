@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ClipboardList, FileText, Settings } from 'lucide-react';
 import ContentBlockEditor, { ContentBlock } from '../../_components/workshop/ContentBlockEditor';
 
 type WorkshopVisibility = 'internal' | 'code';
@@ -97,9 +98,9 @@ export default function NuevoTallerPage() {
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {tab === 'info' && '📋 Información'}
-            {tab === 'content' && '📝 Contenido'}
-            {tab === 'settings' && '⚙️ Configuración'}
+            {tab === 'info' && <span className="flex items-center gap-1.5"><ClipboardList className="h-4 w-4" /> Información</span>}
+            {tab === 'content' && <span className="flex items-center gap-1.5"><FileText className="h-4 w-4" /> Contenido</span>}
+            {tab === 'settings' && <span className="flex items-center gap-1.5"><Settings className="h-4 w-4" /> Configuración</span>}
           </button>
         ))}
       </div>

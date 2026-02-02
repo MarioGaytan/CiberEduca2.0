@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { PartyPopper } from 'lucide-react';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -144,7 +145,7 @@ export default function IntentosInboxPage() {
         ) : attempts.length === 0 ? (
           <div className="mt-8 ce-card p-6">
             <div className="text-center">
-              <div className="text-4xl">🎉</div>
+              <PartyPopper className="h-10 w-10 mx-auto text-fuchsia-400" />
               <div className="mt-3 text-sm font-semibold text-zinc-200">¡Todo al día!</div>
               <div className="mt-1 text-sm text-zinc-400">No hay intentos pendientes de revisión.</div>
             </div>

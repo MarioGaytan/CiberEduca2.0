@@ -337,7 +337,7 @@ export default function StyleDetailPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="ce-chip text-xs">
-                {style.styleCategory === 'characters' ? '👤 Personajes' : '🔷 Minimalista'}
+                {style.styleCategory === 'characters' ? 'Personajes' : 'Minimalista'}
               </span>
             </div>
             <h1 className="mt-2 text-2xl font-bold text-zinc-100">{style.displayName}</h1>
@@ -397,9 +397,9 @@ export default function StyleDetailPage() {
           </div>
           <div className="text-sm">
             {styleXp === 0 && styleLevel === 0 ? (
-              <span className="text-green-400">✅ Disponible desde el inicio</span>
+              <span className="text-green-400">Disponible desde el inicio</span>
             ) : (
-              <span className="text-fuchsia-300">🔒 {styleXp.toLocaleString()} XP, Nivel {styleLevel}</span>
+              <span className="text-fuchsia-300">{styleXp.toLocaleString()} XP, Nivel {styleLevel}</span>
             )}
           </div>
         </div>
@@ -452,7 +452,7 @@ export default function StyleDetailPage() {
                   onClick={() => setBulkEditMode(true)}
                   className="ce-btn ce-btn-ghost text-sm"
                 >
-                  ✏️ Edición en Lote
+                  Edición en Lote
                 </button>
               )}
             </div>
@@ -540,8 +540,8 @@ export default function StyleDetailPage() {
                               : 'text-fuchsia-300'
                           }`}>
                             {option.requiredXp === 0 && option.requiredLevel === 0
-                              ? '✅ Gratis'
-                              : `🔒 ${option.requiredXp} XP • Nv.${option.requiredLevel}`}
+                              ? 'Gratis'
+                              : `${option.requiredXp} XP • Nv.${option.requiredLevel}`}
                           </p>
                           <button
                             onClick={() => setEditingOption({

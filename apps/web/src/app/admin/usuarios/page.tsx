@@ -144,7 +144,7 @@ export default function AdminUsuariosPage() {
             href="/admin/experiencia"
             className="ce-btn ce-btn-ghost"
           >
-            🎮 Gamificación
+            Gamificación
           </Link>
           <Link
             href="/admin/revision"

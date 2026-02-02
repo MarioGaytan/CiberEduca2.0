@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Lightbulb } from 'lucide-react';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -331,7 +332,7 @@ export default function TestPage() {
                 {/* Explanation - shown after result */}
                 {result && q.explanation && (
                   <div className="mt-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 px-3 py-2">
-                    <span className="text-xs font-medium text-cyan-300">📝 Explicación:</span>
+                    <span className="flex items-center gap-1 text-xs font-medium text-cyan-300"><Lightbulb className="h-3.5 w-3.5" /> Explicación:</span>
                     <p className="mt-1 text-sm text-cyan-200">{q.explanation}</p>
                   </div>
                 )}

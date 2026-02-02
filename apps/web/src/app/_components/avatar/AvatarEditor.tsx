@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { Lock } from 'lucide-react';
 import DiceBearAvatar, { DiceBearConfig, buildDiceBearUrl } from './DiceBearAvatar';
 
 type AvatarOption = {
@@ -27,13 +28,13 @@ type Props = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  style: '🎨 Estilo',
-  skinColor: '👤 Tono de piel',
-  backgroundColor: '🖼️ Fondo',
-  eyes: '👁️ Ojos',
-  mouth: '👄 Boca',
-  top: '💇 Cabello',
-  accessories: '👓 Accesorios',
+  style: 'Estilo',
+  skinColor: 'Tono de piel',
+  backgroundColor: 'Fondo',
+  eyes: 'Ojos',
+  mouth: 'Boca',
+  top: 'Cabello',
+  accessories: 'Accesorios',
 };
 
 const CATEGORY_ORDER = ['style', 'skinColor', 'backgroundColor', 'top', 'eyes', 'mouth', 'accessories'];
@@ -259,7 +260,7 @@ export default function AvatarEditor({ currentConfig, username, userXp, userLeve
         {options.locked[activeCategory]?.length > 0 && (
           <div className="mt-6">
             <h5 className="text-xs font-semibold text-zinc-500 mb-3 flex items-center gap-2">
-              🔒 Por desbloquear
+              Por desbloquear
             </h5>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 opacity-60">
               {options.locked[activeCategory]?.slice(0, 6).map((option) => (
