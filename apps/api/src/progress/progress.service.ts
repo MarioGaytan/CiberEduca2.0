@@ -14,6 +14,7 @@ import {
   MEDAL_INFO,
   Medal,
   AvatarConfig,
+  TestCompletion,
 } from './schemas/student-progress.schema';
 
 export interface AuthUser {
@@ -252,6 +253,9 @@ export class ProgressService {
   /**
    * Record a test completion and update progress
    * Called after a student submits a test attempt
+   * 
+   * XP Logic: Only the best score counts. If student retakes and gets better score,
+   * they get the DIFFERENCE in XP, not cumulative.
    */
   async recordTestCompletion(
     user: AuthUser,
@@ -264,29 +268,57 @@ export class ProgressService {
 
     const progress = await this.getOrCreateProgress(user);
     const schoolId = this.requireSchoolId(user);
+    const now = new Date();
 
-    // Check if test already completed
-    if (progress.testsCompleted.includes(testId)) {
-      // Already recorded, just update activity
-      await this.updateActivity(progress);
-      return progress;
+    // Calculate XP for this score (simple: XP = score)
+    // TODO: Use GamificationService for dynamic config
+    const xpForThisScore = score;
+    const isPerfect = maxScore > 0 && score === maxScore;
+
+    // Find existing test completion
+    const existingIdx = progress.testsCompleted.findIndex(
+      (tc) => tc.testId === testId
+    );
+
+    if (existingIdx >= 0) {
+      // Test was completed before - check if new score is better
+      const existing = progress.testsCompleted[existingIdx];
+      existing.attemptCount += 1;
+      existing.lastAttemptAt = now;
+
+      if (score > existing.bestScore) {
+        // New best score! Calculate XP difference
+        const xpDifference = xpForThisScore - existing.xpEarned;
+        
+        if (xpDifference > 0) {
+          progress.totalXp += xpDifference;
+          existing.bestScore = score;
+          existing.xpEarned = xpForThisScore;
+        }
+      }
+      // If score is same or worse, no XP change
+    } else {
+      // First time completing this test
+      const testCompletion: TestCompletion = {
+        testId,
+        workshopId,
+        bestScore: score,
+        maxScore,
+        xpEarned: xpForThisScore,
+        firstCompletedAt: now,
+        lastAttemptAt: now,
+        attemptCount: 1,
+      };
+      
+      progress.testsCompleted.push(testCompletion);
+      progress.testsCompletedCount += 1;
+      progress.totalXp += xpForThisScore;
     }
 
-    // Add test to completed list
-    progress.testsCompleted.push(testId);
-    progress.testsCompletedCount += 1;
-
-    // Calculate XP earned (base 25 XP + bonus for score)
-    const scorePercentage = maxScore > 0 ? score / maxScore : 0;
-    let xpEarned = 25; // base XP for completing
-    xpEarned += Math.round(scorePercentage * 50); // up to 50 bonus XP for high scores
-    
-    // Perfect score medal
-    if (scorePercentage === 1) {
+    // Perfect score medal (only award once)
+    if (isPerfect) {
       await this.awardMedal(progress, MedalType.PerfectScore);
     }
-
-    progress.totalXp += xpEarned;
 
     // Check if all tests in workshop are completed
     const workshopTests = await this.testModel.find({
@@ -296,7 +328,9 @@ export class ProgressService {
     }).select('_id').exec();
 
     const workshopTestIds = workshopTests.map(t => String(t._id));
-    const completedTestIds = progress.testsCompleted.filter(id => workshopTestIds.includes(id));
+    const completedTestIds = progress.testsCompleted
+      .filter(tc => workshopTestIds.includes(tc.testId))
+      .map(tc => tc.testId);
 
     if (completedTestIds.length === workshopTestIds.length && workshopTestIds.length > 0) {
       // Workshop completed!

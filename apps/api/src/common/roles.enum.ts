@@ -3,4 +3,5 @@ export enum Role {
   Reviewer = 'reviewer',
   Teacher = 'teacher',
   Student = 'student',
+  ExperienceManager = 'experience_manager',
 }

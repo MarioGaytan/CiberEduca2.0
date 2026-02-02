@@ -17,7 +17,15 @@ type UserItem = {
   createdAt?: string;
 };
 
-const ROLES = ['admin', 'reviewer', 'teacher', 'student'] as const;
+const ROLES = ['admin', 'reviewer', 'teacher', 'student', 'experience_manager'] as const;
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrador',
+  reviewer: 'Revisor',
+  teacher: 'Profesor',
+  student: 'Estudiante',
+  experience_manager: 'Gestor de Experiencia',
+};
 
 type CreateUserDraft = {
   username: string;
@@ -133,6 +141,12 @@ export default function AdminUsuariosPage() {
         </div>
         <div className="flex gap-3">
           <Link
+            href="/admin/experiencia"
+            className="ce-btn ce-btn-ghost"
+          >
+            🎮 Gamificación
+          </Link>
+          <Link
             href="/admin/revision"
             className="ce-btn ce-btn-ghost"
           >
@@ -185,7 +199,7 @@ export default function AdminUsuariosPage() {
                 >
                   {ROLES.map((r) => (
                     <option key={r} value={r}>
-                      {r}
+                      {ROLE_LABELS[r] || r}
                     </option>
                   ))}
                 </select>
@@ -253,7 +267,7 @@ export default function AdminUsuariosPage() {
                   <div key={u._id} className="grid grid-cols-12 gap-2 px-4 py-3 text-sm text-zinc-200">
                     <div className="col-span-4 font-semibold text-zinc-100">{u.username}</div>
                     <div className="col-span-4 text-zinc-300">{u.email || '—'}</div>
-                    <div className="col-span-2 capitalize">{u.role}</div>
+                    <div className="col-span-2">{ROLE_LABELS[u.role] || u.role}</div>
                     <div className="col-span-2 text-zinc-400">{u.schoolId || '—'}</div>
                   </div>
                 ))}

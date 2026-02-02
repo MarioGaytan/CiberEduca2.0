@@ -63,6 +63,35 @@ export class AvatarConfig {
 export const AvatarConfigSchema = SchemaFactory.createForClass(AvatarConfig);
 
 @Schema({ _id: false })
+export class TestCompletion {
+  @Prop({ required: true })
+  testId!: string;
+
+  @Prop({ required: true })
+  workshopId!: string;
+
+  @Prop({ required: true, default: 0 })
+  bestScore!: number; // Best score achieved
+
+  @Prop({ required: true, default: 0 })
+  maxScore!: number; // Max possible score
+
+  @Prop({ required: true, default: 0 })
+  xpEarned!: number; // XP earned from this test (based on best score)
+
+  @Prop({ required: true })
+  firstCompletedAt!: Date;
+
+  @Prop({ required: true })
+  lastAttemptAt!: Date;
+
+  @Prop({ required: true, default: 1 })
+  attemptCount!: number;
+}
+
+export const TestCompletionSchema = SchemaFactory.createForClass(TestCompletion);
+
+@Schema({ _id: false })
 export class WorkshopCompletion {
   @Prop({ required: true })
   workshopId!: string;
@@ -102,8 +131,8 @@ export class StudentProgress {
   @Prop({ required: true, type: [WorkshopCompletionSchema], default: [] })
   workshopsCompleted!: WorkshopCompletion[];
 
-  @Prop({ required: true, default: [] })
-  testsCompleted!: string[]; // testIds
+  @Prop({ required: true, type: [TestCompletionSchema], default: [] })
+  testsCompleted!: TestCompletion[]; // Detailed test completions with XP tracking
 
   @Prop({ required: true, type: [MedalSchema], default: [] })
   medals!: Medal[];

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   ChevronRight,
+  Gamepad2,
   Home,
   Inbox,
   LayoutDashboard,
@@ -34,6 +35,7 @@ function navIcon(href: string) {
   if (href === '/intentos') return Inbox;
   if (href === '/admin/revision') return ShieldCheck;
   if (href === '/admin/usuarios') return Users;
+  if (href === '/admin/experiencia') return Gamepad2;
   if (href === '/dashboard') return LayoutDashboard;
   if (href === '/perfil') return User;
   return LayoutDashboard;
@@ -53,6 +55,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   admin: 'Admin',
   revision: 'Revisión',
   usuarios: 'Usuarios',
+  experiencia: 'Gamificación',
   editar: 'Editar',
 };
 
@@ -67,6 +70,8 @@ function getBreadcrumbs(pathname: string, role: string): { label: string; href: 
   // Add home/dashboard as first crumb based on role
   if (role === 'student') {
     crumbs.push({ label: 'Inicio', href: '/home' });
+  } else if (role === 'experience_manager') {
+    crumbs.push({ label: 'Gamificación', href: '/admin/experiencia' });
   } else if (role === 'teacher' || role === 'admin' || role === 'reviewer') {
     crumbs.push({ label: 'Dashboard', href: '/dashboard' });
   }
@@ -108,6 +113,7 @@ const NAV: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', visible: (r) => r === 'teacher' || r === 'admin' || r === 'reviewer' },
   { href: '/talleres', label: 'Talleres', visible: () => true },
   { href: '/intentos', label: 'Intentos', visible: (r) => r === 'teacher' || r === 'admin' },
+  { href: '/admin/experiencia', label: 'Gamificación', visible: (r) => r === 'admin' || r === 'experience_manager' },
   { href: '/admin/revision', label: 'Revisión', visible: (r) => r === 'admin' || r === 'reviewer' },
   { href: '/admin/usuarios', label: 'Usuarios', visible: (r) => r === 'admin' },
   { href: '/perfil', label: 'Perfil', visible: () => true },
