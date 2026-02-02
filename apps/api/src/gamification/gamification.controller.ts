@@ -250,4 +250,136 @@ export class GamificationController {
   ) {
     return this.gamificationService.updateDiceBearStyle(styleId, updates);
   }
+
+  // ========== OPTIMIZED AVATAR CONFIG ENDPOINTS ==========
+
+  /**
+   * Get avatar configs for a specific style (admin)
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Get('avatar-configs/:styleId')
+  async getAvatarConfigsForStyle(
+    @Req() req: { user: any },
+    @Param('styleId') styleId: string,
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.getAvatarConfigsForStyle(schoolId, styleId);
+  }
+
+  /**
+   * Update style unlock requirements
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Put('avatar-configs/:styleId/unlock')
+  async updateStyleUnlock(
+    @Req() req: { user: any },
+    @Param('styleId') styleId: string,
+    @Body() body: { requiredXp: number; requiredLevel: number },
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.updateStyleUnlockConfig(
+      schoolId,
+      styleId,
+      body.requiredXp,
+      body.requiredLevel,
+      req.user.userId,
+    );
+  }
+
+  /**
+   * Bulk update avatar option configs for a style
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Post('avatar-configs/:styleId/bulk')
+  async bulkUpdateAvatarConfigs(
+    @Req() req: { user: any },
+    @Param('styleId') styleId: string,
+    @Body() body: {
+      configs: Array<{
+        category: string;
+        optionValue: string;
+        displayName: string;
+        requiredXp: number;
+        requiredLevel: number;
+        isActive?: boolean;
+        sortOrder?: number;
+      }>;
+    },
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.bulkUpsertAvatarConfigs(
+      schoolId,
+      styleId,
+      body.configs,
+      req.user.userId,
+    );
+  }
+
+  // ========== OPTIMIZED MEDAL CONFIG ENDPOINTS ==========
+
+  /**
+   * Get all medals for school (optimized)
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Get('medal-configs')
+  async getMedalConfigs(@Req() req: { user: any }) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.getMedalsForSchool(schoolId, false);
+  }
+
+  /**
+   * Upsert a medal config
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Post('medal-configs')
+  async upsertMedalConfig(
+    @Req() req: { user: any },
+    @Body() body: {
+      medalId: string;
+      name: string;
+      description: string;
+      icon: string;
+      iconType?: string;
+      iconColor?: string;
+      bgColor?: string;
+      xpReward: number;
+      conditionType: string;
+      conditionValue: number;
+      conditionOperator?: string;
+      isActive?: boolean;
+      sortOrder?: number;
+    },
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.upsertMedalConfig(
+      schoolId,
+      body.medalId,
+      body,
+      req.user.userId,
+    );
+  }
+
+  /**
+   * Delete a medal config
+   */
+  @Roles(Role.Admin, Role.ExperienceManager)
+  @Delete('medal-configs/:medalId')
+  async deleteMedalConfig(
+    @Req() req: { user: any },
+    @Param('medalId') medalId: string,
+  ) {
+    const schoolId = req.user.schoolId ?? 'default';
+    await this.gamificationService.deleteMedalConfig(schoolId, medalId);
+    return { success: true };
+  }
+
+  /**
+   * Seed default medals
+   */
+  @Roles(Role.Admin)
+  @Post('medal-configs/seed-defaults')
+  async seedDefaultMedals(@Req() req: { user: any }) {
+    const schoolId = req.user.schoolId ?? 'default';
+    return this.gamificationService.seedDefaultMedals(schoolId, req.user.userId);
+  }
 }

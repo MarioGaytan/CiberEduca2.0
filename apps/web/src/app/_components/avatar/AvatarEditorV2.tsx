@@ -130,25 +130,37 @@ const LazyImage = memo(function LazyImage({
 export default function AvatarEditorV2({ currentConfig, username, userXp, userLevel, onSave }: Props) {
   const [config, setConfig] = useState<Partial<DiceBearConfig>>(currentConfig);
   const [styles, setStyles] = useState<StyleSummary[]>([]);
-  const [selectedStyle, setSelectedStyle] = useState<string>(currentConfig.style || 'avataaars');
+  const [selectedStyle, setSelectedStyle] = useState<string>(currentConfig.style || '');
   const [styleData, setStyleData] = useState<DiceBearStyleData | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [loadingStyle, setLoadingStyle] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [stylesLoaded, setStylesLoaded] = useState(false);
 
   // Fetch available styles
   useEffect(() => {
     fetchStyles();
   }, [userXp, userLevel]);
 
-  // Fetch style data when selected style changes
+  // Fetch style data when selected style changes AND styles are loaded
   useEffect(() => {
-    if (selectedStyle) {
-      fetchStyleData(selectedStyle);
+    if (selectedStyle && stylesLoaded) {
+      // Verify the style exists in available styles
+      const styleExists = styles.some(s => s.styleId === selectedStyle);
+      if (styleExists) {
+        fetchStyleData(selectedStyle);
+      } else if (styles.length > 0) {
+        // Style doesn't exist, select first available unlocked style
+        const firstUnlocked = styles.find(s => s.isUnlocked);
+        if (firstUnlocked) {
+          setSelectedStyle(firstUnlocked.styleId);
+          setConfig(prev => ({ ...prev, style: firstUnlocked.styleId }));
+        }
+      }
     }
-  }, [selectedStyle, userXp, userLevel]);
+  }, [selectedStyle, stylesLoaded, styles]);
 
   // Sync config when currentConfig changes externally
   useEffect(() => {
@@ -165,6 +177,16 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
       if (res.ok) {
         const data = await res.json();
         setStyles(data);
+        setStylesLoaded(true);
+        
+        // If no style selected yet, select first unlocked one
+        if (!selectedStyle && data.length > 0) {
+          const firstUnlocked = data.find((s: StyleSummary) => s.isUnlocked);
+          if (firstUnlocked) {
+            setSelectedStyle(firstUnlocked.styleId);
+            setConfig(prev => ({ ...prev, style: firstUnlocked.styleId }));
+          }
+        }
       }
     } catch (e) {
       console.error('Error fetching styles:', e);

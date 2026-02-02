@@ -64,6 +64,9 @@ export class DiceBearStyle {
   description?: string;
 
   @Prop({ required: false })
+  styleCategory?: string; // 'characters' | 'minimalist'
+
+  @Prop({ required: false })
   creator?: string;
 
   @Prop({ required: false })
@@ -90,6 +93,5 @@ export class DiceBearStyle {
 
 export const DiceBearStyleSchema = SchemaFactory.createForClass(DiceBearStyle);
 
-// Index for quick lookups
-DiceBearStyleSchema.index({ styleId: 1 });
+// Index for quick lookups (styleId already indexed via unique: true)
 DiceBearStyleSchema.index({ isActive: 1, sortOrder: 1 });

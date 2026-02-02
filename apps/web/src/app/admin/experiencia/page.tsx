@@ -91,10 +91,6 @@ export default function ExperienceManagerPage() {
   const [editingMedal, setEditingMedal] = useState<MedalDefinition | null>(null);
   const [showMedalForm, setShowMedalForm] = useState(false);
   
-  // Style detail view
-  const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
-  const [styleDetail, setStyleDetail] = useState<any>(null);
-  const [loadingStyleDetail, setLoadingStyleDetail] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -178,55 +174,6 @@ export default function ExperienceManagerPage() {
     }
   }
 
-  async function fetchStyleDetail(styleId: string) {
-    setLoadingStyleDetail(true);
-    setSelectedStyleId(styleId);
-    try {
-      // Fetch style with full options (using XP 999999 to see all options)
-      const res = await fetch(`/api/gamification/dicebear/styles/${styleId}/user/999999/999`);
-      if (res.ok) {
-        const data = await res.json();
-        setStyleDetail(data);
-      }
-    } catch (e) {
-      console.error('Error fetching style detail:', e);
-    } finally {
-      setLoadingStyleDetail(false);
-    }
-  }
-
-  async function saveOptionUnlock(category: string, value: string, requiredXp: number, requiredLevel: number) {
-    setSaving(true);
-    setError(null);
-    try {
-      const optionId = `${category}_${value}`.replace(/[^a-zA-Z0-9_]/g, '_');
-      const option: AvatarOptionDefinition = {
-        id: optionId,
-        category,
-        value,
-        displayName: value,
-        requiredXp,
-        requiredLevel,
-        isActive: true,
-        sortOrder: 0,
-      };
-      
-      const res = await fetch('/api/gamification/avatar-options', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(option),
-      });
-      
-      if (!res.ok) throw new Error('Error al guardar requisitos');
-      await fetchConfig();
-      if (selectedStyleId) await fetchStyleDetail(selectedStyleId);
-      setSuccess('Requisitos guardados');
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function fetchConfig() {
     try {
@@ -820,211 +767,180 @@ export default function ExperienceManagerPage() {
 
       {/* DiceBear Styles Tab */}
       {activeTab === 'styles' && (
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-zinc-100">Estilos de Avatar DiceBear</h2>
+        <div className="mt-6 space-y-6">
+          {/* Header con estadísticas */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="ce-card p-4 bg-gradient-to-br from-fuchsia-500/10 to-purple-500/10 border-fuchsia-500/20">
+              <div className="text-2xl font-bold text-fuchsia-300">{dicebearStyles.length}</div>
+              <div className="text-xs text-zinc-400">Estilos Totales</div>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+              <div className="text-2xl font-bold text-green-300">{dicebearStyles.filter(s => s.isActive).length}</div>
+              <div className="text-xs text-zinc-400">Activos</div>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
+              <div className="text-2xl font-bold text-cyan-300">
+                {dicebearStyles.reduce((sum, s) => sum + s.categoriesCount, 0)}
+              </div>
+              <div className="text-xs text-zinc-400">Categorías</div>
+            </div>
+            <div className="ce-card p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20">
+              <div className="text-2xl font-bold text-amber-300">
+                {dicebearStyles.reduce((sum, s) => sum + s.optionsCount, 0).toLocaleString()}
+              </div>
+              <div className="text-xs text-zinc-400">Opciones</div>
+            </div>
+          </div>
+
+          {/* Info y acciones */}
+          <div className="ce-card p-4 bg-zinc-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-300">
+                <strong>Haz clic en "Configurar"</strong> para personalizar los requisitos de desbloqueo de cada opción dentro de un estilo.
+              </p>
+              <p className="text-xs text-zinc-500 mt-1">
+                Los campos de XP y Nivel aquí configuran el requisito para desbloquear todo el estilo.
+              </p>
+            </div>
             <button
               onClick={fetchDiceBearStyles}
               disabled={loadingStyles}
-              className="ce-btn ce-btn-ghost text-sm"
+              className="ce-btn ce-btn-ghost text-sm whitespace-nowrap"
             >
-              {loadingStyles ? '⏳ Cargando...' : '🔄 Actualizar'}
+              {loadingStyles ? '⏳ Cargando...' : '🔄 Actualizar lista'}
             </button>
           </div>
 
-          <div className="ce-card p-4 mb-4 bg-zinc-800/50">
-            <p className="text-sm text-zinc-400">
-              Configura qué estilos de avatar están disponibles y los requisitos de XP/Nivel para desbloquearlos.
-              Los estilos con 0 XP y Nivel 0 están disponibles para todos desde el inicio.
-            </p>
-          </div>
-
           {loadingStyles ? (
-            <div className="ce-card p-6 text-center text-zinc-400">
-              <div className="animate-spin w-8 h-8 border-2 border-fuchsia-500 border-t-transparent rounded-full mx-auto mb-3" />
-              Cargando estilos de DiceBear...
+            <div className="ce-card p-8 text-center text-zinc-400">
+              <div className="animate-spin w-10 h-10 border-3 border-fuchsia-500 border-t-transparent rounded-full mx-auto mb-4" />
+              <p>Cargando estilos de DiceBear...</p>
+            </div>
+          ) : dicebearStyles.length === 0 ? (
+            <div className="ce-card p-8 text-center">
+              <div className="text-4xl mb-4">🎨</div>
+              <p className="text-zinc-300 font-medium">No hay estilos sincronizados</p>
+              <p className="text-sm text-zinc-500 mt-2">
+                Ejecuta el comando de sincronización para importar los estilos de DiceBear:
+              </p>
+              <code className="mt-3 inline-block bg-zinc-800 px-4 py-2 rounded-lg text-fuchsia-300 text-sm">
+                npm run sync-dicebear -w api
+              </code>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {dicebearStyles.map((style) => {
                 const styleOption = config?.avatarOptions?.find(
                   opt => opt.category === 'style' && opt.value === style.styleId
                 );
                 const requiredXp = styleOption?.requiredXp ?? 0;
                 const requiredLevel = styleOption?.requiredLevel ?? 0;
+                const isFree = requiredXp === 0 && requiredLevel === 0;
                 
                 return (
                   <div
                     key={style.styleId}
-                    className={`ce-card p-4 ${!style.isActive ? 'opacity-50' : ''}`}
+                    className={`ce-card p-4 transition-all hover:border-fuchsia-500/30 hover:shadow-lg hover:shadow-fuchsia-500/5 ${
+                      !style.isActive ? 'opacity-40 grayscale' : ''
+                    }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <img
-                        src={`${style.apiUrl}?seed=preview&size=64`}
-                        alt={style.displayName}
-                        className="w-16 h-16 rounded-lg bg-zinc-700"
-                        loading="lazy"
-                      />
+                    {/* Header */}
+                    <div className="flex items-start gap-4">
+                      <div className="relative">
+                        <img
+                          src={`${style.apiUrl}?seed=preview&size=72`}
+                          alt={style.displayName}
+                          className="w-18 h-18 rounded-xl bg-zinc-800 shadow-lg"
+                          loading="lazy"
+                        />
+                        {!style.isActive && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                            <span className="text-xs text-zinc-300">Inactivo</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-zinc-100 truncate">{style.displayName}</h3>
-                        <p className="text-xs text-zinc-500">{style.creator}</p>
-                        <p className="text-xs text-zinc-400 mt-1">
-                          {style.categoriesCount} categorías • {style.optionsCount} opciones
-                        </p>
-                      </div>
-                      <label className="flex items-center gap-1">
-                        <input
-                          type="checkbox"
-                          checked={style.isActive}
-                          onChange={(e) => toggleStyleActive(style.styleId, e.target.checked)}
-                          className="rounded border-zinc-600"
-                        />
-                        <span className="text-xs text-zinc-400">Activo</span>
-                      </label>
-                    </div>
-                    
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs text-zinc-500">XP requerido</label>
-                        <input
-                          type="number"
-                          defaultValue={requiredXp}
-                          onBlur={(e) => {
-                            const newXp = parseInt(e.target.value) || 0;
-                            if (newXp !== requiredXp) {
-                              updateStyleUnlockRequirements(style.styleId, newXp, requiredLevel);
-                            }
-                          }}
-                          className="ce-field mt-1 text-sm"
-                          min={0}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-zinc-500">Nivel requerido</label>
-                        <input
-                          type="number"
-                          defaultValue={requiredLevel}
-                          onBlur={(e) => {
-                            const newLevel = parseInt(e.target.value) || 0;
-                            if (newLevel !== requiredLevel) {
-                              updateStyleUnlockRequirements(style.styleId, requiredXp, newLevel);
-                            }
-                          }}
-                          className="ce-field mt-1 text-sm"
-                          min={0}
-                        />
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-zinc-100 truncate">{style.displayName}</h3>
+                          <label className="flex items-center gap-1.5 shrink-0">
+                            <input
+                              type="checkbox"
+                              checked={style.isActive}
+                              onChange={(e) => toggleStyleActive(style.styleId, e.target.checked)}
+                              className="rounded border-zinc-600 text-fuchsia-500 focus:ring-fuchsia-500"
+                            />
+                            <span className="text-xs text-zinc-500">Activo</span>
+                          </label>
+                        </div>
+                        <p className="text-xs text-zinc-500">por {style.creator}</p>
+                        <div className="flex gap-3 mt-2">
+                          <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">
+                            {style.categoriesCount} categorías
+                          </span>
+                          <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">
+                            {style.optionsCount} opciones
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="mt-3 flex justify-between items-center">
-                      {requiredXp === 0 && requiredLevel === 0 ? (
-                        <span className="text-xs text-green-400">✅ Disponible</span>
-                      ) : (
-                        <span className="text-xs text-fuchsia-400">🔒 {requiredXp} XP</span>
-                      )}
-                      <button
-                        onClick={() => fetchStyleDetail(style.styleId)}
-                        className="text-xs text-cyan-400 hover:text-cyan-300"
-                      >
-                        Ver opciones →
-                      </button>
+                    {/* Requisitos */}
+                    <div className="mt-4 p-3 rounded-lg bg-zinc-800/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-zinc-400">Requisitos de desbloqueo</span>
+                        {isFree ? (
+                          <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">✓ Gratis</span>
+                        ) : (
+                          <span className="text-xs text-fuchsia-300 bg-fuchsia-500/10 px-2 py-0.5 rounded-full">🔒 Bloqueado</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">XP</label>
+                          <input
+                            type="number"
+                            defaultValue={requiredXp}
+                            onBlur={(e) => {
+                              const newXp = parseInt(e.target.value) || 0;
+                              if (newXp !== requiredXp) {
+                                updateStyleUnlockRequirements(style.styleId, newXp, requiredLevel);
+                              }
+                            }}
+                            className="ce-field text-sm"
+                            min={0}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">Nivel</label>
+                          <input
+                            type="number"
+                            defaultValue={requiredLevel}
+                            onBlur={(e) => {
+                              const newLevel = parseInt(e.target.value) || 0;
+                              if (newLevel !== requiredLevel) {
+                                updateStyleUnlockRequirements(style.styleId, requiredXp, newLevel);
+                              }
+                            }}
+                            className="ce-field text-sm"
+                            min={0}
+                          />
+                        </div>
+                      </div>
                     </div>
+                    
+                    {/* Acción */}
+                    <button
+                      onClick={() => router.push(`/admin/experiencia/estilos/${style.styleId}`)}
+                      className="mt-4 w-full ce-btn ce-btn-ghost text-sm justify-center group"
+                    >
+                      <span>Configurar opciones</span>
+                      <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
                 );
               })}
-            </div>
-          )}
-          
-          {!loadingStyles && dicebearStyles.length === 0 && (
-            <div className="ce-card p-6 text-center text-zinc-400">
-              <p>No hay estilos de DiceBear sincronizados.</p>
-              <p className="text-sm mt-2">
-                Ejecuta <code className="bg-zinc-800 px-2 py-1 rounded">npm run sync-dicebear -w api</code> para sincronizar los estilos.
-              </p>
-            </div>
-          )}
-
-          {/* Style Detail View */}
-          {selectedStyleId && styleDetail && (
-            <div className="mt-6 ce-card p-6 border border-fuchsia-500/30">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={`${styleDetail.apiUrl}?seed=preview&size=80`}
-                    alt={styleDetail.displayName}
-                    className="w-20 h-20 rounded-xl bg-zinc-700"
-                  />
-                  <div>
-                    <h3 className="text-xl font-bold text-zinc-100">{styleDetail.displayName}</h3>
-                    <p className="text-sm text-zinc-400">por {styleDetail.creator}</p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {styleDetail.categories?.length || 0} categorías de personalización
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => { setSelectedStyleId(null); setStyleDetail(null); }}
-                  className="text-zinc-400 hover:text-zinc-200 text-xl"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {loadingStyleDetail ? (
-                <div className="text-center py-8 text-zinc-400">
-                  <div className="animate-spin w-6 h-6 border-2 border-fuchsia-500 border-t-transparent rounded-full mx-auto mb-2" />
-                  Cargando opciones...
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {styleDetail.categories?.map((category: any, catIdx: number) => (
-                    <div key={`${category.name}-${catIdx}`} className="border-t border-zinc-700 pt-4">
-                      <h4 className="font-semibold text-fuchsia-300 mb-3">
-                        {category.displayName} ({category.options?.length || 0} opciones)
-                      </h4>
-                      
-                      {category.isColor ? (
-                        <div className="flex flex-wrap gap-2">
-                          {category.options?.slice(0, 20).map((opt: any, idx: number) => (
-                            <div
-                              key={`${opt.value}-${idx}`}
-                              className="w-8 h-8 rounded-lg border border-white/20"
-                              style={{ backgroundColor: `#${opt.value}` }}
-                              title={`${opt.displayName} - ${opt.requiredXp} XP`}
-                            />
-                          ))}
-                          {category.options?.length > 20 && (
-                            <span className="text-xs text-zinc-500 self-center">+{category.options.length - 20} más</span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                          {category.options?.slice(0, 12).map((opt: any, idx: number) => (
-                            <div
-                              key={`${opt.value}-${idx}`}
-                              className={`p-2 rounded-lg text-center text-xs ${
-                                opt.isUnlocked 
-                                  ? 'bg-zinc-800 text-zinc-200' 
-                                  : 'bg-zinc-900 text-zinc-500'
-                              }`}
-                            >
-                              <div className="truncate font-medium">{opt.displayName}</div>
-                              <div className={`text-xs mt-1 ${opt.requiredXp > 0 ? 'text-fuchsia-400' : 'text-green-400'}`}>
-                                {opt.requiredXp > 0 ? `🔒 ${opt.requiredXp} XP` : '✅ Gratis'}
-                              </div>
-                            </div>
-                          ))}
-                          {category.options?.length > 12 && (
-                            <div className="p-2 rounded-lg text-center text-xs bg-zinc-900 text-zinc-500">
-                              +{category.options.length - 12} más
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>

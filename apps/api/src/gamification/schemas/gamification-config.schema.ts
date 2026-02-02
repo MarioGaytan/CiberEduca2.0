@@ -238,7 +238,7 @@ export const DEFAULT_AVATAR_OPTIONS: Omit<AvatarOptionDefinition, 'isActive' | '
   { id: 'mouth_eating', category: 'mouth', value: 'eating', displayName: 'Comiendo', requiredXp: 600, requiredLevel: 7 },
   
   // ========== ACCESORIOS (TODOS DESBLOQUEABLES) ==========
-  { id: 'acc_none', category: 'accessories', value: '', displayName: 'Ninguno', requiredXp: 0, requiredLevel: 0 },
+  { id: 'acc_none', category: 'accessories', value: 'none', displayName: 'Ninguno', requiredXp: 0, requiredLevel: 0 },
   { id: 'acc_glasses_round', category: 'accessories', value: 'round', displayName: 'Lentes Redondos', requiredXp: 100, requiredLevel: 2 },
   { id: 'acc_glasses_square', category: 'accessories', value: 'prescription02', displayName: 'Lentes Cuadrados', requiredXp: 200, requiredLevel: 3 },
   { id: 'acc_glasses_wayfarers', category: 'accessories', value: 'wayfarers', displayName: 'Wayfarers', requiredXp: 300, requiredLevel: 4 },

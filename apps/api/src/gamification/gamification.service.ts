@@ -16,6 +16,14 @@ import {
   DiceBearStyle,
   DiceBearStyleDocument,
 } from './schemas/dicebear-style.schema';
+import {
+  SchoolAvatarConfig,
+  SchoolAvatarConfigDocument,
+} from './schemas/school-avatar-config.schema';
+import {
+  SchoolMedalConfig,
+  SchoolMedalConfigDocument,
+} from './schemas/school-medal-config.schema';
 
 @Injectable()
 export class GamificationService {
@@ -25,6 +33,10 @@ export class GamificationService {
     private readonly configModel: Model<GamificationConfigDocument>,
     @InjectModel(DiceBearStyle.name)
     private readonly dicebearStyleModel: Model<DiceBearStyleDocument>,
+    @InjectModel(SchoolAvatarConfig.name)
+    private readonly avatarConfigModel: Model<SchoolAvatarConfigDocument>,
+    @InjectModel(SchoolMedalConfig.name)
+    private readonly medalConfigModel: Model<SchoolMedalConfigDocument>,
   ) {}
 
   private getDefaultSchoolId(): string {
@@ -36,6 +48,14 @@ export class GamificationService {
    */
   async getConfig(schoolId?: string): Promise<GamificationConfigDocument> {
     const id = schoolId && schoolId.trim() ? schoolId : this.getDefaultSchoolId();
+    
+    // First, fix any existing documents with empty values (migration fix)
+    // This runs BEFORE loading to avoid validation errors
+    await this.configModel.updateMany(
+      { schoolId: id, 'avatarOptions.value': '' },
+      { $set: { 'avatarOptions.$[elem].value': 'none' } },
+      { arrayFilters: [{ 'elem.value': '' }] }
+    ).exec();
     
     let config = await this.configModel.findOne({ schoolId: id }).exec();
     
@@ -369,14 +389,24 @@ export class GamificationService {
   // ========== DICEBEAR STYLES METHODS ==========
 
   /**
-   * Get all DiceBear styles
+   * Get all DiceBear styles with computed counts
    */
   async getDiceBearStyles(activeOnly = true) {
     const query = activeOnly ? { isActive: true } : {};
-    return this.dicebearStyleModel
+    const styles = await this.dicebearStyleModel
       .find(query)
       .sort({ sortOrder: 1 })
       .exec();
+    
+    // Add computed counts for frontend
+    return styles.map(style => {
+      const doc = style.toObject();
+      return {
+        ...doc,
+        categoriesCount: doc.categories?.length ?? 0,
+        optionsCount: doc.categories?.reduce((sum: number, c: any) => sum + (c.options?.length ?? 0), 0) ?? 0,
+      };
+    });
   }
 
   /**
@@ -423,8 +453,10 @@ export class GamificationService {
       (styleOption.requiredXp <= userXp && styleOption.requiredLevel <= userLevel);
     
     // Build categories with unlock status
-    const categoriesWithStatus = style.categories.map(category => {
-      const optionsWithStatus = category.options.map(option => {
+    // Convert Mongoose subdocuments to plain objects to preserve all fields
+    const styleObj = style.toObject();
+    const categoriesWithStatus = styleObj.categories.map((category: any) => {
+      const optionsWithStatus = (category.options || []).map((option: any) => {
         // Find if there's a specific unlock requirement for this option
         const optionConfig = config.avatarOptions.find(
           opt => opt.category === category.name && opt.value === option.value
@@ -449,7 +481,7 @@ export class GamificationService {
     });
     
     return {
-      ...style.toObject(),
+      ...styleObj,
       isUnlocked: isStyleUnlocked,
       requiredXp: styleOption?.requiredXp ?? 0,
       requiredLevel: styleOption?.requiredLevel ?? 0,
@@ -485,5 +517,307 @@ export class GamificationService {
         isUnlocked,
       };
     });
+  }
+
+  // ========== OPTIMIZED AVATAR CONFIG METHODS (New Collections) ==========
+
+  /**
+   * Get avatar configs for a specific style with optimized query
+   * Uses compound index: schoolId + styleId + category
+   */
+  async getAvatarConfigsForStyle(schoolId: string, styleId: string) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    return this.avatarConfigModel
+      .find({ schoolId: id, styleId })
+      .sort({ category: 1, sortOrder: 1 })
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Get unlocked avatar configs using optimized index query
+   * Uses compound index: schoolId + styleId + requiredXp + requiredLevel
+   */
+  async getUnlockedAvatarConfigsForStyle(
+    schoolId: string,
+    styleId: string,
+    userXp: number,
+    userLevel: number,
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    return this.avatarConfigModel
+      .find({
+        schoolId: id,
+        styleId,
+        isActive: true,
+        requiredXp: { $lte: userXp },
+        requiredLevel: { $lte: userLevel },
+      })
+      .sort({ category: 1, sortOrder: 1 })
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Upsert an avatar config (optimized single document update)
+   */
+  async upsertAvatarConfig(
+    schoolId: string,
+    styleId: string,
+    category: string,
+    optionValue: string,
+    data: Partial<SchoolAvatarConfig>,
+    userId?: string,
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    return this.avatarConfigModel.findOneAndUpdate(
+      { schoolId: id, styleId, category, optionValue },
+      {
+        $set: {
+          ...data,
+          schoolId: id,
+          styleId,
+          category,
+          optionValue,
+          lastModifiedBy: userId,
+        },
+      },
+      { upsert: true, new: true }
+    ).exec();
+  }
+
+  /**
+   * Bulk upsert avatar configs for a style (efficient batch operation)
+   */
+  async bulkUpsertAvatarConfigs(
+    schoolId: string,
+    styleId: string,
+    configs: Array<{
+      category: string;
+      optionValue: string;
+      displayName: string;
+      requiredXp: number;
+      requiredLevel: number;
+      isActive?: boolean;
+      sortOrder?: number;
+    }>,
+    userId?: string,
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    const bulkOps = configs.map((config, idx) => ({
+      updateOne: {
+        filter: {
+          schoolId: id,
+          styleId,
+          category: config.category,
+          optionValue: config.optionValue,
+        },
+        update: {
+          $set: {
+            schoolId: id,
+            styleId,
+            category: config.category,
+            optionValue: config.optionValue,
+            displayName: config.displayName,
+            requiredXp: config.requiredXp,
+            requiredLevel: config.requiredLevel,
+            isActive: config.isActive ?? true,
+            sortOrder: config.sortOrder ?? idx,
+            lastModifiedBy: userId,
+          },
+        },
+        upsert: true,
+      },
+    }));
+
+    return this.avatarConfigModel.bulkWrite(bulkOps);
+  }
+
+  /**
+   * Get style unlock config (whether a whole style is unlocked)
+   */
+  async getStyleUnlockConfig(schoolId: string, styleId: string) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    return this.avatarConfigModel.findOne({
+      schoolId: id,
+      styleId,
+      category: 'style',
+      optionValue: styleId,
+    }).lean().exec();
+  }
+
+  /**
+   * Update style unlock requirements
+   */
+  async updateStyleUnlockConfig(
+    schoolId: string,
+    styleId: string,
+    requiredXp: number,
+    requiredLevel: number,
+    userId?: string,
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    const style = await this.getDiceBearStyle(styleId);
+    
+    return this.avatarConfigModel.findOneAndUpdate(
+      { schoolId: id, styleId, category: 'style', optionValue: styleId },
+      {
+        $set: {
+          schoolId: id,
+          styleId,
+          category: 'style',
+          optionValue: styleId,
+          displayName: style.displayName,
+          requiredXp,
+          requiredLevel,
+          isActive: true,
+          lastModifiedBy: userId,
+        },
+      },
+      { upsert: true, new: true }
+    ).exec();
+  }
+
+  // ========== OPTIMIZED MEDAL CONFIG METHODS (New Collections) ==========
+
+  /**
+   * Get all medals for a school using optimized query
+   */
+  async getMedalsForSchool(schoolId: string, activeOnly = true) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    const query: any = { schoolId: id };
+    if (activeOnly) query.isActive = true;
+    
+    return this.medalConfigModel
+      .find(query)
+      .sort({ sortOrder: 1 })
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Get medals that should be awarded based on user stats
+   * Uses index: schoolId + conditionType + conditionValue
+   */
+  async getMedalsToAward(
+    schoolId: string,
+    stats: {
+      testsCompleted: number;
+      workshopsCompleted: number;
+      perfectScores: number;
+      currentStreak: number;
+      rankingPosition: number;
+      totalXp: number;
+    },
+    alreadyEarnedIds: string[],
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    const allMedals = await this.medalConfigModel
+      .find({ schoolId: id, isActive: true })
+      .lean()
+      .exec();
+
+    const toAward: SchoolMedalConfigDocument[] = [];
+
+    for (const medal of allMedals) {
+      if (alreadyEarnedIds.includes(medal.medalId)) continue;
+
+      let value = 0;
+      switch (medal.conditionType) {
+        case 'tests_completed': value = stats.testsCompleted; break;
+        case 'workshops_completed': value = stats.workshopsCompleted; break;
+        case 'perfect_scores': value = stats.perfectScores; break;
+        case 'streak_days': value = stats.currentStreak; break;
+        case 'ranking_position': value = stats.rankingPosition; break;
+        case 'total_xp': value = stats.totalXp; break;
+      }
+
+      const op = medal.conditionOperator ?? 'gte';
+      let conditionMet = false;
+
+      switch (op) {
+        case 'gte': conditionMet = value >= medal.conditionValue; break;
+        case 'lte': conditionMet = value <= medal.conditionValue && value > 0; break;
+        case 'eq': conditionMet = value === medal.conditionValue; break;
+      }
+
+      if (conditionMet) {
+        toAward.push(medal as any);
+      }
+    }
+
+    return toAward;
+  }
+
+  /**
+   * Upsert a medal config
+   */
+  async upsertMedalConfig(
+    schoolId: string,
+    medalId: string,
+    data: Partial<SchoolMedalConfig>,
+    userId?: string,
+  ) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    return this.medalConfigModel.findOneAndUpdate(
+      { schoolId: id, medalId },
+      {
+        $set: {
+          ...data,
+          schoolId: id,
+          medalId,
+          lastModifiedBy: userId,
+        },
+      },
+      { upsert: true, new: true }
+    ).exec();
+  }
+
+  /**
+   * Delete a medal config
+   */
+  async deleteMedalConfig(schoolId: string, medalId: string) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    return this.medalConfigModel.deleteOne({ schoolId: id, medalId }).exec();
+  }
+
+  /**
+   * Seed default medals for a school (migration helper)
+   */
+  async seedDefaultMedals(schoolId: string, userId?: string) {
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    
+    const bulkOps = DEFAULT_MEDALS.map((medal, idx) => ({
+      updateOne: {
+        filter: { schoolId: id, medalId: medal.id },
+        update: {
+          $setOnInsert: {
+            schoolId: id,
+            medalId: medal.id,
+            name: medal.name,
+            description: medal.description,
+            icon: medal.icon,
+            iconType: 'emoji',
+            xpReward: medal.xpReward,
+            conditionType: medal.conditionType,
+            conditionValue: medal.conditionValue,
+            conditionOperator: (medal as any).conditionOperator ?? 'gte',
+            isActive: true,
+            sortOrder: idx,
+            lastModifiedBy: userId,
+          },
+        },
+        upsert: true,
+      },
+    }));
+
+    return this.medalConfigModel.bulkWrite(bulkOps);
   }
 }

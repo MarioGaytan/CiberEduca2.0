@@ -9,38 +9,42 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DiceBearStyle, DiceBearStyleDocument, DiceBearCategory, DiceBearOptionValue } from '../schemas/dicebear-style.schema';
 
-// All 32 DiceBear styles with metadata
+// All DiceBear styles with metadata (updated 2025)
+// Reference: https://www.dicebear.com/styles/
 const DICEBEAR_STYLES = [
-  { id: 'adventurer', name: 'Adventurer', creator: 'Lisa Wischofsky' },
-  { id: 'adventurer-neutral', name: 'Adventurer Neutral', creator: 'Lisa Wischofsky' },
-  { id: 'avataaars', name: 'Avataaars', creator: 'Pablo Stanley' },
-  { id: 'avataaars-neutral', name: 'Avataaars Neutral', creator: 'Pablo Stanley' },
-  { id: 'big-ears', name: 'Big Ears', creator: 'The Visual Team' },
-  { id: 'big-ears-neutral', name: 'Big Ears Neutral', creator: 'The Visual Team' },
-  { id: 'big-smile', name: 'Big Smile', creator: 'Ashley Seo' },
-  { id: 'bottts', name: 'Bottts', creator: 'Pablo Stanley' },
-  { id: 'bottts-neutral', name: 'Bottts Neutral', creator: 'Pablo Stanley' },
-  { id: 'croodles', name: 'Croodles', creator: 'vijay verma' },
-  { id: 'croodles-neutral', name: 'Croodles Neutral', creator: 'vijay verma' },
-  { id: 'dylan', name: 'Dylan', creator: 'Natalia Flores' },
-  { id: 'fun-emoji', name: 'Fun Emoji', creator: 'Davis Uche' },
-  { id: 'glass', name: 'Glass', creator: 'DiceBear' },
-  { id: 'icons', name: 'Icons', creator: 'Bootstrap' },
-  { id: 'identicon', name: 'Identicon', creator: 'DiceBear' },
-  { id: 'initials', name: 'Initials', creator: 'DiceBear' },
-  { id: 'lorelei', name: 'Lorelei', creator: 'Lisa Wischofsky' },
-  { id: 'lorelei-neutral', name: 'Lorelei Neutral', creator: 'Lisa Wischofsky' },
-  { id: 'micah', name: 'Micah', creator: 'Micah Lanier' },
-  { id: 'miniavs', name: 'Miniavs', creator: 'Webpixels' },
-  { id: 'notionists', name: 'Notionists', creator: 'Zoish' },
-  { id: 'notionists-neutral', name: 'Notionists Neutral', creator: 'Zoish' },
-  { id: 'open-peeps', name: 'Open Peeps', creator: 'Pablo Stanley' },
-  { id: 'personas', name: 'Personas', creator: 'Draftbit' },
-  { id: 'pixel-art', name: 'Pixel Art', creator: 'DiceBear' },
-  { id: 'pixel-art-neutral', name: 'Pixel Art Neutral', creator: 'DiceBear' },
-  { id: 'rings', name: 'Rings', creator: 'DiceBear' },
-  { id: 'shapes', name: 'Shapes', creator: 'DiceBear' },
-  { id: 'thumbs', name: 'Thumbs', creator: 'DiceBear' },
+  // === Characters ===
+  { id: 'adventurer', name: 'Adventurer', creator: 'Lisa Wischofsky', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'adventurer-neutral', name: 'Adventurer Neutral', creator: 'Lisa Wischofsky', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'avataaars', name: 'Avataaars', creator: 'Pablo Stanley', license: 'Free for personal and commercial use', category: 'characters' },
+  { id: 'avataaars-neutral', name: 'Avataaars Neutral', creator: 'Pablo Stanley', license: 'Free for personal and commercial use', category: 'characters' },
+  { id: 'big-ears', name: 'Big Ears', creator: 'The Visual Team', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'big-ears-neutral', name: 'Big Ears Neutral', creator: 'The Visual Team', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'big-smile', name: 'Big Smile', creator: 'Ashley Seo', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'bottts', name: 'Bottts', creator: 'Pablo Stanley', license: 'Free for personal and commercial use', category: 'characters' },
+  { id: 'bottts-neutral', name: 'Bottts Neutral', creator: 'Pablo Stanley', license: 'Free for personal and commercial use', category: 'characters' },
+  { id: 'croodles', name: 'Croodles', creator: 'vijay verma', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'croodles-neutral', name: 'Croodles Neutral', creator: 'vijay verma', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'dylan', name: 'Dylan', creator: 'Natalia Spivak', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'fun-emoji', name: 'Fun Emoji', creator: 'Davis Uche', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'lorelei', name: 'Lorelei', creator: 'Lisa Wischofsky', license: 'CC0 1.0', category: 'characters' },
+  { id: 'lorelei-neutral', name: 'Lorelei Neutral', creator: 'Lisa Wischofsky', license: 'CC0 1.0', category: 'characters' },
+  { id: 'micah', name: 'Micah', creator: 'Micah Lanier', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'miniavs', name: 'Miniavs', creator: 'Webpixels', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'notionists', name: 'Notionists', creator: 'Zoish', license: 'CC0 1.0', category: 'characters' },
+  { id: 'notionists-neutral', name: 'Notionists Neutral', creator: 'Zoish', license: 'CC0 1.0', category: 'characters' },
+  { id: 'open-peeps', name: 'Open Peeps', creator: 'Pablo Stanley', license: 'CC0 1.0', category: 'characters' },
+  { id: 'personas', name: 'Personas', creator: 'Draftbit', license: 'CC BY 4.0', category: 'characters' },
+  { id: 'pixel-art', name: 'Pixel Art', creator: 'DiceBear', license: 'CC0 1.0', category: 'characters' },
+  { id: 'pixel-art-neutral', name: 'Pixel Art Neutral', creator: 'DiceBear', license: 'CC0 1.0', category: 'characters' },
+  { id: 'toon-head', name: 'Toon Head', creator: 'Johan Melin', license: 'CC BY 4.0', category: 'characters' },
+  // === Minimalist ===
+  { id: 'glass', name: 'Glass', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
+  { id: 'icons', name: 'Icons', creator: 'Bootstrap', license: 'MIT', category: 'minimalist' },
+  { id: 'identicon', name: 'Identicon', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
+  { id: 'initials', name: 'Initials', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
+  { id: 'rings', name: 'Rings', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
+  { id: 'shapes', name: 'Shapes', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
+  { id: 'thumbs', name: 'Thumbs', creator: 'DiceBear', license: 'CC0 1.0', category: 'minimalist' },
 ];
 
 // Category display names in Spanish
@@ -92,6 +96,50 @@ const CATEGORY_NAMES: Record<string, string> = {
   cheekColor: 'Color de Mejillas',
   frecklesProbability: 'Probabilidad de Pecas',
   dimplesProbability: 'Probabilidad de Hoyuelos',
+  // New categories for various styles
+  cheeks: 'Mejillas',
+  cheeksColor: 'Color de Mejillas',
+  eyesShadow: 'Sombra de Ojos',
+  eyesShadowColor: 'Color Sombra de Ojos',
+  freckles: 'Pecas',
+  frecklesColor: 'Color de Pecas',
+  gesture: 'Gesto',
+  pattern: 'Patrón',
+  primaryColor: 'Color Primario',
+  secondaryColor: 'Color Secundario',
+  tertiaryColor: 'Color Terciario',
+  emotion: 'Emoción',
+  shape: 'Forma',
+  texture: 'Textura',
+  variant: 'Variante',
+  baseColor: 'Color Base',
+  mole: 'Lunares',
+  moleProbability: 'Probabilidad de Lunares',
+  blush: 'Rubor',
+  blushColor: 'Color de Rubor',
+  flip: 'Voltear',
+  style: 'Estilo',
+  backgroundRotation: 'Rotación de Fondo',
+  icon: 'Icono',
+  row1: 'Fila 1',
+  row2: 'Fila 2',
+  row3: 'Fila 3',
+  row4: 'Fila 4',
+  row5: 'Fila 5',
+  sides: 'Lados',
+  mouthSmile: 'Sonrisa',
+  mouthSmileProbability: 'Probabilidad de Sonrisa',
+  shapeColor: 'Color de Forma',
+  smile: 'Sonrisa',
+  smileProbability: 'Probabilidad de Sonrisa',
+  sideburn: 'Patillas',
+  sideburnProbability: 'Probabilidad de Patillas',
+  spectacles: 'Anteojos',
+  spectaclesProbability: 'Probabilidad de Anteojos',
+  tatoos: 'Tatuajes',
+  tatoosProbability: 'Probabilidad de Tatuajes',
+  wrinkles: 'Arrugas',
+  wrinklesProbability: 'Probabilidad de Arrugas',
 };
 
 // Option value display names
@@ -133,27 +181,59 @@ function getOptionDisplayName(category: string, value: string): string {
   return displayNames[value] || value.charAt(0).toUpperCase() + value.slice(1).replace(/([A-Z])/g, ' $1');
 }
 
+// Helper to format camelCase to readable name
+function formatDisplayName(key: string): string {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
+}
+
+// Determine field type from schema property
+function determineFieldType(key: string, prop: any): string {
+  if (prop.type === 'boolean') return 'boolean';
+  if (prop.type === 'integer') return 'integer';
+  if (prop.type === 'array') return 'array';
+  if (prop.enum) return 'enum';
+  return 'unknown';
+}
+
 async function fetchSchema(styleId: string): Promise<any> {
   const url = `https://api.dicebear.com/9.x/${styleId}/schema.json`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn(`  ⚠️ Could not fetch schema for ${styleId}: ${response.status}`);
-      return null;
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (attempt === maxRetries) {
+          console.warn(`  ⚠️ Could not fetch schema for ${styleId}: ${response.status}`);
+          return null;
+        }
+        await new Promise(r => setTimeout(r, 1000 * attempt)); // Backoff
+        continue;
+      }
+      return await response.json();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        console.warn(`  ⚠️ Error fetching schema for ${styleId}:`, error);
+        return null;
+      }
+      await new Promise(r => setTimeout(r, 1000 * attempt));
     }
-    return await response.json();
-  } catch (error) {
-    console.warn(`  ⚠️ Error fetching schema for ${styleId}:`, error);
-    return null;
   }
+  return null;
 }
 
 function parseSchemaToCategories(schema: any): DiceBearCategory[] {
   const categories: DiceBearCategory[] = [];
   const properties = schema?.properties || {};
   
-  // Skip these generic properties
-  const skipProperties = ['seed', 'flip', 'rotate', 'scale', 'radius', 'size', 'translateX', 'translateY', 'clip', 'randomizeIds'];
+  // Skip these generic/internal properties that don't affect appearance meaningfully
+  const skipProperties = [
+    'seed', 'flip', 'rotate', 'scale', 'radius', 'size', 
+    'translateX', 'translateY', 'clip', 'randomizeIds'
+  ];
   
   let sortOrder = 0;
   
@@ -162,54 +242,100 @@ function parseSchemaToCategories(schema: any): DiceBearCategory[] {
     
     const category: DiceBearCategory = {
       name: key,
-      displayName: CATEGORY_NAMES[key] || key.charAt(0).toUpperCase() + key.slice(1),
-      type: prop.type || 'array',
+      displayName: CATEGORY_NAMES[key] || formatDisplayName(key),
+      type: determineFieldType(key, prop),
       options: [],
       sortOrder: sortOrder++,
     };
     
-    // Check if it's a color property
-    if (prop.items?.pattern?.includes('fA-F0-9') || key.toLowerCase().includes('color')) {
+    // Check if it's a color property (by pattern or naming convention)
+    const isColorField = 
+      prop.items?.pattern?.includes('[a-fA-F0-9]') || 
+      prop.items?.pattern?.includes('fA-F0-9') ||
+      key.toLowerCase().includes('color') ||
+      (prop.type === 'array' && prop.default?.every?.((v: string) => /^[a-fA-F0-9]{6}$/.test(v)));
+    
+    if (isColorField) {
       category.isColor = true;
+      category.type = 'color';
       category.colorPattern = prop.items?.pattern;
       
-      // If there are example colors, add them as options
-      if (Array.isArray(prop.examples) && prop.examples.length > 0) {
-        const colors = prop.examples.flat();
-        colors.forEach((color: string, i: number) => {
-          if (color && color !== 'transparent') {
-            category.options.push({
-              value: color,
-              displayName: `#${color}`,
-            });
-          }
+      // Collect colors from examples, defaults, and enum
+      const colorSet = new Set<string>();
+      
+      // From examples
+      if (Array.isArray(prop.examples)) {
+        prop.examples.flat().forEach((c: string) => {
+          if (c && c !== 'transparent' && /^[a-fA-F0-9]{3,8}$/.test(c)) colorSet.add(c);
         });
       }
+      
+      // From default
+      if (Array.isArray(prop.default)) {
+        prop.default.forEach((c: string) => {
+          if (c && c !== 'transparent' && /^[a-fA-F0-9]{3,8}$/.test(c)) colorSet.add(c);
+        });
+      }
+      
+      // From enum in items
+      if (prop.items?.enum) {
+        prop.items.enum.forEach((c: string) => {
+          if (c && c !== 'transparent' && /^[a-fA-F0-9]{3,8}$/.test(c)) colorSet.add(c);
+        });
+      }
+      
+      colorSet.forEach(color => {
+        category.options.push({
+          value: color,
+          displayName: `#${color.toUpperCase()}`,
+        });
+      });
     }
-    // Array of string options
+    // Array of string/enum options
     else if (prop.type === 'array' && prop.items?.enum) {
-      prop.items.enum.forEach((value: string, i: number) => {
+      prop.items.enum.forEach((value: string) => {
         category.options.push({
           value,
           displayName: getOptionDisplayName(key, value),
         });
       });
     }
-    // Integer with min/max
-    else if (prop.type === 'integer') {
-      category.min = prop.minimum;
-      category.max = prop.maximum;
+    // Single enum (not array)
+    else if (prop.enum) {
+      prop.enum.forEach((value: string) => {
+        category.options.push({
+          value: String(value),
+          displayName: getOptionDisplayName(key, String(value)),
+        });
+      });
     }
-    // Boolean
+    // Integer with min/max (probability fields, etc)
+    else if (prop.type === 'integer') {
+      category.type = 'integer';
+      category.min = prop.minimum ?? 0;
+      category.max = prop.maximum ?? 100;
+      // For probability fields, add preset options
+      if (key.toLowerCase().includes('probability')) {
+        category.options = [
+          { value: '0', displayName: '0%' },
+          { value: '25', displayName: '25%' },
+          { value: '50', displayName: '50%' },
+          { value: '75', displayName: '75%' },
+          { value: '100', displayName: '100%' },
+        ];
+      }
+    }
+    // Boolean fields
     else if (prop.type === 'boolean') {
+      category.type = 'boolean';
       category.options = [
         { value: 'true', displayName: 'Sí' },
         { value: 'false', displayName: 'No' },
       ];
     }
     
-    // Only add categories with options or specific types
-    if (category.options.length > 0 || category.isColor || category.type === 'integer') {
+    // Only add categories with options or numeric ranges
+    if (category.options.length > 0 || category.type === 'integer' || category.isColor) {
       categories.push(category);
     }
   }
@@ -259,13 +385,15 @@ async function main() {
       styleId: style.id,
       displayName: style.name,
       creator: style.creator,
-      license: 'CC BY 4.0',
+      license: style.license || 'CC BY 4.0',
+      styleCategory: style.category,
       apiUrl: `https://api.dicebear.com/9.x/${style.id}/svg`,
       schemaUrl: `https://api.dicebear.com/9.x/${style.id}/schema.json`,
       categories,
       isActive: true,
       sortOrder: DICEBEAR_STYLES.indexOf(style),
       lastSyncedAt: new Date(),
+      description: `${style.name} by ${style.creator}`,
     };
     
     await styleModel.findOneAndUpdate(

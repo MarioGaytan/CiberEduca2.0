@@ -200,7 +200,29 @@ export default function PerfilPage() {
 
       {/* Avatar customization tab - DiceBear Editor */}
       {isStudent && activeTab === 'avatar' && progress && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
+          {/* Progress info for unlocking */}
+          <div className="ce-card p-4 bg-gradient-to-r from-fuchsia-500/10 via-purple-500/10 to-cyan-500/10 border-fuchsia-500/20">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-200">Tu progreso de personalización</h3>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Gana más XP para desbloquear estilos y opciones exclusivas
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-fuchsia-300">{progress.totalXp.toLocaleString()}</div>
+                  <div className="text-xs text-zinc-500">XP</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-cyan-300">Nv. {progress.level}</div>
+                  <div className="text-xs text-zinc-500">Nivel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <AvatarEditorV2
             currentConfig={progress.avatar}
             username={me.user.username}

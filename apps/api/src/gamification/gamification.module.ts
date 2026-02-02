@@ -10,12 +10,22 @@ import {
   DiceBearStyle,
   DiceBearStyleSchema,
 } from './schemas/dicebear-style.schema';
+import {
+  SchoolAvatarConfig,
+  SchoolAvatarConfigSchema,
+} from './schemas/school-avatar-config.schema';
+import {
+  SchoolMedalConfig,
+  SchoolMedalConfigSchema,
+} from './schemas/school-medal-config.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: GamificationConfig.name, schema: GamificationConfigSchema },
       { name: DiceBearStyle.name, schema: DiceBearStyleSchema },
+      { name: SchoolAvatarConfig.name, schema: SchoolAvatarConfigSchema },
+      { name: SchoolMedalConfig.name, schema: SchoolMedalConfigSchema },
     ]),
   ],
   controllers: [GamificationController],
