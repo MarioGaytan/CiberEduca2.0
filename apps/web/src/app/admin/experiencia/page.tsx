@@ -81,7 +81,7 @@ export default function ExperienceManagerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals' | 'avatars' | 'styles'>('xp');
+  const [activeTab, setActiveTab] = useState<'xp' | 'levels' | 'medals' | 'styles'>('xp');
 
   // DiceBear styles
   const [dicebearStyles, setDicebearStyles] = useState<DiceBearStyleSummary[]>([]);
@@ -91,9 +91,10 @@ export default function ExperienceManagerPage() {
   const [editingMedal, setEditingMedal] = useState<MedalDefinition | null>(null);
   const [showMedalForm, setShowMedalForm] = useState(false);
   
-  // Avatar option editing
-  const [editingAvatar, setEditingAvatar] = useState<AvatarOptionDefinition | null>(null);
-  const [showAvatarForm, setShowAvatarForm] = useState(false);
+  // Style detail view
+  const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
+  const [styleDetail, setStyleDetail] = useState<any>(null);
+  const [loadingStyleDetail, setLoadingStyleDetail] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -170,6 +171,56 @@ export default function ExperienceManagerPage() {
       if (!res.ok) throw new Error('Error al actualizar estilo');
       await fetchDiceBearStyles();
       setSuccess(`Estilo ${isActive ? 'activado' : 'desactivado'}`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function fetchStyleDetail(styleId: string) {
+    setLoadingStyleDetail(true);
+    setSelectedStyleId(styleId);
+    try {
+      // Fetch style with full options (using XP 999999 to see all options)
+      const res = await fetch(`/api/gamification/dicebear/styles/${styleId}/user/999999/999`);
+      if (res.ok) {
+        const data = await res.json();
+        setStyleDetail(data);
+      }
+    } catch (e) {
+      console.error('Error fetching style detail:', e);
+    } finally {
+      setLoadingStyleDetail(false);
+    }
+  }
+
+  async function saveOptionUnlock(category: string, value: string, requiredXp: number, requiredLevel: number) {
+    setSaving(true);
+    setError(null);
+    try {
+      const optionId = `${category}_${value}`.replace(/[^a-zA-Z0-9_]/g, '_');
+      const option: AvatarOptionDefinition = {
+        id: optionId,
+        category,
+        value,
+        displayName: value,
+        requiredXp,
+        requiredLevel,
+        isActive: true,
+        sortOrder: 0,
+      };
+      
+      const res = await fetch('/api/gamification/avatar-options', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(option),
+      });
+      
+      if (!res.ok) throw new Error('Error al guardar requisitos');
+      await fetchConfig();
+      if (selectedStyleId) await fetchStyleDetail(selectedStyleId);
+      setSuccess('Requisitos guardados');
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -272,42 +323,6 @@ export default function ExperienceManagerPage() {
     }
   }
 
-  async function saveAvatarOption(option: AvatarOptionDefinition) {
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/gamification/avatar-options', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(option),
-      });
-      if (!res.ok) throw new Error('Error al guardar opción de avatar');
-      await fetchConfig();
-      setShowAvatarForm(false);
-      setEditingAvatar(null);
-      setSuccess('Opción de avatar guardada');
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function deleteAvatarOption(optionId: string) {
-    if (!confirm('¿Eliminar esta opción de avatar?')) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/gamification/avatar-options/delete/${optionId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error al eliminar opción');
-      await fetchConfig();
-      setSuccess('Opción eliminada');
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   function updateXpRule(key: keyof XpRules, value: number) {
     if (!config) return;
     setConfig({
@@ -391,14 +406,6 @@ export default function ExperienceManagerPage() {
           }`}
         >
           🏅 Medallas ({config.medals.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('avatars')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
-            activeTab === 'avatars' ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-zinc-400 hover:text-zinc-200'
-          }`}
-        >
-          🎨 Avatares ({config.avatarOptions?.length || 0})
         </button>
         <button
           onClick={() => setActiveTab('styles')}
@@ -811,193 +818,6 @@ export default function ExperienceManagerPage() {
         </div>
       )}
 
-      {/* Avatar Options Tab */}
-      {activeTab === 'avatars' && (
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-zinc-100">Opciones de Avatar (DiceBear)</h2>
-            <button
-              onClick={() => {
-                setEditingAvatar({
-                  id: `avatar_${Date.now()}`,
-                  category: 'style',
-                  value: '',
-                  displayName: '',
-                  requiredXp: 0,
-                  requiredLevel: 0,
-                  isActive: true,
-                  sortOrder: config.avatarOptions?.length || 0,
-                });
-                setShowAvatarForm(true);
-              }}
-              className="ce-btn ce-btn-primary"
-            >
-              + Nueva opción
-            </button>
-          </div>
-
-          <div className="ce-card p-4 mb-4 bg-zinc-800/50">
-            <p className="text-sm text-zinc-400">
-              Las opciones de avatar usan <a href="https://www.dicebear.com/styles/" target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 hover:underline">DiceBear API</a>. 
-              Cada categoría controla un aspecto del avatar que los estudiantes pueden personalizar según su XP y nivel.
-            </p>
-          </div>
-
-          {showAvatarForm && editingAvatar && (
-            <div className="ce-card p-6 mb-4 border border-fuchsia-500/30">
-              <h3 className="text-md font-semibold text-fuchsia-300 mb-4">
-                {editingAvatar.displayName ? `Editar: ${editingAvatar.displayName}` : 'Nueva opción de avatar'}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-zinc-400">Categoría</label>
-                  <select
-                    value={editingAvatar.category}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, category: e.target.value })}
-                    className="ce-field mt-1"
-                  >
-                    <option value="style">Estilo (style)</option>
-                    <option value="skinColor">Tono de piel (skinColor)</option>
-                    <option value="backgroundColor">Fondo (backgroundColor)</option>
-                    <option value="top">Cabello (top)</option>
-                    <option value="eyes">Ojos (eyes)</option>
-                    <option value="mouth">Boca (mouth)</option>
-                    <option value="accessories">Accesorios (accessories)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Nombre visible</label>
-                  <input
-                    type="text"
-                    value={editingAvatar.displayName}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, displayName: e.target.value })}
-                    className="ce-field mt-1"
-                    placeholder="Ej: Cabello Rizado"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Valor DiceBear</label>
-                  <input
-                    type="text"
-                    value={editingAvatar.value}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, value: e.target.value })}
-                    className="ce-field mt-1"
-                    placeholder="Ej: longHairCurly, f8d9c4, avataaars"
-                  />
-                  <p className="text-xs text-zinc-500 mt-1">Consulta la documentación de DiceBear para valores válidos</p>
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">XP requerido</label>
-                  <input
-                    type="number"
-                    value={editingAvatar.requiredXp}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, requiredXp: parseInt(e.target.value) || 0 })}
-                    className="ce-field mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Nivel requerido</label>
-                  <input
-                    type="number"
-                    value={editingAvatar.requiredLevel}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, requiredLevel: parseInt(e.target.value) || 0 })}
-                    className="ce-field mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Activa</label>
-                  <select
-                    value={editingAvatar.isActive ? 'true' : 'false'}
-                    onChange={(e) => setEditingAvatar({ ...editingAvatar, isActive: e.target.value === 'true' })}
-                    className="ce-field mt-1"
-                  >
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => saveAvatarOption(editingAvatar)}
-                  disabled={saving || !editingAvatar.displayName || !editingAvatar.value}
-                  className="ce-btn ce-btn-primary"
-                >
-                  {saving ? 'Guardando...' : 'Guardar opción'}
-                </button>
-                <button
-                  onClick={() => { setShowAvatarForm(false); setEditingAvatar(null); }}
-                  className="ce-btn ce-btn-ghost"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Group by category */}
-          {['style', 'skinColor', 'backgroundColor', 'top', 'eyes', 'mouth', 'accessories'].map((category) => {
-            const categoryOptions = config.avatarOptions?.filter(opt => opt.category === category) || [];
-            if (categoryOptions.length === 0) return null;
-            
-            const categoryLabels: Record<string, string> = {
-              style: '🎨 Estilos',
-              skinColor: '👤 Tonos de piel',
-              backgroundColor: '🖼️ Fondos',
-              top: '💇 Cabello',
-              eyes: '👁️ Ojos',
-              mouth: '👄 Boca',
-              accessories: '👓 Accesorios',
-            };
-            
-            return (
-              <div key={category} className="mb-6">
-                <h3 className="text-sm font-semibold text-fuchsia-300 mb-3">
-                  {categoryLabels[category]} ({categoryOptions.length})
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {categoryOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className={`ce-card p-3 text-center ${!option.isActive ? 'opacity-50' : ''}`}
-                    >
-                      {category === 'backgroundColor' || category === 'skinColor' ? (
-                        <div
-                          className="w-full h-12 rounded-lg mb-2"
-                          style={{ backgroundColor: `#${option.value}` }}
-                        />
-                      ) : (
-                        <div className="text-2xl mb-2">
-                          {category === 'style' ? '🎭' : category === 'top' ? '💇' : category === 'eyes' ? '👁️' : category === 'mouth' ? '👄' : '👓'}
-                        </div>
-                      )}
-                      <div className="text-xs font-medium text-zinc-200 truncate">{option.displayName}</div>
-                      <div className="text-xs text-zinc-500 truncate">{option.value}</div>
-                      <div className="text-xs text-fuchsia-400 mt-1">
-                        {option.requiredXp} XP / Nv.{option.requiredLevel}
-                      </div>
-                      <div className="mt-2 flex justify-center gap-2">
-                        <button
-                          onClick={() => { setEditingAvatar(option); setShowAvatarForm(true); }}
-                          className="text-xs text-fuchsia-300 hover:text-fuchsia-200"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => deleteAvatarOption(option.id)}
-                          className="text-xs text-red-400 hover:text-red-300"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* DiceBear Styles Tab */}
       {activeTab === 'styles' && (
         <div className="mt-6">
@@ -1096,12 +916,18 @@ export default function ExperienceManagerPage() {
                       </div>
                     </div>
                     
-                    <div className="mt-3 text-center">
+                    <div className="mt-3 flex justify-between items-center">
                       {requiredXp === 0 && requiredLevel === 0 ? (
-                        <span className="text-xs text-green-400">✅ Disponible desde inicio</span>
+                        <span className="text-xs text-green-400">✅ Disponible</span>
                       ) : (
-                        <span className="text-xs text-fuchsia-400">🔒 {requiredXp} XP / Nivel {requiredLevel}</span>
+                        <span className="text-xs text-fuchsia-400">🔒 {requiredXp} XP</span>
                       )}
+                      <button
+                        onClick={() => fetchStyleDetail(style.styleId)}
+                        className="text-xs text-cyan-400 hover:text-cyan-300"
+                      >
+                        Ver opciones →
+                      </button>
                     </div>
                   </div>
                 );
@@ -1115,6 +941,90 @@ export default function ExperienceManagerPage() {
               <p className="text-sm mt-2">
                 Ejecuta <code className="bg-zinc-800 px-2 py-1 rounded">npm run sync-dicebear -w api</code> para sincronizar los estilos.
               </p>
+            </div>
+          )}
+
+          {/* Style Detail View */}
+          {selectedStyleId && styleDetail && (
+            <div className="mt-6 ce-card p-6 border border-fuchsia-500/30">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={`${styleDetail.apiUrl}?seed=preview&size=80`}
+                    alt={styleDetail.displayName}
+                    className="w-20 h-20 rounded-xl bg-zinc-700"
+                  />
+                  <div>
+                    <h3 className="text-xl font-bold text-zinc-100">{styleDetail.displayName}</h3>
+                    <p className="text-sm text-zinc-400">por {styleDetail.creator}</p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {styleDetail.categories?.length || 0} categorías de personalización
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setSelectedStyleId(null); setStyleDetail(null); }}
+                  className="text-zinc-400 hover:text-zinc-200 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {loadingStyleDetail ? (
+                <div className="text-center py-8 text-zinc-400">
+                  <div className="animate-spin w-6 h-6 border-2 border-fuchsia-500 border-t-transparent rounded-full mx-auto mb-2" />
+                  Cargando opciones...
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {styleDetail.categories?.map((category: any, catIdx: number) => (
+                    <div key={`${category.name}-${catIdx}`} className="border-t border-zinc-700 pt-4">
+                      <h4 className="font-semibold text-fuchsia-300 mb-3">
+                        {category.displayName} ({category.options?.length || 0} opciones)
+                      </h4>
+                      
+                      {category.isColor ? (
+                        <div className="flex flex-wrap gap-2">
+                          {category.options?.slice(0, 20).map((opt: any, idx: number) => (
+                            <div
+                              key={`${opt.value}-${idx}`}
+                              className="w-8 h-8 rounded-lg border border-white/20"
+                              style={{ backgroundColor: `#${opt.value}` }}
+                              title={`${opt.displayName} - ${opt.requiredXp} XP`}
+                            />
+                          ))}
+                          {category.options?.length > 20 && (
+                            <span className="text-xs text-zinc-500 self-center">+{category.options.length - 20} más</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                          {category.options?.slice(0, 12).map((opt: any, idx: number) => (
+                            <div
+                              key={`${opt.value}-${idx}`}
+                              className={`p-2 rounded-lg text-center text-xs ${
+                                opt.isUnlocked 
+                                  ? 'bg-zinc-800 text-zinc-200' 
+                                  : 'bg-zinc-900 text-zinc-500'
+                              }`}
+                            >
+                              <div className="truncate font-medium">{opt.displayName}</div>
+                              <div className={`text-xs mt-1 ${opt.requiredXp > 0 ? 'text-fuchsia-400' : 'text-green-400'}`}>
+                                {opt.requiredXp > 0 ? `🔒 ${opt.requiredXp} XP` : '✅ Gratis'}
+                              </div>
+                            </div>
+                          ))}
+                          {category.options?.length > 12 && (
+                            <div className="p-2 rounded-lg text-center text-xs bg-zinc-900 text-zinc-500">
+                              +{category.options.length - 12} más
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -180,13 +180,20 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
       if (res.ok) {
         const data = await res.json();
         setStyleData(data);
-        // Set first category as active if none selected
-        if (!activeCategory && data.categories?.length > 0) {
-          setActiveCategory(data.categories[0].name);
+        // Always set first category when loading a new style
+        if (data.categories?.length > 0) {
+          const firstCatWithOptions = data.categories.find((c: DiceBearCategory) => c.options && c.options.length > 0);
+          if (firstCatWithOptions) {
+            setActiveCategory(firstCatWithOptions.name);
+          }
         }
+      } else {
+        console.error('Error fetching style data:', res.status);
+        setStyleData(null);
       }
     } catch (e) {
       console.error('Error fetching style data:', e);
+      setStyleData(null);
     } finally {
       setLoadingStyle(false);
     }
@@ -211,7 +218,8 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
     if (!style?.isUnlocked) return;
     
     setSelectedStyle(styleId);
-    setConfig(prev => ({ ...prev, style: styleId }));
+    // Reset config to only keep style - each style has different properties
+    setConfig({ style: styleId });
     setHasChanges(true);
     setActiveCategory(''); // Reset category
   }
@@ -341,9 +349,9 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
       {/* Category Tabs */}
       {availableCategories.length > 0 && (
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-          {availableCategories.map((category) => (
+          {availableCategories.map((category, idx) => (
             <button
-              key={category.name}
+              key={`cat-${category.name}-${idx}`}
               onClick={() => setActiveCategory(category.name)}
               className={`px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
                 activeCategory === category.name
@@ -372,11 +380,13 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
           {currentCategory.isColor ? (
             // Color picker grid
             <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
-              {currentCategory.options.map((option) => {
-                const isSelected = (config as any)[currentCategory.name] === option.value;
+              {currentCategory.options.map((option, idx) => {
+                const currentValue = (config as any)[currentCategory.name];
+                const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== '';
+                const isSelected = hasValue ? currentValue === option.value : idx === 0;
                 return (
                   <button
-                    key={option.value}
+                    key={`color-${option.value}-${idx}`}
                     onClick={() => option.isUnlocked && updateConfig(currentCategory.name, option.value)}
                     disabled={!option.isUnlocked}
                     className={`relative aspect-square rounded-lg border-2 transition-all ${
@@ -399,16 +409,28 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
           ) : (
             // Regular options grid with avatar previews
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {currentCategory.options.map((option) => {
-                const isSelected = (config as any)[currentCategory.name] === option.value ||
-                  (option.value === 'none' && !(config as any)[currentCategory.name]);
+              {currentCategory.options.map((option, idx) => {
+                const currentValue = (config as any)[currentCategory.name];
+                const optionValue = option.value;
                 
-                const previewConfig = { ...config, [currentCategory.name]: option.value };
-                const optionPreviewUrl = buildDiceBearUrl(previewConfig, `preview-${option.value}`);
+                // Check if this option is selected - only ONE can be selected
+                const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== '';
+                const isSelected = hasValue 
+                  ? currentValue === optionValue
+                  : idx === 0; // Default to first option if nothing selected
+                
+                // Build preview URL - use ONLY the style and this specific option
+                // Using a fixed seed ensures the only difference between previews is the option value
+                const previewConfig: Partial<DiceBearConfig> = { 
+                  style: selectedStyle,
+                  [currentCategory.name]: optionValue === 'none' ? undefined : optionValue 
+                };
+                // Use fixed seed "preview" so all options show consistent base, only differing by the option
+                const optionPreviewUrl = buildDiceBearUrl(previewConfig, 'preview');
                 
                 return (
                   <button
-                    key={option.value}
+                    key={`opt-${option.value}-${idx}`}
                     onClick={() => option.isUnlocked && updateConfig(currentCategory.name, option.value)}
                     disabled={!option.isUnlocked}
                     className={`group relative p-2 rounded-xl border-2 transition-all ${

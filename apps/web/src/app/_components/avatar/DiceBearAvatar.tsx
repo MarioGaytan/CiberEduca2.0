@@ -2,9 +2,12 @@
 
 import { useMemo } from 'react';
 
+// Dynamic config type - DiceBear styles have different properties
+// Using index signature to allow any valid DiceBear parameter
 export type DiceBearConfig = {
   style: string;
   seed?: string;
+  // Common properties across many styles
   backgroundColor?: string;
   skinColor?: string;
   hair?: string;
@@ -18,6 +21,8 @@ export type DiceBearConfig = {
   clothingColor?: string;
   facialHair?: string;
   top?: string;
+  // Allow any other DiceBear properties dynamically
+  [key: string]: string | undefined;
 };
 
 type Props = {
@@ -34,6 +39,9 @@ const SIZE_MAP: Record<string, number> = {
   xl: 96,
 };
 
+// Keys to exclude from URL params (not DiceBear API params)
+const EXCLUDED_KEYS = ['style', 'seed'];
+
 export function buildDiceBearUrl(config: Partial<DiceBearConfig>, seed?: string): string {
   const style = config.style || 'avataaars';
   const baseUrl = `https://api.dicebear.com/9.x/${style}/svg`;
@@ -41,30 +49,18 @@ export function buildDiceBearUrl(config: Partial<DiceBearConfig>, seed?: string)
   const params = new URLSearchParams();
   
   if (seed) params.set('seed', seed);
-  if (config.backgroundColor && config.backgroundColor !== 'transparent') {
-    params.set('backgroundColor', config.backgroundColor);
-  }
   
-  // Style-specific params for avataaars
-  if (style === 'avataaars') {
-    if (config.skinColor) params.set('skinColor', config.skinColor);
-    if (config.top && config.top !== 'none') params.set('top', config.top);
-    if (config.eyes && config.eyes !== 'default') params.set('eyes', config.eyes);
-    if (config.eyebrows) params.set('eyebrows', config.eyebrows);
-    if (config.mouth && config.mouth !== 'default') params.set('mouth', config.mouth);
-    if (config.accessories && config.accessories !== 'none') {
-      params.set('accessories', config.accessories);
-      params.set('accessoriesProbability', '100');
+  // Pass ALL config values to the API (DiceBear ignores unknown params)
+  for (const [key, value] of Object.entries(config)) {
+    if (EXCLUDED_KEYS.includes(key)) continue;
+    if (value === undefined || value === null || value === '' || value === 'none') continue;
+    
+    // Handle probability params for optional features
+    if (['accessories', 'glasses', 'earrings', 'facialHair', 'beard'].includes(key) && value) {
+      params.set(`${key}Probability`, '100');
     }
-    if (config.clothing) params.set('clothing', config.clothing);
-    if (config.clothingColor) params.set('clothingColor', config.clothingColor);
-    if (config.facialHair) params.set('facialHair', config.facialHair);
-    if (config.hairColor) params.set('hairColor', config.hairColor);
-  }
-  
-  // For other styles, pass relevant params
-  if (style === 'lorelei' || style === 'notionists' || style === 'open-peeps' || style === 'pixel-art') {
-    if (config.backgroundColor) params.set('backgroundColor', config.backgroundColor);
+    
+    params.set(key, String(value));
   }
   
   const queryString = params.toString();
