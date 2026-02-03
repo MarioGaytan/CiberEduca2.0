@@ -145,6 +145,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [stylesLoaded, setStylesLoaded] = useState(false);
+  const [hoverConfig, setHoverConfig] = useState<Partial<DiceBearConfig> | null>(null);
 
   // Fetch available styles
   useEffect(() => {
@@ -208,10 +209,41 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
       const res = await fetch(`/api/gamification/dicebear/styles/${styleId}/user/${userXp}/${userLevel}`);
       if (res.ok) {
         const data = await res.json();
-        setStyleData(data);
+        const normalized: DiceBearStyleData = {
+          ...data,
+          categories: Array.isArray(data.categories) ? [...data.categories] : [],
+        };
+
+        const hasBackgroundCategory = normalized.categories.some((c: DiceBearCategory) => c.name === 'backgroundColor');
+        if (!hasBackgroundCategory) {
+          const fallbackBackground: DiceBearCategory = {
+            name: 'backgroundColor',
+            displayName: 'Fondo',
+            type: 'color',
+            isColor: true,
+            sortOrder: 9999,
+            options: [
+              { value: '000000', displayName: 'Negro', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '0b1020', displayName: 'Noche', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '111827', displayName: 'Zinc', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '1f2937', displayName: 'Gris', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '312e81', displayName: 'Índigo', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '581c87', displayName: 'Violeta', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '831843', displayName: 'Magenta', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '134e4a', displayName: 'Verde', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '164e63', displayName: 'Cian', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: '7c2d12', displayName: 'Ámbar', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              { value: 'ffffff', displayName: 'Blanco', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+            ],
+          };
+          normalized.categories.push(fallbackBackground);
+          normalized.categories.sort((a: DiceBearCategory, b: DiceBearCategory) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }
+
+        setStyleData(normalized);
         // Always set first category when loading a new style
-        if (data.categories?.length > 0) {
-          const firstCatWithOptions = data.categories.find((c: DiceBearCategory) => c.options && c.options.length > 0);
+        if (normalized.categories?.length > 0) {
+          const firstCatWithOptions = normalized.categories.find((c: DiceBearCategory) => c.options && c.options.length > 0);
           if (firstCatWithOptions) {
             setActiveCategory(firstCatWithOptions.name);
           }
@@ -240,6 +272,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
     
     setConfig(newConfig);
     setHasChanges(true);
+    setHoverConfig(null);
   }
 
   function handleStyleChange(styleId: string) {
@@ -251,6 +284,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
     setConfig({ style: styleId });
     setHasChanges(true);
     setActiveCategory(''); // Reset category
+    setHoverConfig(null);
   }
 
   async function handleSave() {
@@ -272,7 +306,8 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
   }
 
   // Build preview URL
-  const previewUrl = buildDiceBearUrl(config, username);
+  const effectiveConfig = hoverConfig ?? config;
+  const previewUrl = buildDiceBearUrl(effectiveConfig, username);
 
   // Filter categories with options
   const availableCategories = styleData?.categories?.filter(
@@ -281,6 +316,8 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
 
   // Get current category data
   const currentCategory = availableCategories.find(c => c.name === activeCategory);
+
+  const isHovering = !!hoverConfig;
 
   if (loading) {
     return (
@@ -345,6 +382,11 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
               <span className="text-fuchsia-400">•</span>
               <span>Nv. {userLevel}</span>
             </p>
+            {isHovering && (
+              <div className="mt-1 text-[11px] text-fuchsia-200/90">
+                Vista previa
+              </div>
+            )}
             
             {/* Unlock Progress */}
             {styleData && (
@@ -546,6 +588,13 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                   <button
                     key={`color-${option.value}-${idx}`}
                     onClick={() => option.isUnlocked && updateConfig(currentCategory.name, option.value)}
+                    onMouseEnter={() => {
+                      if (!option.isUnlocked) return;
+                      const next = { ...config, style: selectedStyle };
+                      (next as any)[currentCategory.name] = option.value;
+                      setHoverConfig(next);
+                    }}
+                    onMouseLeave={() => setHoverConfig(null)}
                     disabled={!option.isUnlocked}
                     className={`relative aspect-square rounded-lg border-2 transition-all ${
                       isSelected
@@ -579,17 +628,19 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                 
                 // Build preview URL - use ONLY the style and this specific option
                 // Using a fixed seed ensures the only difference between previews is the option value
-                const previewConfig: Partial<DiceBearConfig> = { 
-                  style: selectedStyle,
-                  [currentCategory.name]: optionValue === 'none' ? undefined : optionValue 
-                };
-                // Use fixed seed "preview" so all options show consistent base, only differing by the option
-                const optionPreviewUrl = buildDiceBearUrl(previewConfig, 'preview');
+                const previewConfig: Partial<DiceBearConfig> = { ...config, style: selectedStyle };
+                (previewConfig as any)[currentCategory.name] = optionValue === 'none' ? undefined : optionValue;
+                const optionPreviewUrl = buildDiceBearUrl(previewConfig, username);
                 
                 return (
                   <button
                     key={`opt-${option.value}-${idx}`}
                     onClick={() => option.isUnlocked && updateConfig(currentCategory.name, option.value)}
+                    onMouseEnter={() => {
+                      if (!option.isUnlocked) return;
+                      setHoverConfig(previewConfig);
+                    }}
+                    onMouseLeave={() => setHoverConfig(null)}
                     disabled={!option.isUnlocked}
                     className={`group relative p-2 rounded-xl border-2 transition-all ${
                       isSelected
