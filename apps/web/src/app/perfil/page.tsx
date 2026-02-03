@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User, KeyRound, Mail, UserCircle } from 'lucide-react';
+import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User, KeyRound, UserCircle, Users, Clock, Inbox, ShieldCheck, PlusCircle } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
@@ -43,6 +43,34 @@ type ProgressData = {
 
 type MedalShape = 'circle' | 'shield' | 'star' | 'hexagon' | 'diamond' | 'badge';
 
+type StaffStats = {
+  role: string;
+  general: {
+    totalWorkshops: number;
+    approvedWorkshops: number;
+    inReviewWorkshops: number;
+    draftWorkshops: number;
+  };
+  admin?: {
+    totalUsers: number;
+    usersByRole: Record<string, number>;
+    pendingRequests: number;
+  };
+  teacher?: {
+    myWorkshops: number;
+    myDrafts: number;
+    myInReview: number;
+    myApproved: number;
+    pendingGrades: number;
+    testsCreated: number;
+  };
+  reviewer?: {
+    pendingReview: number;
+    pendingRequests: number;
+    reviewedThisWeek: number;
+  };
+};
+
 type Medal = {
   type: string;
   name: string;
@@ -76,6 +104,7 @@ export default function PerfilPage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [medals, setMedals] = useState<Medal[]>([]);
+  const [staffStats, setStaffStats] = useState<StaffStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'stats' | 'avatar' | 'medals' | 'settings'>('stats');
@@ -117,6 +146,13 @@ export default function PerfilPage() {
 
         const medalsData = await medalsRes.json().catch(() => []);
         if (Array.isArray(medalsData)) setMedals(medalsData);
+      } else if (data.authenticated && data.user.role !== 'student') {
+        // Fetch staff stats
+        const statsRes = await fetch('/api/dashboard/stats', { cache: 'no-store' });
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          if (alive) setStaffStats(statsData);
+        }
       }
 
       setLoading(false);
@@ -498,34 +534,181 @@ export default function PerfilPage() {
 
       {/* Staff info view */}
       {!isStudent && activeTab === 'stats' && (
-        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200">Accesos rápidos</div>
-            <div className="mt-3 space-y-2">
-              <Link href="/talleres" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                <BookOpen className="h-4 w-4" />
-                Talleres
-              </Link>
-              {(role === 'teacher' || role === 'admin') && (
-                <Link href="/intentos" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                  <FileText className="h-4 w-4" />
-                  Bandeja de intentos
-                </Link>
-              )}
-              <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Link>
+        <div className="mt-6 space-y-6">
+          {/* Role Info Card */}
+          <div className="ce-card p-5 bg-gradient-to-r from-fuchsia-500/10 via-purple-500/10 to-cyan-500/10 border-fuchsia-500/20">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 flex items-center justify-center rounded-full bg-zinc-800">
+                {role === 'teacher' ? <GraduationCap className="h-7 w-7 text-fuchsia-400" /> : 
+                 role === 'admin' ? <Settings className="h-7 w-7 text-cyan-400" /> : 
+                 role === 'reviewer' ? <ShieldCheck className="h-7 w-7 text-amber-400" /> :
+                 role === 'experience_manager' ? <Gamepad2 className="h-7 w-7 text-purple-400" /> : 
+                 <User className="h-7 w-7 text-zinc-400" />}
+              </div>
+              <div>
+                <div className="text-2xl font-bold capitalize text-fuchsia-300">
+                  {role === 'teacher' ? 'Profesor' : 
+                   role === 'admin' ? 'Administrador' : 
+                   role === 'reviewer' ? 'Revisor' : 
+                   role === 'experience_manager' ? 'Gestor de Experiencia' : role}
+                </div>
+                <div className="text-sm text-zinc-400">
+                  {role === 'teacher' && 'Puedes crear talleres, tests y calificar a tus alumnos.'}
+                  {role === 'admin' && 'Acceso completo a la plataforma.'}
+                  {role === 'reviewer' && 'Puedes revisar y aprobar talleres y tests.'}
+                  {role === 'experience_manager' && 'Puedes gestionar la configuración de gamificación.'}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="ce-card p-5">
-            <div className="text-sm font-semibold text-zinc-200">Tu rol</div>
-            <div className="mt-2 text-2xl font-bold capitalize text-fuchsia-300">{role}</div>
-            <div className="mt-2 text-sm text-zinc-400">
-              {role === 'teacher' && 'Puedes crear talleres, tests y calificar a tus alumnos.'}
-              {role === 'admin' && 'Acceso completo a la plataforma.'}
-              {role === 'reviewer' && 'Puedes revisar y aprobar talleres y tests.'}
-              {role === 'experience_manager' && 'Puedes gestionar la configuración de gamificación.'}
+
+          {/* Admin Stats */}
+          {staffStats?.admin && (
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-fuchsia-400" />
+                Usuarios de la Plataforma
+              </h3>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-fuchsia-300">{staffStats.admin.totalUsers}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Total</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-300">{staffStats.admin.usersByRole.student || 0}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Estudiantes</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-300">{staffStats.admin.usersByRole.teacher || 0}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Profesores</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-300">{staffStats.admin.usersByRole.reviewer || 0}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Revisores</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-red-300">{staffStats.admin.pendingRequests}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Solicitudes</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Teacher Stats */}
+          {staffStats?.teacher && (
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-cyan-400" />
+                Mis Contenidos
+              </h3>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-fuchsia-300">{staffStats.teacher.myWorkshops}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Mis Talleres</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-zinc-400">{staffStats.teacher.myDrafts}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Borradores</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-300">{staffStats.teacher.myApproved}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Aprobados</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-green-300">{staffStats.teacher.testsCreated}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Tests Creados</div>
+                </div>
+              </div>
+              {staffStats.teacher.pendingGrades > 0 && (
+                <div className="mt-4 ce-card p-4 bg-amber-500/10 border-amber-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Inbox className="h-5 w-5 text-amber-400" />
+                      <span className="text-sm font-semibold text-amber-200">
+                        {staffStats.teacher.pendingGrades} intentos por calificar
+                      </span>
+                    </div>
+                    <Link href="/intentos" className="ce-btn ce-btn-ghost text-xs">
+                      Ver bandeja
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reviewer Stats */}
+          {staffStats?.reviewer && (
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-amber-400" />
+                Revisión de Contenido
+              </h3>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-300">{staffStats.reviewer.pendingReview}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Por Revisar</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-300">{staffStats.reviewer.pendingRequests}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Solicitudes</div>
+                </div>
+                <div className="ce-card p-4 text-center">
+                  <div className="text-2xl font-bold text-green-300">{staffStats.reviewer.reviewedThisWeek}</div>
+                  <div className="text-xs text-zinc-400 mt-1">Esta Semana</div>
+                </div>
+              </div>
+              {staffStats.reviewer.pendingReview > 0 && (
+                <div className="mt-4 ce-card p-4 bg-cyan-500/10 border-cyan-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-cyan-400" />
+                      <span className="text-sm font-semibold text-cyan-200">
+                        {staffStats.reviewer.pendingReview} talleres pendientes de revisión
+                      </span>
+                    </div>
+                    <Link href="/admin/revision" className="ce-btn ce-btn-ghost text-xs">
+                      Ver bandeja
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+              <PlusCircle className="h-4 w-4 text-fuchsia-400" />
+              Accesos Rápidos
+            </h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Link href="/talleres" className="ce-card ce-card-hover p-4 flex items-center gap-3">
+                <BookOpen className="h-5 w-5 text-fuchsia-400" />
+                <span className="text-sm font-semibold text-zinc-200">Talleres</span>
+              </Link>
+              {(role === 'teacher' || role === 'admin') && (
+                <Link href="/intentos" className="ce-card ce-card-hover p-4 flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-amber-400" />
+                  <span className="text-sm font-semibold text-zinc-200">Bandeja de intentos</span>
+                </Link>
+              )}
+              {(role === 'reviewer' || role === 'admin') && (
+                <Link href="/admin/revision" className="ce-card ce-card-hover p-4 flex items-center gap-3">
+                  <ShieldCheck className="h-5 w-5 text-cyan-400" />
+                  <span className="text-sm font-semibold text-zinc-200">Revisión</span>
+                </Link>
+              )}
+              {role === 'admin' && (
+                <Link href="/admin/usuarios" className="ce-card ce-card-hover p-4 flex items-center gap-3">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  <span className="text-sm font-semibold text-zinc-200">Usuarios</span>
+                </Link>
+              )}
+              <Link href="/dashboard" className="ce-card ce-card-hover p-4 flex items-center gap-3">
+                <LayoutDashboard className="h-5 w-5 text-purple-400" />
+                <span className="text-sm font-semibold text-zinc-200">Dashboard</span>
+              </Link>
             </div>
           </div>
         </div>

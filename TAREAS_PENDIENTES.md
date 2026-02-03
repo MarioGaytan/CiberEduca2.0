@@ -199,21 +199,25 @@
 
 ---
 
-### 8. Vista de Perfil para Staff más Completa
+### 8. ✅ Vista de Perfil para Staff más Completa
 **Archivo:** `apps/web/src/app/perfil/page.tsx`
 
 **Problema actual:** Staff solo ve su rol y accesos rápidos, muy básico.
 
 **Tareas:**
-- [ ] Mostrar estadísticas para teachers:
-  - Talleres creados
+- [x] Mostrar estadísticas para teachers:
+  - Talleres creados (total, borradores, aprobados)
   - Tests creados
-  - Alumnos que han completado sus tests
-  - Intentos pendientes de calificar
-- [ ] Mostrar estadísticas para admin:
-  - Total de usuarios
-  - Talleres aprobados/pendientes
-  - Actividad reciente
+  - Intentos pendientes de calificar (con alerta visual)
+- [x] Mostrar estadísticas para admin:
+  - Total de usuarios y desglose por rol
+  - Solicitudes pendientes
+- [x] Mostrar estadísticas para reviewer:
+  - Talleres por revisar
+  - Solicitudes pendientes
+  - Revisados esta semana
+- [x] Card de rol con descripción
+- [x] Accesos rápidos mejorados según rol
 
 ---
 
