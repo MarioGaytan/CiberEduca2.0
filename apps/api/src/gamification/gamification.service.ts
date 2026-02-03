@@ -181,12 +181,18 @@ export class GamificationService {
   ) {
     const config = await this.getConfig(schoolId);
     
-    return config.medals
-      .filter(m => m.isActive)
-      .map(medal => {
+    // Convert to plain objects to ensure spread works correctly
+    const configObj = typeof (config as any).toObject === 'function' 
+      ? (config as any).toObject() 
+      : config;
+    const medalsArray = configObj.medals || [];
+    
+    return medalsArray
+      .filter((m: MedalDefinition) => m.isActive)
+      .map((medal: MedalDefinition) => {
         const earned = earnedMedalIds.includes(medal.id);
         let progress = 0;
-        let target = medal.conditionValue;
+        const target = medal.conditionValue;
         
         switch (medal.conditionType) {
           case 'tests_completed':
@@ -216,7 +222,7 @@ export class GamificationService {
           target,
         };
       })
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+      .sort((a: any, b: any) => a.sortOrder - b.sortOrder);
   }
 
   /**
@@ -237,7 +243,13 @@ export class GamificationService {
     const config = await this.getConfig(schoolId);
     const toAward: MedalDefinition[] = [];
     
-    for (const medal of config.medals) {
+    // Convert to plain objects to ensure proper access
+    const configObj = typeof (config as any).toObject === 'function' 
+      ? (config as any).toObject() 
+      : config;
+    const medalsArray = configObj.medals || [];
+    
+    for (const medal of medalsArray) {
       if (!medal.isActive || alreadyEarnedIds.includes(medal.id)) continue;
       
       let value = 0;
@@ -248,6 +260,7 @@ export class GamificationService {
         case 'streak_days': value = stats.currentStreak; break;
         case 'ranking_position': value = stats.rankingPosition; break;
         case 'total_xp': value = stats.totalXp; break;
+        case 'level_reached': value = Math.floor(stats.totalXp / 500) + 1; break;
       }
       
       const op = medal.conditionOperator ?? 'gte';

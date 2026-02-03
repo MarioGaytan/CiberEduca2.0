@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -16,6 +16,7 @@ import {
   AvatarConfig,
   TestCompletion,
 } from './schemas/student-progress.schema';
+import { GamificationService } from '../gamification/gamification.service';
 
 export interface AuthUser {
   userId: string;
@@ -73,6 +74,8 @@ export class ProgressService {
     private readonly attemptModel: Model<TestAttemptDocument>,
     @InjectModel(Workshop.name)
     private readonly workshopModel: Model<WorkshopDocument>,
+    @Inject(forwardRef(() => GamificationService))
+    private readonly gamificationService: GamificationService,
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
@@ -192,16 +195,50 @@ export class ProgressService {
 
   /**
    * Get all medals with status (earned or not)
+   * Uses dynamic medals from GamificationConfig instead of hardcoded MEDAL_INFO
    */
   async getMedals(user: AuthUser) {
     const progress = await this.getOrCreateProgress(user);
-    const earnedMedalTypes = new Set(progress.medals.map(m => m.type));
-
-    return Object.entries(MEDAL_INFO).map(([type, info]) => ({
-      type,
-      ...info,
-      earned: earnedMedalTypes.has(type as MedalType),
-      earnedAt: progress.medals.find(m => m.type === type)?.earnedAt,
+    const schoolId = this.requireSchoolId(user);
+    
+    // Get earned medal IDs from progress
+    const earnedMedalIds = progress.medals.map(m => m.type);
+    
+    // Calculate stats for progress tracking
+    const stats = {
+      testsCompleted: progress.testsCompletedCount,
+      workshopsCompleted: progress.workshopsCompletedCount,
+      perfectScores: progress.testsCompleted.filter(t => t.bestScore === t.maxScore && t.maxScore > 0).length,
+      currentStreak: progress.currentStreak,
+      rankingPosition: await this.progressModel.countDocuments({
+        schoolId,
+        totalXp: { $gt: progress.totalXp },
+      }) + 1,
+      totalXp: progress.totalXp,
+    };
+    
+    // Get medals from dynamic config with earned status
+    const medals = await this.gamificationService.getMedalsStatus(schoolId, stats, earnedMedalIds);
+    
+    // Add earnedAt date for earned medals
+    return medals.map((medal: any) => ({
+      type: medal.id,
+      name: medal.name,
+      description: medal.description,
+      icon: medal.icon,
+      iconType: medal.iconType || 'emoji',
+      iconColor: medal.iconColor,
+      bgColor: medal.bgColor,
+      borderColor: medal.borderColor,
+      shape: medal.shape,
+      glow: medal.glow,
+      xp: medal.xpReward,
+      earned: medal.earned,
+      earnedAt: progress.medals.find(m => m.type === medal.id)?.earnedAt,
+      conditionType: medal.conditionType,
+      conditionValue: medal.conditionValue,
+      progress: medal.progress,
+      target: medal.target,
     }));
   }
 
@@ -301,10 +338,8 @@ export class ProgressService {
       progress.totalXp += xpForThisScore;
     }
 
-    // Perfect score medal (only award once)
-    if (isPerfect) {
-      await this.awardMedal(progress, MedalType.PerfectScore);
-    }
+    // Check and award dynamic medals based on current stats
+    await this.checkAndAwardDynamicMedals(progress, schoolId, isPerfect);
 
     // Check if all tests in workshop are completed
     const workshopTests = await this.testModel.find({
@@ -363,12 +398,7 @@ export class ProgressService {
     // Award XP for workshop completion
     progress.totalXp += 100;
 
-    // Check workshop medals
-    const count = progress.workshopsCompletedCount;
-    if (count === 1) await this.awardMedal(progress, MedalType.FirstWorkshop);
-    if (count === 5) await this.awardMedal(progress, MedalType.Workshop5);
-    if (count === 10) await this.awardMedal(progress, MedalType.Workshop10);
-    if (count === 25) await this.awardMedal(progress, MedalType.Workshop25);
+    // Dynamic medals are checked in recordTestCompletion after workshop completion
   }
 
   /**
@@ -391,7 +421,54 @@ export class ProgressService {
   }
 
   /**
-   * Award a medal if not already earned
+   * Check and award dynamic medals based on current stats
+   */
+  private async checkAndAwardDynamicMedals(
+    progress: StudentProgressDocument,
+    schoolId: string,
+    justGotPerfectScore = false,
+  ) {
+    // Calculate current stats
+    const perfectScores = progress.testsCompleted.filter(
+      t => t.bestScore === t.maxScore && t.maxScore > 0
+    ).length;
+    
+    const rankingPosition = await this.progressModel.countDocuments({
+      schoolId,
+      totalXp: { $gt: progress.totalXp },
+    }) + 1;
+    
+    const stats = {
+      testsCompleted: progress.testsCompletedCount,
+      workshopsCompleted: progress.workshopsCompletedCount,
+      perfectScores: justGotPerfectScore ? perfectScores : perfectScores,
+      currentStreak: progress.currentStreak,
+      rankingPosition,
+      totalXp: progress.totalXp,
+    };
+    
+    // Get already earned medal IDs
+    const earnedMedalIds = progress.medals.map(m => m.type);
+    
+    // Check which medals should be awarded
+    const medalsToAward = await this.gamificationService.checkMedalsToAward(
+      schoolId,
+      stats,
+      earnedMedalIds,
+    );
+    
+    // Award each medal
+    for (const medal of medalsToAward) {
+      progress.medals.push({
+        type: medal.id,
+        earnedAt: new Date(),
+      });
+      progress.totalXp += medal.xpReward;
+    }
+  }
+
+  /**
+   * Award a medal if not already earned (legacy - kept for compatibility)
    */
   private async awardMedal(progress: StudentProgressDocument, medalType: MedalType) {
     if (progress.medals.some(m => m.type === medalType)) {

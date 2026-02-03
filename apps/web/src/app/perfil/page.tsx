@@ -456,8 +456,8 @@ export default function PerfilPage() {
                 Medallas ganadas ({earnedMedals.length})
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {earnedMedals.map((medal) => (
-                  <div key={medal.type} className="ce-card p-4 text-center bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
+                {earnedMedals.map((medal, idx) => (
+                  <div key={medal.type || `earned-${idx}`} className="ce-card p-4 text-center bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
                     <div className="flex justify-center mb-3">
                       <MedalBadge medal={medal} size="lg" showTooltip={false} />
                     </div>
@@ -481,7 +481,7 @@ export default function PerfilPage() {
                 Por desbloquear ({unearnedMedals.length})
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {unearnedMedals.map((medal) => {
+                {unearnedMedals.map((medal, idx) => {
                   const currentProgress = medal.conditionType ? (
                     medal.conditionType === 'tests_completed' ? progress.testsCompletedCount :
                     medal.conditionType === 'workshops_completed' ? progress.workshopsCompletedCount :
@@ -495,7 +495,7 @@ export default function PerfilPage() {
                     : 0;
 
                   return (
-                    <div key={medal.type} className="ce-card p-4 text-center opacity-70 hover:opacity-100 transition-opacity">
+                    <div key={medal.type || `unearned-${idx}`} className="ce-card p-4 text-center opacity-70 hover:opacity-100 transition-opacity">
                       <div className="flex justify-center mb-3">
                         <MedalBadge medal={medal} size="lg" showTooltip={false} />
                       </div>

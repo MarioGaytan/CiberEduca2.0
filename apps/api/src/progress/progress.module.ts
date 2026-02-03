@@ -6,6 +6,7 @@ import { Workshop, WorkshopSchema } from '../workshops/schemas/workshop.schema';
 import { StudentProgress, StudentProgressSchema } from './schemas/student-progress.schema';
 import { ProgressController } from './progress.controller';
 import { ProgressService } from './progress.service';
+import { GamificationModule } from '../gamification/gamification.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProgressService } from './progress.service';
       { name: TestAttempt.name, schema: TestAttemptSchema },
       { name: Workshop.name, schema: WorkshopSchema },
     ]),
+    forwardRef(() => GamificationModule),
   ],
   controllers: [ProgressController],
   providers: [ProgressService],

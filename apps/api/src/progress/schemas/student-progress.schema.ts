@@ -33,8 +33,8 @@ export const MEDAL_INFO: Record<MedalType, { name: string; description: string; 
 
 @Schema({ _id: false })
 export class Medal {
-  @Prop({ required: true, enum: MedalType })
-  type!: MedalType;
+  @Prop({ required: true })
+  type!: string; // Can be MedalType enum value or dynamic medal ID
 
   @Prop({ required: false })
   workshopId?: string;
