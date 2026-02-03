@@ -318,78 +318,118 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
   const unlockProgress = totalOptions > 0 ? Math.round((unlockedOptions / totalOptions) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Preview Section - Enhanced */}
-      <div className="ce-card p-6 bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+    <div className="relative">
+      {/* Fixed Avatar Preview - visible while scrolling on desktop */}
+      <div className="hidden lg:block fixed bottom-6 right-6 z-40 w-56">
+        <div className="ce-card p-4 bg-zinc-900/95 backdrop-blur-lg border-fuchsia-500/30 shadow-2xl shadow-fuchsia-500/20">
           {/* Avatar Preview with glow effect */}
-          <div className="relative group">
-            <div className="absolute -inset-2 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 blur-xl transition-opacity" />
+          <div className="relative group mx-auto w-fit">
+            <div className="absolute -inset-2 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full opacity-30 group-hover:opacity-50 blur-xl transition-opacity" />
             <img
               src={previewUrl}
               alt="Tu avatar"
-              className="relative w-36 h-36 rounded-full bg-zinc-800 shadow-2xl ring-4 ring-fuchsia-500/30 transition-transform group-hover:scale-105"
+              className="relative w-28 h-28 rounded-full bg-zinc-800 shadow-2xl ring-4 ring-fuchsia-500/40 transition-transform group-hover:scale-105"
             />
             {hasChanges && (
-              <div className="absolute -top-2 -right-2 bg-fuchsia-500 text-white text-xs px-2.5 py-1 rounded-full animate-bounce shadow-lg">
-                <Zap className="inline h-3 w-3 mr-1" />Sin guardar
+              <div className="absolute -top-1 -right-1 bg-fuchsia-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse shadow-lg">
+                <Zap className="inline h-3 w-3" />
               </div>
             )}
           </div>
           
-          {/* Info and Actions */}
-          <div className="text-center sm:text-left flex-1">
-            <h3 className="text-xl font-bold text-zinc-100">Tu Avatar</h3>
-            <p className="text-sm text-zinc-400 mt-1 flex items-center justify-center sm:justify-start gap-2">
-              <Trophy className="h-4 w-4 text-amber-400" />
+          {/* Compact Info */}
+          <div className="text-center mt-3">
+            <p className="text-xs text-zinc-400 flex items-center justify-center gap-1.5">
+              <Trophy className="h-3 w-3 text-amber-400" />
               <span>{userXp.toLocaleString()} XP</span>
               <span className="text-fuchsia-400">•</span>
-              <span>Nivel {userLevel}</span>
+              <span>Nv. {userLevel}</span>
             </p>
             
             {/* Unlock Progress */}
             {styleData && (
-              <div className="mt-3 max-w-xs mx-auto sm:mx-0">
-                <div className="flex justify-between text-xs text-zinc-500 mb-1">
-                  <span>Opciones desbloqueadas</span>
-                  <span className="text-fuchsia-300">{unlockedOptions}/{totalOptions}</span>
-                </div>
-                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="mt-2">
+                <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500 transition-all duration-500"
                     style={{ width: `${unlockProgress}%` }}
                   />
                 </div>
+                <span className="text-xs text-zinc-500 mt-1">{unlockProgress}% desbloqueado</span>
               </div>
             )}
-            
-            {/* Action Buttons */}
-            <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
-              <button
-                onClick={handleSave}
-                disabled={!hasChanges || saving}
-                className="ce-btn ce-btn-primary disabled:opacity-50 shadow-lg shadow-fuchsia-500/20"
+          </div>
+          
+          {/* Compact Action Buttons */}
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+              className="ce-btn ce-btn-primary flex-1 disabled:opacity-50 shadow-lg shadow-fuchsia-500/20 text-xs py-2"
+            >
+              {saving ? '...' : hasChanges ? '💾 Guardar' : '✓'}
+            </button>
+            <button
+              onClick={handleRandomize}
+              disabled={!styleData}
+              className="ce-btn ce-btn-ghost flex items-center justify-center text-xs py-2 px-3"
+              title="Aleatorio"
+            >
+              <Shuffle className="h-3.5 w-3.5" />
+            </button>
+            {hasChanges && (
+              <button 
+                onClick={handleReset} 
+                className="ce-btn ce-btn-ghost text-red-400 hover:text-red-300 text-xs py-2 px-2"
               >
-                {saving ? 'Guardando...' : 'Guardar cambios'}
+                ✕
               </button>
-              <button
-                onClick={handleRandomize}
-                disabled={!styleData}
-                className="ce-btn ce-btn-ghost flex items-center gap-1.5"
-                title="Generar avatar aleatorio"
-              >
-                <Shuffle className="h-4 w-4" /> Aleatorio
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Avatar Preview - inline at top */}
+      <div className="lg:hidden ce-card p-4 mb-5 bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full opacity-20 blur-lg" />
+            <img
+              src={previewUrl}
+              alt="Tu avatar"
+              className="relative w-20 h-20 rounded-full bg-zinc-800 ring-2 ring-fuchsia-500/30"
+            />
+            {hasChanges && (
+              <div className="absolute -top-1 -right-1 bg-fuchsia-500 text-white p-1 rounded-full animate-pulse">
+                <Zap className="h-2.5 w-2.5" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-zinc-400 flex items-center gap-1.5">
+              <Trophy className="h-3 w-3 text-amber-400" />
+              {userXp.toLocaleString()} XP • Nv. {userLevel}
+            </p>
+            {styleData && (
+              <div className="mt-2 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500" style={{ width: `${unlockProgress}%` }} />
+              </div>
+            )}
+            <div className="mt-3 flex gap-2">
+              <button onClick={handleSave} disabled={!hasChanges || saving} className="ce-btn ce-btn-primary text-xs py-1.5 px-3">
+                {saving ? '...' : hasChanges ? 'Guardar' : '✓'}
               </button>
-              {hasChanges && (
-                <button onClick={handleReset} className="ce-btn ce-btn-ghost text-red-400 hover:text-red-300">
-                  Descartar
-                </button>
-              )}
+              <button onClick={handleRandomize} disabled={!styleData} className="ce-btn ce-btn-ghost text-xs py-1.5 px-2">
+                <Shuffle className="h-3.5 w-3.5" />
+              </button>
+              {hasChanges && <button onClick={handleReset} className="ce-btn ce-btn-ghost text-red-400 text-xs py-1.5 px-2">✕</button>}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Editor Options */}
+      <div className="space-y-5">
       {/* Style Selector - Enhanced */}
       <div className="ce-card p-5">
         <div className="flex items-center justify-between mb-4">
@@ -591,6 +631,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
