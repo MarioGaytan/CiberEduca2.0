@@ -68,14 +68,20 @@ function getBreadcrumbs(pathname: string, role: string): { label: string; href: 
 
   const crumbs: { label: string; href: string }[] = [];
   
-  // Add home/dashboard as first crumb based on role
-  if (role === 'student') {
-    crumbs.push({ label: 'Inicio', href: '/home' });
-  } else if (role === 'experience_manager') {
-    crumbs.push({ label: 'Gamificación', href: '/admin/experiencia' });
+  // Determine the home path based on role
+  let homePath = '/home';
+  let homeLabel = 'Inicio';
+  
+  if (role === 'experience_manager') {
+    homePath = '/admin/experiencia';
+    homeLabel = 'Gamificación';
   } else if (role === 'teacher' || role === 'admin' || role === 'reviewer') {
-    crumbs.push({ label: 'Dashboard', href: '/dashboard' });
+    homePath = '/dashboard';
+    homeLabel = 'Dashboard';
   }
+  
+  // Add home as first crumb
+  crumbs.push({ label: homeLabel, href: homePath });
 
   // Build path progressively
   let currentPath = '';
@@ -83,8 +89,11 @@ function getBreadcrumbs(pathname: string, role: string): { label: string; href: 
     const segment = segments[i];
     currentPath += '/' + segment;
     
-    // Skip if it's the home/dashboard we already added
-    if ((segment === 'home' || segment === 'dashboard') && i === 0) continue;
+    // Skip if this path matches the home we already added
+    if (currentPath === homePath) continue;
+    
+    // Skip if it's a segment that's part of the home path
+    if (homePath.startsWith(currentPath) && currentPath !== homePath) continue;
     
     // Check if it looks like an ID (MongoDB ObjectId or UUID)
     const isId = /^[a-f0-9]{24}$/.test(segment) || /^[a-f0-9-]{36}$/.test(segment);

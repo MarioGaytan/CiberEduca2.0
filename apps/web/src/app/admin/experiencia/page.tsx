@@ -600,20 +600,67 @@ export default function ExperienceManagerPage() {
           </div>
 
           <div className="mt-6 p-4 rounded-xl bg-zinc-800/50">
-            <h4 className="text-sm font-medium text-zinc-300">Tabla de niveles (primeros 10)</h4>
-            <div className="mt-3 grid grid-cols-5 gap-2 text-xs">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((level) => {
-                const xpNeeded = Math.round(
-                  config.levelConfig.baseXpPerLevel * Math.pow(config.levelConfig.levelMultiplier, level - 1)
-                );
-                return (
-                  <div key={level} className="bg-zinc-900 rounded p-2 text-center">
-                    <div className="text-fuchsia-300 font-bold">Nv. {level}</div>
-                    <div className="text-zinc-400">{xpNeeded} XP</div>
-                  </div>
-                );
-              })}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <h4 className="text-sm font-medium text-zinc-300">
+                Tabla de niveles ({config.levelConfig.maxLevel} niveles)
+              </h4>
+              <input
+                type="text"
+                placeholder="Buscar nivel... (ej: 15)"
+                className="ce-field text-sm w-full sm:w-48"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const el = document.getElementById(`level-${val}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('ring-2', 'ring-fuchsia-500');
+                    setTimeout(() => el.classList.remove('ring-2', 'ring-fuchsia-500'), 2000);
+                  }
+                }}
+              />
             </div>
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-white/10">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-zinc-900 z-10">
+                  <tr className="border-b border-white/10">
+                    <th className="px-3 py-2 text-left text-zinc-400 font-medium">Nivel</th>
+                    <th className="px-3 py-2 text-right text-zinc-400 font-medium">XP Requerido</th>
+                    <th className="px-3 py-2 text-right text-zinc-400 font-medium">XP Acumulado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {Array.from({ length: config.levelConfig.maxLevel }, (_, i) => i + 1).map((level) => {
+                    const xpNeeded = Math.round(
+                      config.levelConfig.baseXpPerLevel * Math.pow(config.levelConfig.levelMultiplier, level - 1)
+                    );
+                    const xpAccumulated = Array.from({ length: level }, (_, j) =>
+                      Math.round(config.levelConfig.baseXpPerLevel * Math.pow(config.levelConfig.levelMultiplier, j))
+                    ).reduce((sum, x) => sum + x, 0);
+                    return (
+                      <tr 
+                        key={level} 
+                        id={`level-${level}`}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-3 py-2">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-6 h-6 rounded-full bg-fuchsia-500/20 flex items-center justify-center text-fuchsia-300 font-bold text-xs">
+                              {level}
+                            </span>
+                            <span className="text-zinc-200">Nivel {level}</span>
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-right text-cyan-300 font-mono">{xpNeeded.toLocaleString()} XP</td>
+                        <td className="px-3 py-2 text-right text-zinc-400 font-mono">{xpAccumulated.toLocaleString()} XP</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              Fórmula: XP = {config.levelConfig.baseXpPerLevel} × {config.levelConfig.levelMultiplier}^(nivel-1)
+            </p>
           </div>
 
           <button

@@ -25,42 +25,8 @@ export interface AuthUser {
   schoolId?: string;
 }
 
-// Available avatar options that unlock with XP
-export const AVATAR_OPTIONS = {
-  bases: [
-    { id: 'default', name: 'Básico', requiredXp: 0 },
-    { id: 'cool', name: 'Cool', requiredXp: 100 },
-    { id: 'nerd', name: 'Nerd', requiredXp: 200 },
-    { id: 'ninja', name: 'Ninja', requiredXp: 500 },
-    { id: 'robot', name: 'Robot', requiredXp: 1000 },
-    { id: 'alien', name: 'Alien', requiredXp: 2000 },
-  ],
-  colors: [
-    { id: '#6366f1', name: 'Índigo', requiredXp: 0 },
-    { id: '#ec4899', name: 'Rosa', requiredXp: 0 },
-    { id: '#10b981', name: 'Esmeralda', requiredXp: 50 },
-    { id: '#f59e0b', name: 'Ámbar', requiredXp: 100 },
-    { id: '#ef4444', name: 'Rojo', requiredXp: 150 },
-    { id: '#8b5cf6', name: 'Violeta', requiredXp: 200 },
-    { id: '#06b6d4', name: 'Cian', requiredXp: 300 },
-    { id: '#fbbf24', name: 'Dorado', requiredXp: 500 },
-  ],
-  accessories: [
-    { id: 'glasses', name: 'Lentes', requiredXp: 100 },
-    { id: 'hat', name: 'Gorro', requiredXp: 200 },
-    { id: 'headphones', name: 'Audífonos', requiredXp: 300 },
-    { id: 'crown', name: 'Corona', requiredXp: 1000 },
-    { id: 'halo', name: 'Aureola', requiredXp: 2000 },
-  ],
-  frames: [
-    { id: 'none', name: 'Sin marco', requiredXp: 0 },
-    { id: 'bronze', name: 'Bronce', requiredXp: 200 },
-    { id: 'silver', name: 'Plata', requiredXp: 500 },
-    { id: 'gold', name: 'Oro', requiredXp: 1000 },
-    { id: 'diamond', name: 'Diamante', requiredXp: 2500 },
-    { id: 'legendary', name: 'Legendario', requiredXp: 5000 },
-  ],
-};
+// Legacy avatar options removed - now using dynamic DiceBear configuration
+// Avatar options are fetched from GamificationService.getUnlockedAvatarOptions()
 
 @Injectable()
 export class ProgressService {
@@ -80,6 +46,38 @@ export class ProgressService {
 
   private requireSchoolId(user: AuthUser): string {
     return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
+  }
+
+  /**
+   * Calculate level and XP progress from total XP using gamification config
+   */
+  private calculateLevelFromXp(
+    totalXp: number,
+    levelConfig: { baseXpPerLevel: number; levelMultiplier: number; maxLevel: number }
+  ): { level: number; xpProgress: number; xpNeeded: number; xpPercentage: number } {
+    const { baseXpPerLevel, levelMultiplier, maxLevel } = levelConfig;
+    
+    let level = 1;
+    let accumulatedXp = 0;
+    
+    // Find current level by accumulating XP requirements
+    while (level < maxLevel) {
+      const xpForThisLevel = Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1));
+      if (accumulatedXp + xpForThisLevel > totalXp) {
+        break;
+      }
+      accumulatedXp += xpForThisLevel;
+      level++;
+    }
+    
+    // Calculate progress within current level
+    const xpProgress = totalXp - accumulatedXp;
+    const xpNeeded = level < maxLevel 
+      ? Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1))
+      : 0;
+    const xpPercentage = xpNeeded > 0 ? Math.round((xpProgress / xpNeeded) * 100) : 100;
+    
+    return { level, xpProgress, xpNeeded, xpPercentage };
   }
 
   /**
@@ -143,26 +141,29 @@ export class ProgressService {
     // Get total students for ranking context
     const totalStudents = await this.progressModel.countDocuments({ schoolId });
 
-    // Calculate level from XP (every 500 XP = 1 level)
-    const level = Math.floor(progress.totalXp / 500) + 1;
-    const xpForCurrentLevel = (level - 1) * 500;
-    const xpForNextLevel = level * 500;
-    const xpProgress = progress.totalXp - xpForCurrentLevel;
-    const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+    // Get level config from gamification settings
+    const gamificationConfig = await this.gamificationService.getConfig(schoolId);
+    const levelConfig = gamificationConfig.levelConfig || { baseXpPerLevel: 100, levelMultiplier: 1.2, maxLevel: 50 };
+    
+    // Calculate level from XP using dynamic config
+    const { level, xpProgress, xpNeeded, xpPercentage } = this.calculateLevelFromXp(
+      progress.totalXp,
+      levelConfig
+    );
 
     return {
       ...progress.toObject(),
       level,
       xpProgress,
       xpNeeded,
-      xpPercentage: Math.round((xpProgress / xpNeeded) * 100),
+      xpPercentage,
       rankingPosition,
       totalStudents,
       availableWorkshops,
       completionPercentage: availableWorkshops > 0 
         ? Math.round((progress.workshopsCompletedCount / availableWorkshops) * 100)
         : 0,
-      avatarOptions: this.getUnlockedAvatarOptions(progress.totalXp),
+      // avatarOptions now fetched via /api/gamification/avatar-options/:xp/:level
     };
   }
 
@@ -179,18 +180,25 @@ export class ProgressService {
       .select('userId username totalXp workshopsCompletedCount testsCompletedCount medals avatar')
       .exec();
 
-    return rankings.map((r, idx) => ({
-      position: idx + 1,
-      userId: r.userId,
-      username: r.username,
-      totalXp: r.totalXp,
-      level: Math.floor(r.totalXp / 500) + 1,
-      workshopsCompleted: r.workshopsCompletedCount,
-      testsCompleted: r.testsCompletedCount,
-      medalCount: r.medals.length,
-      avatar: r.avatar,
-      isMe: r.userId === user.userId,
-    }));
+    // Get level config for calculating levels
+    const gamificationConfig = await this.gamificationService.getConfig(schoolId);
+    const levelConfig = gamificationConfig.levelConfig || { baseXpPerLevel: 100, levelMultiplier: 1.2, maxLevel: 50 };
+
+    return rankings.map((r, idx) => {
+      const { level } = this.calculateLevelFromXp(r.totalXp, levelConfig);
+      return {
+        position: idx + 1,
+        userId: r.userId,
+        username: r.username,
+        totalXp: r.totalXp,
+        level,
+        workshopsCompleted: r.workshopsCompletedCount,
+        testsCompleted: r.testsCompletedCount,
+        medalCount: r.medals.length,
+        avatar: r.avatar,
+        isMe: r.userId === user.userId,
+      };
+    });
   }
 
   /**
@@ -516,18 +524,6 @@ export class ProgressService {
     }
 
     progress.lastActivityAt = now;
-  }
-
-  /**
-   * Get unlocked avatar options based on XP
-   */
-  private getUnlockedAvatarOptions(xp: number) {
-    return {
-      bases: AVATAR_OPTIONS.bases.filter(b => b.requiredXp <= xp),
-      colors: AVATAR_OPTIONS.colors.filter(c => c.requiredXp <= xp),
-      accessories: AVATAR_OPTIONS.accessories.filter(a => a.requiredXp <= xp),
-      frames: AVATAR_OPTIONS.frames.filter(f => f.requiredXp <= xp),
-    };
   }
 
   /**
