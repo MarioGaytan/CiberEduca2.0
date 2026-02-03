@@ -14,5 +14,10 @@ export async function PUT(
   { params }: { params: Promise<{ styleId: string }> }
 ) {
   const { styleId } = await params;
-  return proxyBackend(req, `/gamification/dicebear/styles/${styleId}`, { method: 'PUT' });
+  const body = await req.text();
+  return proxyBackend(req, `/gamification/dicebear/styles/${styleId}`, { 
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body,
+  });
 }

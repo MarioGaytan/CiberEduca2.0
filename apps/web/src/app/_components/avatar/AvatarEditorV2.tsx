@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings, Lock } from 'lucide-react';
+import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings, Lock, Shuffle, ChevronRight, Trophy, Zap } from 'lucide-react';
 import { buildDiceBearUrl, DiceBearConfig } from './DiceBearAvatar';
 
 type DiceBearOption = {
@@ -291,38 +291,97 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
     );
   }
 
+  // Randomize avatar within unlocked options
+  function handleRandomize() {
+    if (!styleData) return;
+    const newConfig: Partial<DiceBearConfig> = { style: selectedStyle };
+    
+    styleData.categories.forEach(cat => {
+      const unlockedOptions = cat.options.filter(o => o.isUnlocked);
+      if (unlockedOptions.length > 0) {
+        const randomOption = unlockedOptions[Math.floor(Math.random() * unlockedOptions.length)];
+        if (randomOption.value !== 'none') {
+          (newConfig as any)[cat.name] = randomOption.value;
+        }
+      }
+    });
+    
+    setConfig(newConfig);
+    setHasChanges(true);
+  }
+
+  // Calculate unlock progress
+  const totalOptions = styleData?.categories.reduce((sum, cat) => sum + cat.options.length, 0) || 0;
+  const unlockedOptions = styleData?.categories.reduce(
+    (sum, cat) => sum + cat.options.filter(o => o.isUnlocked).length, 0
+  ) || 0;
+  const unlockProgress = totalOptions > 0 ? Math.round((unlockedOptions / totalOptions) * 100) : 0;
+
   return (
     <div className="space-y-6">
-      {/* Preview Section */}
-      <div className="ce-card p-6">
+      {/* Preview Section - Enhanced */}
+      <div className="ce-card p-6 bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="relative">
+          {/* Avatar Preview with glow effect */}
+          <div className="relative group">
+            <div className="absolute -inset-2 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 blur-xl transition-opacity" />
             <img
               src={previewUrl}
               alt="Tu avatar"
-              className="w-32 h-32 rounded-full bg-zinc-800 shadow-lg"
+              className="relative w-36 h-36 rounded-full bg-zinc-800 shadow-2xl ring-4 ring-fuchsia-500/30 transition-transform group-hover:scale-105"
             />
             {hasChanges && (
-              <div className="absolute -top-2 -right-2 bg-fuchsia-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                Sin guardar
+              <div className="absolute -top-2 -right-2 bg-fuchsia-500 text-white text-xs px-2.5 py-1 rounded-full animate-bounce shadow-lg">
+                <Zap className="inline h-3 w-3 mr-1" />Sin guardar
               </div>
             )}
           </div>
+          
+          {/* Info and Actions */}
           <div className="text-center sm:text-left flex-1">
-            <h3 className="text-lg font-semibold text-zinc-100">Vista previa</h3>
-            <p className="text-sm text-zinc-400 mt-1">
-              XP: {userXp.toLocaleString()} • Nivel {userLevel}
+            <h3 className="text-xl font-bold text-zinc-100">Tu Avatar</h3>
+            <p className="text-sm text-zinc-400 mt-1 flex items-center justify-center sm:justify-start gap-2">
+              <Trophy className="h-4 w-4 text-amber-400" />
+              <span>{userXp.toLocaleString()} XP</span>
+              <span className="text-fuchsia-400">•</span>
+              <span>Nivel {userLevel}</span>
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            
+            {/* Unlock Progress */}
+            {styleData && (
+              <div className="mt-3 max-w-xs mx-auto sm:mx-0">
+                <div className="flex justify-between text-xs text-zinc-500 mb-1">
+                  <span>Opciones desbloqueadas</span>
+                  <span className="text-fuchsia-300">{unlockedOptions}/{totalOptions}</span>
+                </div>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500 transition-all duration-500"
+                    style={{ width: `${unlockProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
               <button
                 onClick={handleSave}
                 disabled={!hasChanges || saving}
-                className="ce-btn ce-btn-primary disabled:opacity-50"
+                className="ce-btn ce-btn-primary disabled:opacity-50 shadow-lg shadow-fuchsia-500/20"
               >
                 {saving ? 'Guardando...' : 'Guardar cambios'}
               </button>
+              <button
+                onClick={handleRandomize}
+                disabled={!styleData}
+                className="ce-btn ce-btn-ghost flex items-center gap-1.5"
+                title="Generar avatar aleatorio"
+              >
+                <Shuffle className="h-4 w-4" /> Aleatorio
+              </button>
               {hasChanges && (
-                <button onClick={handleReset} className="ce-btn ce-btn-ghost">
+                <button onClick={handleReset} className="ce-btn ce-btn-ghost text-red-400 hover:text-red-300">
                   Descartar
                 </button>
               )}
@@ -331,9 +390,16 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
         </div>
       </div>
 
-      {/* Style Selector */}
+      {/* Style Selector - Enhanced */}
       <div className="ce-card p-5">
-        <h4 className="text-sm font-semibold text-zinc-200 mb-4">Estilo de Avatar</h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+            <Palette className="h-4 w-4 text-fuchsia-400" /> Estilo de Avatar
+          </h4>
+          <span className="text-xs text-zinc-500">
+            {styles.filter(s => s.isUnlocked).length} de {styles.length} desbloqueados
+          </span>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {styles.map((style) => (
             <button
@@ -357,9 +423,10 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                 {style.displayName}
               </div>
               {!style.isUnlocked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
-                  <span className="text-xs text-zinc-300 px-2 py-1 bg-black/70 rounded">
-                    {style.requiredXp} XP
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-xl backdrop-blur-sm">
+                  <Lock className="h-5 w-5 text-zinc-400 mb-1" />
+                  <span className="text-xs text-zinc-300 font-medium">
+                    {style.requiredXp > 0 ? `${style.requiredXp} XP` : `Nv. ${style.requiredLevel}`}
                   </span>
                 </div>
               )}
@@ -375,22 +442,44 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
         </div>
       </div>
 
-      {/* Category Tabs */}
+      {/* Category Tabs - Enhanced with unlock indicators */}
       {availableCategories.length > 0 && (
-        <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-          {availableCategories.map((category, idx) => (
-            <button
-              key={`cat-${category.name}-${idx}`}
-              onClick={() => setActiveCategory(category.name)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
-                activeCategory === category.name
-                  ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-500/50'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-800'
-              }`}
-            >
-              <CategoryIcon name={category.name} className="h-4 w-4" /> {category.displayName}
-            </button>
-          ))}
+        <div className="ce-card p-4">
+          <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Personaliza tu avatar</h4>
+          <div className="flex flex-wrap gap-2">
+            {availableCategories.map((category, idx) => {
+              const unlockedInCat = category.options.filter(o => o.isUnlocked).length;
+              const totalInCat = category.options.length;
+              const allUnlocked = unlockedInCat === totalInCat;
+              
+              return (
+                <button
+                  key={`cat-${category.name}-${idx}`}
+                  onClick={() => setActiveCategory(category.name)}
+                  className={`group flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+                    activeCategory === category.name
+                      ? 'bg-gradient-to-r from-fuchsia-500/30 to-purple-500/30 text-fuchsia-200 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/10'
+                      : 'bg-zinc-800/50 text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-800'
+                  }`}
+                >
+                  <CategoryIcon name={category.name} className="h-4 w-4" />
+                  <span>{category.displayName}</span>
+                  {!allUnlocked && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      activeCategory === category.name 
+                        ? 'bg-fuchsia-500/30 text-fuchsia-200' 
+                        : 'bg-zinc-700 text-zinc-400'
+                    }`}>
+                      {unlockedInCat}/{totalInCat}
+                    </span>
+                  )}
+                  {activeCategory === category.name && (
+                    <ChevronRight className="h-4 w-4 text-fuchsia-400" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -488,9 +577,10 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                       </div>
                     )}
                     {!option.isUnlocked && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="bg-black/70 text-xs px-2 py-1 rounded text-zinc-300">
-                          {option.requiredXp} XP
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+                        <Lock className="h-4 w-4 text-zinc-400 mb-1" />
+                        <span className="bg-black/70 text-xs px-2 py-0.5 rounded-full text-zinc-300 font-medium">
+                          {option.requiredXp > 0 ? `${option.requiredXp} XP` : `Nv. ${option.requiredLevel}`}
                         </span>
                       </div>
                     )}

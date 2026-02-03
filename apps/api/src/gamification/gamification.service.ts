@@ -249,8 +249,18 @@ export class GamificationService {
       : config;
     const medalsArray = configObj.medals || [];
     
+    console.log('[MEDALS DEBUG] Stats:', stats);
+    console.log('[MEDALS DEBUG] Already earned IDs:', alreadyEarnedIds);
+    console.log('[MEDALS DEBUG] Total medals in config:', medalsArray.length);
+    
     for (const medal of medalsArray) {
-      if (!medal.isActive || alreadyEarnedIds.includes(medal.id)) continue;
+      const alreadyEarned = alreadyEarnedIds.includes(medal.id);
+      if (!medal.isActive || alreadyEarned) {
+        if (alreadyEarned) {
+          console.log(`[MEDALS DEBUG] Skipping ${medal.id} - already earned`);
+        }
+        continue;
+      }
       
       let value = 0;
       switch (medal.conditionType) {
@@ -272,11 +282,14 @@ export class GamificationService {
         case 'eq': conditionMet = value === medal.conditionValue; break;
       }
       
+      console.log(`[MEDALS DEBUG] Medal ${medal.id} (${medal.name}): condition=${medal.conditionType}, value=${value}, target=${medal.conditionValue}, op=${op}, met=${conditionMet}`);
+      
       if (conditionMet) {
         toAward.push(medal);
       }
     }
     
+    console.log('[MEDALS DEBUG] Medals to award:', toAward.map(m => m.id));
     return toAward;
   }
 

@@ -338,9 +338,6 @@ export class ProgressService {
       progress.totalXp += xpForThisScore;
     }
 
-    // Check and award dynamic medals based on current stats
-    await this.checkAndAwardDynamicMedals(progress, schoolId, isPerfect);
-
     // Check if all tests in workshop are completed
     const workshopTests = await this.testModel.find({
       workshopId,
@@ -357,6 +354,10 @@ export class ProgressService {
       // Workshop completed!
       await this.recordWorkshopCompletion(progress, workshopId, schoolId);
     }
+
+    // Check and award dynamic medals AFTER workshop completion is recorded
+    // This ensures workshopsCompletedCount is up-to-date
+    await this.checkAndAwardDynamicMedals(progress, schoolId, isPerfect);
 
     await this.updateActivity(progress);
     await progress.save();
