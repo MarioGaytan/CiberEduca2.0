@@ -178,17 +178,24 @@
 
 ---
 
-### 7. Mejoras en Dashboard de Staff
+### 7. ✅ Mejoras en Dashboard de Staff
 **Archivo:** `apps/web/src/app/dashboard/page.tsx`
 
 **Tareas:**
-- [ ] Agregar estadísticas más detalladas:
-  - Alumnos activos esta semana
-  - Tests completados recientemente
-  - Progreso general de la clase
-- [ ] Acceso rápido a funciones comunes
-- [ ] Notificaciones pendientes (intentos por calificar)
-- [ ] Gráficas básicas de actividad
+- [x] Agregar estadísticas más detalladas por rol:
+  - **Admin**: Total usuarios, usuarios por rol, solicitudes pendientes, actividad reciente
+  - **Teacher**: Mis talleres, borradores, en revisión, intentos por calificar
+  - **Reviewer**: Pendientes de revisión, solicitudes, revisados esta semana
+  - **Experience Manager**: Acceso a configuración de gamificación
+- [x] Acceso rápido a funciones comunes (acciones rápidas)
+- [x] Notificaciones pendientes (badges con contadores)
+- [x] Actividad reciente (para admin)
+
+**Archivos creados:**
+- `apps/api/src/dashboard/dashboard.module.ts`
+- `apps/api/src/dashboard/dashboard.service.ts`
+- `apps/api/src/dashboard/dashboard.controller.ts`
+- `apps/web/src/app/api/dashboard/stats/route.ts`
 
 ---
 
