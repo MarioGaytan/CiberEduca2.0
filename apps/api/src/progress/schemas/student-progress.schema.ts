@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type StudentProgressDocument = StudentProgress & Document;
 
@@ -45,54 +45,20 @@ export class Medal {
 
 export const MedalSchema = SchemaFactory.createForClass(Medal);
 
-@Schema({ _id: false })
-export class AvatarConfig {
-  // DiceBear configuration
-  @Prop({ required: true, default: 'avataaars' })
-  style!: string; // DiceBear style: avataaars, lorelei, notionists, etc.
+// AvatarConfig is now a Mixed type to support dynamic DiceBear properties
+// Each DiceBear style has different properties (hair, facialHair, glasses, etc.)
+// Using Mixed allows any properties to be saved without schema restrictions
+export type AvatarConfig = {
+  style: string;
+  [key: string]: string | undefined;
+};
 
-  @Prop({ required: false })
-  skinColor?: string; // Skin color hex (without #)
-
-  @Prop({ required: false })
-  backgroundColor?: string; // Background color hex (without #)
-
-  @Prop({ required: false })
-  top?: string; // Hair style
-
-  @Prop({ required: false })
-  hairColor?: string;
-
-  @Prop({ required: false })
-  eyes?: string;
-
-  @Prop({ required: false })
-  eyebrows?: string;
-
-  @Prop({ required: false })
-  mouth?: string;
-
-  @Prop({ required: false })
-  accessories?: string;
-
-  @Prop({ required: false })
-  clothing?: string;
-
-  @Prop({ required: false })
-  clothingColor?: string;
-
-  // Legacy fields (for backwards compatibility)
-  @Prop({ required: false, default: 'default' })
-  base?: string;
-
-  @Prop({ required: false, default: '#6366f1' })
-  color?: string;
-
-  @Prop({ required: false, default: 'none' })
-  frame?: string;
-}
-
-export const AvatarConfigSchema = SchemaFactory.createForClass(AvatarConfig);
+export const AvatarConfigSchema = new MongooseSchema(
+  {
+    style: { type: String, required: true, default: 'avataaars' },
+  },
+  { _id: false, strict: false, minimize: false }
+);
 
 @Schema({ _id: false })
 export class TestCompletion {

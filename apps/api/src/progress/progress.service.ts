@@ -252,30 +252,52 @@ export class ProgressService {
 
   /**
    * Update avatar configuration (DiceBear format)
+   * Replaces the entire avatar object to ensure all dynamic fields are saved.
+   * Each DiceBear style has different properties, so we store them as a flexible object.
    */
   async updateAvatar(user: AuthUser, avatarUpdate: Partial<AvatarConfig>) {
     const progress = await this.getOrCreateProgress(user);
-    
-    // TODO: Add validation against GamificationConfig unlocked options
-    // For now, directly update the avatar config with provided values
-    
-    // DiceBear fields
-    if (avatarUpdate.style !== undefined) progress.avatar.style = avatarUpdate.style;
-    if (avatarUpdate.skinColor !== undefined) progress.avatar.skinColor = avatarUpdate.skinColor;
-    if (avatarUpdate.backgroundColor !== undefined) progress.avatar.backgroundColor = avatarUpdate.backgroundColor;
-    if (avatarUpdate.top !== undefined) progress.avatar.top = avatarUpdate.top;
-    if (avatarUpdate.hairColor !== undefined) progress.avatar.hairColor = avatarUpdate.hairColor;
-    if (avatarUpdate.eyes !== undefined) progress.avatar.eyes = avatarUpdate.eyes;
-    if (avatarUpdate.eyebrows !== undefined) progress.avatar.eyebrows = avatarUpdate.eyebrows;
-    if (avatarUpdate.mouth !== undefined) progress.avatar.mouth = avatarUpdate.mouth;
-    if (avatarUpdate.accessories !== undefined) progress.avatar.accessories = avatarUpdate.accessories;
-    if (avatarUpdate.clothing !== undefined) progress.avatar.clothing = avatarUpdate.clothing;
-    if (avatarUpdate.clothingColor !== undefined) progress.avatar.clothingColor = avatarUpdate.clothingColor;
-    
-    // Legacy fields (backwards compatibility)
-    if (avatarUpdate.base !== undefined) progress.avatar.base = avatarUpdate.base;
-    if (avatarUpdate.color !== undefined) progress.avatar.color = avatarUpdate.color;
-    if (avatarUpdate.frame !== undefined) progress.avatar.frame = avatarUpdate.frame;
+
+    const shouldUnset = (v: unknown) => v === undefined || v === null || v === '' || v === 'none';
+
+    // Build new avatar object from scratch to avoid stale fields from previous styles
+    const newAvatar: Record<string, string> = {};
+
+    // Always ensure style is set
+    const newStyle = avatarUpdate.style || progress.avatar?.style || 'avataaars';
+    newAvatar.style = newStyle;
+
+    // If style changed, only keep the new style (reset all other fields)
+    // If style is the same, merge current avatar with updates
+    const isStyleChange = avatarUpdate.style !== undefined && 
+                          avatarUpdate.style !== progress.avatar?.style;
+
+    if (!isStyleChange && progress.avatar) {
+      // Keep existing values from current avatar (same style)
+      for (const [key, value] of Object.entries(progress.avatar as Record<string, unknown>)) {
+        if (key === 'style' || key === '_id') continue;
+        if (!shouldUnset(value)) {
+          newAvatar[key] = String(value);
+        }
+      }
+    }
+
+    // Apply all updates from the request
+    for (const [key, value] of Object.entries(avatarUpdate as Record<string, unknown>)) {
+      if (key === 'seed' || key === '_id') continue;
+      if (key === 'style') continue; // Already handled above
+
+      if (shouldUnset(value)) {
+        // Remove the field if it should be unset
+        delete newAvatar[key];
+      } else {
+        newAvatar[key] = String(value);
+      }
+    }
+
+    // Replace the entire avatar object (this ensures Mongoose saves all fields)
+    progress.set('avatar', newAvatar);
+    progress.markModified('avatar');
 
     await progress.save();
     return progress.avatar;

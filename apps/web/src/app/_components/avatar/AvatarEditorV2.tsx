@@ -223,6 +223,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
             isColor: true,
             sortOrder: 9999,
             options: [
+              { value: 'none', displayName: 'Sin fondo', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
               { value: '000000', displayName: 'Negro', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
               { value: '0b1020', displayName: 'Noche', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
               { value: '111827', displayName: 'Zinc', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
@@ -239,6 +240,30 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
           normalized.categories.push(fallbackBackground);
           normalized.categories.sort((a: DiceBearCategory, b: DiceBearCategory) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         }
+
+        // Ensure backgroundColor has a "Sin fondo" option even if provided by API
+        const bgCat = normalized.categories.find((c: DiceBearCategory) => c.name === 'backgroundColor');
+        if (bgCat && bgCat.options && !bgCat.options.some((o: DiceBearOption) => o.value === 'none')) {
+          bgCat.options = [
+            { value: 'none', displayName: 'Sin fondo', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+            ...bgCat.options,
+          ];
+        }
+
+        // Add "Ninguno" option for non-color categories (poses/accesorios/etc) if missing.
+        normalized.categories = normalized.categories.map((cat: DiceBearCategory) => {
+          if (!cat.options || cat.options.length === 0) return cat;
+          if (cat.isColor) return cat;
+          const hasNone = cat.options.some((o: DiceBearOption) => o.value === 'none');
+          if (hasNone) return cat;
+          return {
+            ...cat,
+            options: [
+              { value: 'none', displayName: 'Ninguno', requiredXp: 0, requiredLevel: 0, isUnlocked: true },
+              ...cat.options,
+            ],
+          };
+        });
 
         setStyleData(normalized);
         // Always set first category when loading a new style
@@ -264,7 +289,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
     const newConfig = { ...config };
     
     // Handle special cases
-    if (value === 'none' || value === '') {
+    if (value === '') {
       (newConfig as any)[category] = undefined;
     } else {
       (newConfig as any)[category] = value;
@@ -584,6 +609,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                 const currentValue = (config as any)[currentCategory.name];
                 const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== '';
                 const isSelected = hasValue ? currentValue === option.value : idx === 0;
+                const isNoneOption = option.value === 'none';
                 return (
                   <button
                     key={`color-${option.value}-${idx}`}
@@ -603,9 +629,21 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                           ? 'border-white/20 hover:border-white/50'
                           : 'border-white/10 opacity-40 cursor-not-allowed'
                     }`}
-                    style={{ backgroundColor: `#${option.value}` }}
+                    style={
+                      isNoneOption
+                        ? {
+                            backgroundImage:
+                              'repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 12px)',
+                          }
+                        : { backgroundColor: `#${option.value}` }
+                    }
                     title={option.displayName}
                   >
+                    {isNoneOption && (
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-zinc-100/80">
+                        Ø
+                      </span>
+                    )}
                     {!option.isUnlocked && (
                       <Lock className="absolute inset-0 m-auto h-4 w-4 text-zinc-400" />
                     )}

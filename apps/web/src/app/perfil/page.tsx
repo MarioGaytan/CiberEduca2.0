@@ -262,9 +262,13 @@ export default function PerfilPage() {
         body: JSON.stringify(update),
       });
       if (res.ok) {
-        setProgress({
-          ...progress,
-          avatar: { ...progress.avatar, ...update },
+        const savedAvatar = await res.json();
+        setProgress((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            avatar: savedAvatar,
+          };
         });
       }
     } catch (e) {
