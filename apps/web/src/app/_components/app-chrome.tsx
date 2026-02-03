@@ -526,7 +526,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         <main
           ref={mainRef}
           className={
-            'flex-1 min-h-screen overflow-y-auto overscroll-contain transition-[margin] duration-200 flex flex-col ' +
+            'flex-1 min-h-screen overflow-y-auto transition-[margin] duration-200 flex flex-col ' +
             (mobileSearchOpen ? 'pt-28 lg:pt-16 ' : 'pt-16 ') +
             (sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72')
           }
