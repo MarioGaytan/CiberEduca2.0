@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     sameSite: 'lax',
     secure: IS_PROD,
     path: '/',
-    maxAge: 60 * 15,
+    maxAge: 60 * 60 * 24 * 7,
   });
   jar.set(REFRESH_COOKIE, tokens.refreshToken, {
     httpOnly: true,

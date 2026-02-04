@@ -51,16 +51,14 @@ export async function proxyBackend(req: Request, path: string, init?: RequestIni
   const access = jar.get(ACCESS_COOKIE)?.value;
   const refresh = jar.get(REFRESH_COOKIE)?.value;
 
-  if (!access) {
-    return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
-  }
-
-  const first = await fetchBackendWithAccess(path, access, init);
-  if (!first.ok) {
-    return NextResponse.json({ error: 'Backend no disponible.' }, { status: 503 });
-  }
-  if (first.res.status !== 401) {
-    return NextResponse.json(first.data, { status: first.res.status });
+  if (access) {
+    const first = await fetchBackendWithAccess(path, access, init);
+    if (!first.ok) {
+      return NextResponse.json({ error: 'Backend no disponible.' }, { status: 503 });
+    }
+    if (first.res.status !== 401) {
+      return NextResponse.json(first.data, { status: first.res.status });
+    }
   }
 
   if (!refresh) {
@@ -88,7 +86,7 @@ export async function proxyBackend(req: Request, path: string, init?: RequestIni
     sameSite: 'lax',
     secure: IS_PROD,
     path: '/',
-    maxAge: 60 * 15,
+    maxAge: 60 * 60 * 24,
   });
   jar.set(REFRESH_COOKIE, tokens.refreshToken, {
     httpOnly: true,

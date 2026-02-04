@@ -28,16 +28,14 @@ export async function GET() {
   const access = jar.get(ACCESS_COOKIE)?.value;
   const refresh = jar.get(REFRESH_COOKIE)?.value;
 
-  if (!access) {
-    return NextResponse.json({ authenticated: false }, { status: 401 });
-  }
-
-  const first = await fetchMe(access);
-  if (!first.ok) {
-    return NextResponse.json({ authenticated: false }, { status: 200 });
-  }
-  if (first.res.ok) {
-    return NextResponse.json({ authenticated: true, user: first.data });
+  if (access) {
+    const first = await fetchMe(access);
+    if (!first.ok) {
+      return NextResponse.json({ authenticated: false }, { status: 200 });
+    }
+    if (first.res.ok) {
+      return NextResponse.json({ authenticated: true, user: first.data });
+    }
   }
 
   if (!refresh) {
@@ -67,7 +65,7 @@ export async function GET() {
     sameSite: 'lax',
     secure: IS_PROD,
     path: '/',
-    maxAge: 60 * 15,
+    maxAge: 60 * 60 * 24 * 7,
   });
   jar.set(REFRESH_COOKIE, tokens.refreshToken, {
     httpOnly: true,

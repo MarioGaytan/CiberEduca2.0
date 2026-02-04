@@ -32,7 +32,7 @@ export class AuthService {
     }
 
     const accessExpiresIn =
-      (this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m') as SignOptions['expiresIn'];
+      (this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '24h') as SignOptions['expiresIn'];
     const refreshExpiresIn =
       (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d') as SignOptions['expiresIn'];
 
