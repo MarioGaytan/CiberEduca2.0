@@ -80,8 +80,16 @@ function renderIcon(icon: string, iconType: string | undefined, size: string, co
       />
     );
   }
-  
-  return <span className={sizeClass.icon}>{icon}</span>;
+
+  return (
+    <Icon
+      name={icon}
+      fallback="award"
+      size={sizeClass.lucideSize}
+      className={color ? '' : 'text-current'}
+      style={color ? { color } : undefined}
+    />
+  );
 }
 
 export default function MedalBadge({ medal, size = 'md', showTooltip = true }: Props) {

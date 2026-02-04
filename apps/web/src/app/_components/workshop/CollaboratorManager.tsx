@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { X, Users } from 'lucide-react';
 
 type Collaborator = {
   userId: string;
@@ -127,7 +128,10 @@ export default function CollaboratorManager({ workshopId, collaborators, onUpdat
   return (
     <div className="ce-card p-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-zinc-200">👥 Colaboradores</div>
+        <div className="text-sm font-semibold text-zinc-200 inline-flex items-center gap-2">
+          <Users className="h-4 w-4 text-zinc-400" />
+          Colaboradores
+        </div>
         {canManage && !showAdd && (
           <button
             onClick={() => setShowAdd(true)}
@@ -160,7 +164,7 @@ export default function CollaboratorManager({ workshopId, collaborators, onUpdat
                   onClick={() => handleRemove(c.userId)}
                   className="text-xs text-red-400 hover:text-red-300"
                 >
-                  ✕
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -223,7 +227,7 @@ export default function CollaboratorManager({ workshopId, collaborators, onUpdat
                 onClick={() => { setSelectedUser(null); setSearchQuery(''); }}
                 className="ml-auto text-xs text-zinc-400 hover:text-zinc-200"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
           )}

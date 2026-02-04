@@ -1,5 +1,7 @@
 'use client';
 
+import Icon from '../ui/Icon';
+
 type AvatarConfig = {
   base?: string;
   color?: string;
@@ -20,13 +22,13 @@ type Props = {
   showFrame?: boolean;
 };
 
-const AVATAR_EMOJIS: Record<string, string> = {
-  default: '😊',
-  cool: '😎',
-  nerd: '🤓',
-  ninja: '🥷',
-  robot: '🤖',
-  alien: '👽',
+const AVATAR_ICONS: Record<string, string> = {
+  default: 'smile',
+  cool: 'glasses',
+  nerd: 'brain',
+  ninja: 'sword',
+  robot: 'settings-2',
+  alien: 'sparkles',
 };
 
 const FRAME_STYLES: Record<string, string> = {
@@ -38,11 +40,11 @@ const FRAME_STYLES: Record<string, string> = {
   legendary: 'ring-2 ring-fuchsia-400 ring-offset-2 ring-offset-zinc-900 shadow-[0_0_16px_rgba(217,70,239,0.5)] animate-pulse',
 };
 
-const SIZE_CLASSES: Record<string, { container: string; emoji: string }> = {
-  sm: { container: 'h-8 w-8', emoji: 'text-lg' },
-  md: { container: 'h-12 w-12', emoji: 'text-2xl' },
-  lg: { container: 'h-16 w-16', emoji: 'text-3xl' },
-  xl: { container: 'h-24 w-24', emoji: 'text-5xl' },
+const SIZE_CLASSES: Record<string, { container: string; icon: string }> = {
+  sm: { container: 'h-8 w-8', icon: 'h-4 w-4' },
+  md: { container: 'h-12 w-12', icon: 'h-6 w-6' },
+  lg: { container: 'h-16 w-16', icon: 'h-8 w-8' },
+  xl: { container: 'h-24 w-24', icon: 'h-12 w-12' },
 };
 
 export default function StudentAvatar({ avatar, username, size = 'md', showFrame = true }: Props) {
@@ -51,7 +53,7 @@ export default function StudentAvatar({ avatar, username, size = 'md', showFrame
   const frame = avatar?.frame || 'none';
   const sizeClass = SIZE_CLASSES[size];
   const frameClass = showFrame ? FRAME_STYLES[frame] || '' : '';
-  const emoji = AVATAR_EMOJIS[base] || '😊';
+  const iconName = AVATAR_ICONS[base] || 'smile';
 
   return (
     <div
@@ -59,7 +61,7 @@ export default function StudentAvatar({ avatar, username, size = 'md', showFrame
       style={{ backgroundColor: color }}
       title={username}
     >
-      <span className={sizeClass.emoji}>{emoji}</span>
+      <Icon name={iconName} className={`${sizeClass.icon} text-white/90`} />
     </div>
   );
 }

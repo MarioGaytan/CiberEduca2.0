@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Star, BarChart3, Medal, Palette, Plus, Edit2, Trash2, X, GripVertical, Download, Upload } from 'lucide-react';
+import { Star, BarChart3, Medal, Palette, Plus, Edit2, Trash2, X, GripVertical, Download, Upload, RefreshCw, Clock, Check } from 'lucide-react';
 import MedalBadge from '../../_components/progress/MedalBadge';
 import MedalDesigner, { MedalDesign, MedalPreview } from '../../_components/medals/MedalDesigner';
 
@@ -908,7 +908,7 @@ export default function ExperienceManagerPage() {
                         name: medal.name,
                         description: medal.description,
                         icon: medal.icon,
-                        iconType: medal.iconType || 'emoji',
+                        iconType: medal.iconType || 'lucide',
                         iconColor: medal.iconColor,
                         bgColor: medal.bgColor,
                         borderColor: medal.borderColor,
@@ -994,7 +994,17 @@ export default function ExperienceManagerPage() {
               disabled={loadingStyles}
               className="ce-btn ce-btn-ghost text-sm whitespace-nowrap"
             >
-              {loadingStyles ? '⏳ Cargando...' : '🔄 Actualizar lista'}
+              {loadingStyles ? (
+                <span className="inline-flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Cargando...
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Actualizar lista
+                </span>
+              )}
             </button>
           </div>
 
@@ -1076,7 +1086,10 @@ export default function ExperienceManagerPage() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-zinc-400">Requisitos de desbloqueo</span>
                         {isFree ? (
-                          <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">✓ Gratis</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
+                            <Check className="h-3.5 w-3.5" />
+                            Gratis
+                          </span>
                         ) : (
                           <span className="text-xs text-fuchsia-300 bg-fuchsia-500/10 px-2 py-0.5 rounded-full">Bloqueado</span>
                         )}

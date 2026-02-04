@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Check } from 'lucide-react';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -532,7 +533,10 @@ export default function EditarTestPage() {
                       {q.mediaUrl && (
                         <div className="mt-2">
                           {q.mediaUrl.includes('youtube.com') || q.mediaUrl.includes('youtu.be') ? (
-                            <div className="text-xs text-green-400">✓ Video de YouTube detectado</div>
+                            <div className="inline-flex items-center gap-1 text-xs text-green-400">
+                              <Check className="h-3.5 w-3.5" />
+                              Video de YouTube detectado
+                            </div>
                           ) : (
                             <img
                               src={q.mediaUrl}

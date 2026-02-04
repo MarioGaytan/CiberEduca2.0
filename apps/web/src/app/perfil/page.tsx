@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User, KeyRound, UserCircle, Users, Clock, Inbox, ShieldCheck, PlusCircle } from 'lucide-react';
+import { Flame, Trophy, Lock, BookOpen, FileText, LayoutDashboard, TrendingUp, CheckCircle, BarChart3, Palette, Award, GraduationCap, Settings, Gamepad2, User, KeyRound, UserCircle, Users, Clock, Inbox, ShieldCheck, PlusCircle, Check } from 'lucide-react';
 import ProgressCard from '../_components/progress/ProgressCard';
 import StudentAvatar from '../_components/progress/StudentAvatar';
 import MedalBadge from '../_components/progress/MedalBadge';
@@ -831,7 +831,10 @@ export default function PerfilPage() {
                   <p className="mt-1 text-xs text-red-400">Las contraseñas no coinciden.</p>
                 )}
                 {confirmNewPassword && newPassword === confirmNewPassword && (
-                  <p className="mt-1 text-xs text-green-400">✓ Las contraseñas coinciden.</p>
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-green-400">
+                    <Check className="h-3.5 w-3.5" />
+                    Las contraseñas coinciden.
+                  </p>
                 )}
               </div>
 

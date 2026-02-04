@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Check, Clock } from 'lucide-react';
 
 type MeResponse =
   | { authenticated: true; user: { username: string; role: string } }
@@ -233,11 +234,13 @@ export default function IntentosPage() {
                     <div className="mt-2">
                       {a.needsManualReview ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">
-                          ⏳ Requiere revisión manual
+                          <Clock className="h-3.5 w-3.5" />
+                          Requiere revisión manual
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-300">
-                          ✓ Calificado
+                          <Check className="h-3.5 w-3.5" />
+                          Calificado
                         </span>
                       )}
                       {a.submittedAt && (

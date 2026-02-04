@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heading, FileText, Video, ImageIcon } from 'lucide-react';
+import { Heading, FileText, Video, ImageIcon, X } from 'lucide-react';
 
 export type ContentBlockType = 'text' | 'youtube' | 'image' | 'heading';
 
@@ -171,7 +171,7 @@ export default function ContentBlockEditor({ blocks, onChange, disabled }: Props
                   onClick={() => removeBlock(idx)}
                   className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/20"
                 >
-                  ✕
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             )}

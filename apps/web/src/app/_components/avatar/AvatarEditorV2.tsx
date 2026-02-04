@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings, Lock, Shuffle, ChevronRight, Trophy, Zap } from 'lucide-react';
+import { User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, Settings, Lock, Shuffle, ChevronRight, Trophy, Zap, Save, Check, X } from 'lucide-react';
 import { buildDiceBearUrl, DiceBearConfig } from './DiceBearAvatar';
 
 type DiceBearOption = {
@@ -434,7 +434,16 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
               disabled={!hasChanges || saving}
               className="ce-btn ce-btn-primary flex-1 disabled:opacity-50 shadow-lg shadow-fuchsia-500/20 text-xs py-2"
             >
-              {saving ? '...' : hasChanges ? '💾 Guardar' : '✓'}
+              {saving ? (
+                '...'
+              ) : hasChanges ? (
+                <span className="inline-flex items-center justify-center gap-1.5">
+                  <Save className="h-3.5 w-3.5" />
+                  Guardar
+                </span>
+              ) : (
+                <Check className="mx-auto h-3.5 w-3.5" />
+              )}
             </button>
             <button
               onClick={handleRandomize}
@@ -449,7 +458,7 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
                 onClick={handleReset} 
                 className="ce-btn ce-btn-ghost text-red-400 hover:text-red-300 text-xs py-2 px-2"
               >
-                ✕
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
@@ -484,12 +493,25 @@ export default function AvatarEditorV2({ currentConfig, username, userXp, userLe
             )}
             <div className="mt-3 flex gap-2">
               <button onClick={handleSave} disabled={!hasChanges || saving} className="ce-btn ce-btn-primary text-xs py-1.5 px-3">
-                {saving ? '...' : hasChanges ? 'Guardar' : '✓'}
+                {saving ? (
+                  '...'
+                ) : hasChanges ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Save className="h-3.5 w-3.5" />
+                    Guardar
+                  </span>
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
               </button>
               <button onClick={handleRandomize} disabled={!styleData} className="ce-btn ce-btn-ghost text-xs py-1.5 px-2">
                 <Shuffle className="h-3.5 w-3.5" />
               </button>
-              {hasChanges && <button onClick={handleReset} className="ce-btn ce-btn-ghost text-red-400 text-xs py-1.5 px-2">✕</button>}
+              {hasChanges && (
+                <button onClick={handleReset} className="ce-btn ce-btn-ghost text-red-400 text-xs py-1.5 px-2">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>

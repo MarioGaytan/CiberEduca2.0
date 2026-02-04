@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   User, Scissors, Palette, Eye, Sparkles, Glasses, Gem, Shirt, Image, Star, 
   Settings, Square, Hexagon, Grid3X3, Smile, Hand, RefreshCw, Package, MapPin,
-  Shuffle, CircleDot, Layers
+  Shuffle, CircleDot, Layers, Check
 } from 'lucide-react';
 
 type DiceBearOption = {
@@ -483,7 +483,11 @@ export default function StyleDetailPage() {
                       ? 'bg-green-500/80 text-white'
                       : 'bg-fuchsia-500/80 text-white'
                   }`}>
-                    {option.requiredXp === 0 ? '✓' : option.requiredXp}
+                    {option.requiredXp === 0 && option.requiredLevel === 0 ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      option.requiredXp
+                    )}
                   </div>
                 </div>
               ))}

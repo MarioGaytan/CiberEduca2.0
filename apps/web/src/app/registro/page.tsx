@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import Footer from '../_components/Footer';
 
 export default function RegisterPage() {
@@ -142,7 +143,10 @@ export default function RegisterPage() {
             <p className="mt-1 text-xs text-red-400">Las contraseñas no coinciden.</p>
           )}
           {confirmPassword && passwordsMatch && (
-            <p className="mt-1 text-xs text-green-400">✓ Las contraseñas coinciden.</p>
+            <p className="mt-1 inline-flex items-center gap-1 text-xs text-green-400">
+              <Check className="h-3.5 w-3.5" />
+              Las contraseñas coinciden.
+            </p>
           )}
 
           {/* Checkbox de Términos y Condiciones */}

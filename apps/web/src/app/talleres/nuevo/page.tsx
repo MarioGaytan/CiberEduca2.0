@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ClipboardList, FileText, Settings } from 'lucide-react';
+import { ClipboardList, FileText, Settings, X } from 'lucide-react';
 import ContentBlockEditor, { ContentBlock } from '../../_components/workshop/ContentBlockEditor';
 
 type WorkshopVisibility = 'internal' | 'code';
@@ -200,7 +200,7 @@ export default function NuevoTallerPage() {
                         onClick={() => removeObjective(idx)}
                         className="px-3 text-red-400 hover:text-red-300"
                       >
-                        ✕
+                        <X className="h-4 w-4" />
                       </button>
                     )}
                   </div>
