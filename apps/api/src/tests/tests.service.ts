@@ -12,12 +12,21 @@ import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
 import { ProgressService } from '../progress/progress.service';
 import { User, UserDocument } from '../users/schemas/user.schema';
-import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
-import { WorkshopStatus, WorkshopVisibility } from '../workshops/workshop.enums';
+import {
+  Workshop,
+  WorkshopDocument,
+} from '../workshops/schemas/workshop.schema';
+import {
+  WorkshopStatus,
+  WorkshopVisibility,
+} from '../workshops/workshop.enums';
 import { AuthUser } from '../workshops/workshops.service';
 import { QuestionType, TestStatus } from './test.enums';
 import { Test, TestDocument } from './schemas/test.schema';
-import { TestAttempt, TestAttemptDocument } from './schemas/test-attempt.schema';
+import {
+  TestAttempt,
+  TestAttemptDocument,
+} from './schemas/test-attempt.schema';
 
 @Injectable()
 export class TestsService {
@@ -35,10 +44,15 @@ export class TestsService {
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
-    return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
+    return (
+      user.schoolId ?? this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default'
+    );
   }
 
-  private async assertTeacherWorkshopAccess(user: AuthUser, workshopId: string) {
+  private async assertTeacherWorkshopAccess(
+    user: AuthUser,
+    workshopId: string,
+  ) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
 
@@ -48,13 +62,18 @@ export class TestsService {
     }
 
     if (user.role !== Role.Admin && workshop.createdByUserId !== user.userId) {
-      throw new ForbiddenException('Solo el creador del taller o admin puede administrar.');
+      throw new ForbiddenException(
+        'Solo el creador del taller o admin puede administrar.',
+      );
     }
 
     return workshop;
   }
 
-  private async assertStudentWorkshopAccess(user: AuthUser, workshopId: string) {
+  private async assertStudentWorkshopAccess(
+    user: AuthUser,
+    workshopId: string,
+  ) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
 
@@ -78,13 +97,25 @@ export class TestsService {
     for (const q of questions) {
       if (q.type === QuestionType.MultipleChoice) {
         if (!q.options || q.options.length < 2) {
-          throw new BadRequestException('Pregunta de opción múltiple requiere opciones.');
+          throw new BadRequestException(
+            'Pregunta de opción múltiple requiere opciones.',
+          );
         }
-        if (q.correctOptionIndex === undefined || q.correctOptionIndex === null) {
-          throw new BadRequestException('Pregunta de opción múltiple requiere respuesta correcta.');
+        if (
+          q.correctOptionIndex === undefined ||
+          q.correctOptionIndex === null
+        ) {
+          throw new BadRequestException(
+            'Pregunta de opción múltiple requiere respuesta correcta.',
+          );
         }
-        if (q.correctOptionIndex < 0 || q.correctOptionIndex >= q.options.length) {
-          throw new BadRequestException('Índice de respuesta correcta inválido.');
+        if (
+          q.correctOptionIndex < 0 ||
+          q.correctOptionIndex >= q.options.length
+        ) {
+          throw new BadRequestException(
+            'Índice de respuesta correcta inválido.',
+          );
         }
       }
 
@@ -117,9 +148,15 @@ export class TestsService {
     const testIds = tests.map((t) => String(t._id));
     if (testIds.length === 0) return [];
 
-    const testInfoById = new Map<string, { title: string; workshopId: string }>();
+    const testInfoById = new Map<
+      string,
+      { title: string; workshopId: string }
+    >();
     for (const t of tests) {
-      testInfoById.set(String(t._id), { title: t.title, workshopId: t.workshopId });
+      testInfoById.set(String(t._id), {
+        title: t.title,
+        workshopId: t.workshopId,
+      });
     }
 
     const attempts = await this.attemptModel
@@ -137,13 +174,19 @@ export class TestsService {
     });
   }
 
-  async create(user: AuthUser, input: {
-    workshopId: string;
-    title: string;
-    description?: string;
-    questions: Test['questions'];
-  }) {
-    const workshop = await this.assertTeacherWorkshopAccess(user, input.workshopId);
+  async create(
+    user: AuthUser,
+    input: {
+      workshopId: string;
+      title: string;
+      description?: string;
+      questions: Test['questions'];
+    },
+  ) {
+    const workshop = await this.assertTeacherWorkshopAccess(
+      user,
+      input.workshopId,
+    );
 
     this.validateQuestions(input.questions);
 
@@ -160,11 +203,15 @@ export class TestsService {
     return created.save();
   }
 
-  async updateDraft(user: AuthUser, testId: string, input: {
-    title?: string;
-    description?: string;
-    questions?: Test['questions'];
-  }) {
+  async updateDraft(
+    user: AuthUser,
+    testId: string,
+    input: {
+      title?: string;
+      description?: string;
+      questions?: Test['questions'];
+    },
+  ) {
     const test = await this.testModel.findById(testId).exec();
     if (!test) throw new NotFoundException('Test no encontrado.');
 
@@ -175,7 +222,9 @@ export class TestsService {
     }
 
     if (user.role !== Role.Admin && test.createdByUserId !== user.userId) {
-      throw new ForbiddenException('Solo el creador o admin puede editar este test.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede editar este test.',
+      );
     }
 
     if (input.title !== undefined) test.title = input.title;
@@ -200,7 +249,9 @@ export class TestsService {
     }
 
     if (user.role !== Role.Admin && test.createdByUserId !== user.userId) {
-      throw new ForbiddenException('Solo el creador o admin puede enviar a revisión.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede enviar a revisión.',
+      );
     }
 
     test.status = TestStatus.InReview;
@@ -282,7 +333,10 @@ export class TestsService {
     }
 
     if ([Role.Admin, Role.Reviewer].includes(user.role)) {
-      return this.testModel.find({ schoolId, workshopId }).sort({ createdAt: -1 }).exec();
+      return this.testModel
+        .find({ schoolId, workshopId })
+        .sort({ createdAt: -1 })
+        .exec();
     }
 
     await this.assertTeacherWorkshopAccess(user, workshopId);
@@ -326,7 +380,11 @@ export class TestsService {
     return test;
   }
 
-  async submitAttempt(user: AuthUser, testId: string, input: { answers: any[] }) {
+  async submitAttempt(
+    user: AuthUser,
+    testId: string,
+    input: { answers: any[] },
+  ) {
     if (user.role !== Role.Student) {
       throw new ForbiddenException('Solo alumnos pueden enviar intentos.');
     }
@@ -360,11 +418,19 @@ export class TestsService {
         const selected = a.selectedOptionIndex;
         const correct = q.correctOptionIndex;
         let awarded = 0;
-        if (typeof selected === 'number' && typeof correct === 'number' && selected === correct) {
+        if (
+          typeof selected === 'number' &&
+          typeof correct === 'number' &&
+          selected === correct
+        ) {
           awarded = q.points;
           autoScore += awarded;
         }
-        return { questionIndex: idx, selectedOptionIndex: selected, awardedPoints: awarded };
+        return {
+          questionIndex: idx,
+          selectedOptionIndex: selected,
+          awardedPoints: awarded,
+        };
       }
 
       needsManualReview = true;
@@ -398,7 +464,11 @@ export class TestsService {
     return savedAttempt;
   }
 
-  async gradeAttempt(user: AuthUser, attemptId: string, grades: { questionIndex: number; awardedPoints: number }[]) {
+  async gradeAttempt(
+    user: AuthUser,
+    attemptId: string,
+    grades: { questionIndex: number; awardedPoints: number }[],
+  ) {
     if (![Role.Teacher, Role.Admin].includes(user.role)) {
       throw new ForbiddenException('No tienes permisos para calificar.');
     }
@@ -412,7 +482,9 @@ export class TestsService {
     await this.assertTeacherWorkshopAccess(user, attempt.workshopId);
 
     if (user.role !== Role.Admin && test.createdByUserId !== user.userId) {
-      throw new ForbiddenException('Solo el creador del test o admin puede calificar.');
+      throw new ForbiddenException(
+        'Solo el creador del test o admin puede calificar.',
+      );
     }
 
     const gradeMap = new Map<number, number>();
@@ -470,18 +542,19 @@ export class TestsService {
       .exec();
 
     // Enrich with student info
-    const studentIds = [...new Set(attempts.map(a => a.studentUserId))];
+    const studentIds = [...new Set(attempts.map((a) => a.studentUserId))];
     const students = await this.userModel
       .find({ _id: { $in: studentIds } })
       .select('_id username')
       .lean()
       .exec();
-    
-    const studentMap = new Map(students.map(s => [s._id.toString(), s]));
 
-    return attempts.map(a => ({
+    const studentMap = new Map(students.map((s) => [s._id.toString(), s]));
+
+    return attempts.map((a) => ({
       ...a,
-      studentName: studentMap.get(a.studentUserId)?.username || 'Estudiante desconocido',
+      studentName:
+        studentMap.get(a.studentUserId)?.username || 'Estudiante desconocido',
       studentUsername: studentMap.get(a.studentUserId)?.username || '',
     }));
   }

@@ -24,11 +24,15 @@ export class RolesGuard implements CanActivate {
     const user = request.user as { role?: Role } | undefined;
 
     if (!user?.role) {
-      throw new ForbiddenException('No tienes permisos para acceder a este recurso.');
+      throw new ForbiddenException(
+        'No tienes permisos para acceder a este recurso.',
+      );
     }
 
     if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException('No tienes permisos para acceder a este recurso.');
+      throw new ForbiddenException(
+        'No tienes permisos para acceder a este recurso.',
+      );
     }
 
     return true;

@@ -37,7 +37,11 @@ export class TestsController {
 
   @Roles(Role.Teacher, Role.Admin)
   @Patch(':id')
-  updateDraft(@Req() req: { user: any }, @Param('id') id: string, @Body() dto: UpdateTestDto) {
+  updateDraft(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Body() dto: UpdateTestDto,
+  ) {
     return this.testsService.updateDraft(req.user, id, {
       title: dto.title,
       description: dto.description,
@@ -73,7 +77,10 @@ export class TestsController {
 
   @Roles(Role.Student, Role.Teacher, Role.Reviewer, Role.Admin)
   @Get('workshop/:workshopId')
-  listByWorkshop(@Req() req: { user: any }, @Param('workshopId') workshopId: string) {
+  listByWorkshop(
+    @Req() req: { user: any },
+    @Param('workshopId') workshopId: string,
+  ) {
     return this.testsService.listForUser(req.user, workshopId);
   }
 
@@ -97,7 +104,11 @@ export class TestsController {
 
   @Roles(Role.Student)
   @Post(':id/attempts')
-  submitAttempt(@Req() req: { user: any }, @Param('id') id: string, @Body() dto: SubmitAttemptDto) {
+  submitAttempt(
+    @Req() req: { user: any },
+    @Param('id') id: string,
+    @Body() dto: SubmitAttemptDto,
+  ) {
     return this.testsService.submitAttempt(req.user, id, dto);
   }
 

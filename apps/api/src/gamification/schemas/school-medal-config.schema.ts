@@ -55,7 +55,8 @@ export class SchoolMedalConfig {
   lastModifiedBy?: string;
 }
 
-export const SchoolMedalConfigSchema = SchemaFactory.createForClass(SchoolMedalConfig);
+export const SchoolMedalConfigSchema =
+  SchemaFactory.createForClass(SchoolMedalConfig);
 
 // Compound indexes for optimized queries
 // Index for getting all medals for a school
@@ -65,4 +66,8 @@ SchoolMedalConfigSchema.index({ schoolId: 1, isActive: 1, sortOrder: 1 });
 SchoolMedalConfigSchema.index({ schoolId: 1, medalId: 1 }, { unique: true });
 
 // Index for condition-based queries (checking which medals to award)
-SchoolMedalConfigSchema.index({ schoolId: 1, conditionType: 1, conditionValue: 1 });
+SchoolMedalConfigSchema.index({
+  schoolId: 1,
+  conditionType: 1,
+  conditionValue: 1,
+});

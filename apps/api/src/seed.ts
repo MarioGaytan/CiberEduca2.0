@@ -5,7 +5,11 @@ import { AppModule } from './app.module';
 import { Role } from './common/roles.enum';
 import { UsersService } from './users/users.service';
 import { User, UserDocument } from './users/schemas/user.schema';
-import { Workshop, WorkshopDocument, ContentBlockType } from './workshops/schemas/workshop.schema';
+import {
+  Workshop,
+  WorkshopDocument,
+  ContentBlockType,
+} from './workshops/schemas/workshop.schema';
 import { WorkshopsService } from './workshops/workshops.service';
 import { WorkshopStatus, WorkshopVisibility } from './workshops/workshop.enums';
 import { Test, TestDocument } from './tests/schemas/test.schema';
@@ -25,7 +29,9 @@ async function main() {
     const gamificationService = app.get(GamificationService);
 
     const userModel = app.get<Model<UserDocument>>(getModelToken(User.name));
-    const workshopModel = app.get<Model<WorkshopDocument>>(getModelToken(Workshop.name));
+    const workshopModel = app.get<Model<WorkshopDocument>>(
+      getModelToken(Workshop.name),
+    );
     const testModel = app.get<Model<TestDocument>>(getModelToken(Test.name));
 
     const defaultSchoolId = process.env.DEFAULT_SCHOOL_ID ?? 'default';
@@ -37,7 +43,9 @@ async function main() {
     console.log('\n📦 Creando usuarios...');
 
     async function ensureUser(input: { username: string; role: Role }) {
-      const existing = await userModel.findOne({ username: input.username }).exec();
+      const existing = await userModel
+        .findOne({ username: input.username })
+        .exec();
       if (existing) {
         console.log(`  ✓ Usuario ${input.username} ya existe`);
         return existing;
@@ -68,9 +76,18 @@ async function main() {
     }
 
     const admin = await ensureUser({ username: 'admin', role: Role.Admin });
-    const reviewer = await ensureUser({ username: 'reviewer', role: Role.Reviewer });
-    const teacher = await ensureUser({ username: 'maestro', role: Role.Teacher });
-    const experienceManager = await ensureUser({ username: 'experience_manager', role: Role.ExperienceManager });
+    const reviewer = await ensureUser({
+      username: 'reviewer',
+      role: Role.Reviewer,
+    });
+    const teacher = await ensureUser({
+      username: 'maestro',
+      role: Role.Teacher,
+    });
+    const experienceManager = await ensureUser({
+      username: 'experience_manager',
+      role: Role.ExperienceManager,
+    });
     const student = await ensureStudentUser('alumno');
 
     const adminAuth = {
@@ -100,7 +117,8 @@ async function main() {
     if (!workshop) {
       const created = await workshopsService.create(teacherAuth, {
         title: workshopTitle,
-        description: 'Aprende los conceptos básicos de ciberseguridad para protegerte en el mundo digital. Este taller cubre amenazas comunes, buenas prácticas y herramientas esenciales.',
+        description:
+          'Aprende los conceptos básicos de ciberseguridad para protegerte en el mundo digital. Este taller cubre amenazas comunes, buenas prácticas y herramientas esenciales.',
         visibility: WorkshopVisibility.Internal,
       });
       workshop = await workshopModel.findById(created._id).exec();
@@ -118,7 +136,8 @@ async function main() {
         },
         {
           type: ContentBlockType.Text,
-          content: 'La ciberseguridad es el conjunto de prácticas, tecnologías y procesos diseñados para proteger sistemas, redes y datos de ataques digitales. En un mundo cada vez más conectado, entender estos conceptos es fundamental para navegar de forma segura.',
+          content:
+            'La ciberseguridad es el conjunto de prácticas, tecnologías y procesos diseñados para proteger sistemas, redes y datos de ataques digitales. En un mundo cada vez más conectado, entender estos conceptos es fundamental para navegar de forma segura.',
         },
         {
           type: ContentBlockType.Image,
@@ -131,7 +150,8 @@ async function main() {
         },
         {
           type: ContentBlockType.Text,
-          content: '**Phishing**: Correos o mensajes falsos que intentan robar tu información haciéndose pasar por empresas legítimas.\n\n**Malware**: Software malicioso que puede dañar tu dispositivo o robar información.\n\n**Ransomware**: Programa que secuestra tus archivos y pide rescate para liberarlos.\n\n**Ingeniería Social**: Manipulación psicológica para obtener información confidencial.',
+          content:
+            '**Phishing**: Correos o mensajes falsos que intentan robar tu información haciéndose pasar por empresas legítimas.\n\n**Malware**: Software malicioso que puede dañar tu dispositivo o robar información.\n\n**Ransomware**: Programa que secuestra tus archivos y pide rescate para liberarlos.\n\n**Ingeniería Social**: Manipulación psicológica para obtener información confidencial.',
         },
         {
           type: ContentBlockType.Image,
@@ -144,7 +164,8 @@ async function main() {
         },
         {
           type: ContentBlockType.Text,
-          content: 'Una contraseña segura debe tener:\n\n• Al menos 12 caracteres\n• Combinación de mayúsculas y minúsculas\n• Números y símbolos especiales\n• Ser única para cada cuenta\n\n**Nunca** uses información personal como fechas de nacimiento o nombres de mascotas.',
+          content:
+            'Una contraseña segura debe tener:\n\n• Al menos 12 caracteres\n• Combinación de mayúsculas y minúsculas\n• Números y símbolos especiales\n• Ser única para cada cuenta\n\n**Nunca** uses información personal como fechas de nacimiento o nombres de mascotas.',
         },
         {
           type: ContentBlockType.Image,
@@ -157,7 +178,8 @@ async function main() {
         },
         {
           type: ContentBlockType.Text,
-          content: 'La autenticación de dos factores añade una capa extra de seguridad. Además de tu contraseña, necesitas un segundo elemento como:\n\n• Un código enviado a tu teléfono\n• Una app de autenticación\n• Una huella digital\n\nActiva 2FA en todas tus cuentas importantes.',
+          content:
+            'La autenticación de dos factores añade una capa extra de seguridad. Además de tu contraseña, necesitas un segundo elemento como:\n\n• Un código enviado a tu teléfono\n• Una app de autenticación\n• Una huella digital\n\nActiva 2FA en todas tus cuentas importantes.',
         },
         {
           type: ContentBlockType.YouTube,
@@ -170,7 +192,8 @@ async function main() {
         },
         {
           type: ContentBlockType.Text,
-          content: '**Consejos para navegar seguro:**\n\n1. Verifica que los sitios usen HTTPS (candado en la barra)\n2. No hagas clic en enlaces sospechosos\n3. Mantén tu navegador actualizado\n4. Usa un bloqueador de anuncios\n5. Evita redes WiFi públicas para operaciones sensibles',
+          content:
+            '**Consejos para navegar seguro:**\n\n1. Verifica que los sitios usen HTTPS (candado en la barra)\n2. No hagas clic en enlaces sospechosos\n3. Mantén tu navegador actualizado\n4. Usa un bloqueador de anuncios\n5. Evita redes WiFi públicas para operaciones sensibles',
         },
         {
           type: ContentBlockType.Image,
@@ -189,7 +212,8 @@ async function main() {
           'Aplicar buenas prácticas de navegación segura',
         ],
         estimatedMinutes: 30,
-        coverImageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200',
+        coverImageUrl:
+          'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200',
       });
       console.log('  + Contenido del taller actualizado');
     }
@@ -202,7 +226,11 @@ async function main() {
     }
 
     if (workshop && workshop.status === WorkshopStatus.InReview) {
-      await workshopsService.approve(adminAuth, String(workshop._id), 'Aprobado automáticamente (seed)');
+      await workshopsService.approve(
+        adminAuth,
+        String(workshop._id),
+        'Aprobado automáticamente (seed)',
+      );
       workshop = await workshopModel.findById(workshop._id).exec();
       console.log('  + Taller aprobado');
     }
@@ -226,7 +254,8 @@ async function main() {
       test = await testsService.create(teacherAuth, {
         workshopId,
         title: testTitle,
-        description: 'Evalúa tus conocimientos sobre los conceptos básicos de ciberseguridad.',
+        description:
+          'Evalúa tus conocimientos sobre los conceptos básicos de ciberseguridad.',
         questions: [
           {
             type: QuestionType.MultipleChoice,
@@ -234,7 +263,9 @@ async function main() {
             points: 20,
             options: [
               { text: 'Un tipo de pescado digital' },
-              { text: 'Un ataque que intenta robar información haciéndose pasar por una entidad legítima' },
+              {
+                text: 'Un ataque que intenta robar información haciéndose pasar por una entidad legítima',
+              },
               { text: 'Un programa para acelerar internet' },
               { text: 'Una red social nueva' },
             ],
@@ -247,7 +278,9 @@ async function main() {
             options: [
               { text: 'Usar tu fecha de nacimiento' },
               { text: 'Usar la misma contraseña en todos los sitios' },
-              { text: 'Tener al menos 12 caracteres con números, símbolos y mayúsculas' },
+              {
+                text: 'Tener al menos 12 caracteres con números, símbolos y mayúsculas',
+              },
               { text: 'Escribirla en un post-it pegado al monitor' },
             ],
             correctOptionIndex: 2,
@@ -271,7 +304,9 @@ async function main() {
             options: [
               { text: 'Usar dos contraseñas diferentes' },
               { text: 'Iniciar sesión desde dos dispositivos' },
-              { text: 'Una capa adicional de seguridad que requiere un segundo método de verificación' },
+              {
+                text: 'Una capa adicional de seguridad que requiere un segundo método de verificación',
+              },
               { text: 'Tener dos cuentas en el mismo servicio' },
             ],
             correctOptionIndex: 2,
@@ -282,7 +317,9 @@ async function main() {
             points: 20,
             options: [
               { text: 'Un antivirus gratuito' },
-              { text: 'Software que secuestra archivos y pide rescate para liberarlos' },
+              {
+                text: 'Software que secuestra archivos y pide rescate para liberarlos',
+              },
               { text: 'Una red privada virtual' },
               { text: 'Un tipo de firewall' },
             ],
@@ -303,7 +340,11 @@ async function main() {
     }
 
     if (test.status === TestStatus.InReview) {
-      await testsService.approve(adminAuth, String(test._id), 'Aprobado automáticamente (seed)');
+      await testsService.approve(
+        adminAuth,
+        String(test._id),
+        'Aprobado automáticamente (seed)',
+      );
       test = (await testModel.findById(test._id).exec())!;
       console.log('  + Test aprobado');
     }
@@ -314,31 +355,40 @@ async function main() {
     console.log('\n🎮 Configurando sistema de gamificación...');
 
     // Obtener o crear configuración de gamificación
-    let gamificationConfig = await gamificationService.getConfig(defaultSchoolId);
-    
+    let gamificationConfig =
+      await gamificationService.getConfig(defaultSchoolId);
+
     if (!gamificationConfig) {
       // Forzar creación de config con valores por defecto
       gamificationConfig = await gamificationService.getConfig(defaultSchoolId);
     }
 
     // Actualizar reglas de XP
-    await gamificationService.updateXpRules(defaultSchoolId, {
-      testBaseXp: 10,
-      testPointMultiplier: 1,
-      testPerfectBonus: 25,
-      workshopCompletionXp: 75,
-      dailyStreakXp: 10,
-      weeklyStreakBonus: 75,
-      monthlyStreakBonus: 250,
-    }, adminAuth.userId);
+    await gamificationService.updateXpRules(
+      defaultSchoolId,
+      {
+        testBaseXp: 10,
+        testPointMultiplier: 1,
+        testPerfectBonus: 25,
+        workshopCompletionXp: 75,
+        dailyStreakXp: 10,
+        weeklyStreakBonus: 75,
+        monthlyStreakBonus: 250,
+      },
+      adminAuth.userId,
+    );
     console.log('  + Reglas de XP configuradas');
 
     // Actualizar configuración de niveles
-    await gamificationService.updateLevelConfig(defaultSchoolId, {
-      baseXpPerLevel: 100,
-      levelMultiplier: 1.15,
-      maxLevel: 100,
-    }, adminAuth.userId);
+    await gamificationService.updateLevelConfig(
+      defaultSchoolId,
+      {
+        baseXpPerLevel: 100,
+        levelMultiplier: 1.15,
+        maxLevel: 100,
+      },
+      adminAuth.userId,
+    );
     console.log('  + Configuración de niveles actualizada');
 
     console.log('  + Medallas configuradas (usando defaults)');
@@ -354,7 +404,11 @@ async function main() {
         admin: { username: 'admin', password, rol: 'admin' },
         reviewer: { username: 'reviewer', password, rol: 'reviewer' },
         maestro: { username: 'maestro', password, rol: 'teacher' },
-        experience_manager: { username: 'experience_manager', password, rol: 'experience_manager' },
+        experience_manager: {
+          username: 'experience_manager',
+          password,
+          rol: 'experience_manager',
+        },
         alumno: { username: 'alumno', password, rol: 'student' },
       },
       taller: {

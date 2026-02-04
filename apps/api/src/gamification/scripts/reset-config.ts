@@ -22,7 +22,9 @@ async function resetGamificationConfig() {
   console.log('Deleting gamificationconfigs collection...');
   await connection.db?.collection('gamificationconfigs').deleteMany({});
 
-  console.log('Done! The config will be recreated with defaults on next API request.');
+  console.log(
+    'Done! The config will be recreated with defaults on next API request.',
+  );
   await connection.close();
   process.exit(0);
 }

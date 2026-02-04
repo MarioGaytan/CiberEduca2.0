@@ -26,10 +26,7 @@ export class ProgressController {
 
   @Roles(Role.Student, Role.Teacher, Role.Admin)
   @Get('ranking')
-  async getRanking(
-    @Req() req: { user: any },
-    @Query('limit') limit?: string,
-  ) {
+  async getRanking(@Req() req: { user: any }, @Query('limit') limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 50;
     return this.progressService.getRanking(req.user, parsedLimit);
   }

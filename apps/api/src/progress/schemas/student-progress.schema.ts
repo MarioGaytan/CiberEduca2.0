@@ -18,17 +18,70 @@ export enum MedalType {
 }
 
 // Medal metadata for display
-export const MEDAL_INFO: Record<MedalType, { name: string; description: string; icon: string; xp: number }> = {
-  [MedalType.FirstWorkshop]: { name: 'Primer Paso', description: 'Completaste tu primer taller', icon: '🎯', xp: 50 },
-  [MedalType.Workshop5]: { name: 'En Racha', description: 'Completaste 5 talleres', icon: '⭐', xp: 100 },
-  [MedalType.Workshop10]: { name: 'Dedicado', description: 'Completaste 10 talleres', icon: '🌟', xp: 200 },
-  [MedalType.Workshop25]: { name: 'Maestro', description: 'Completaste 25 talleres', icon: '👑', xp: 500 },
-  [MedalType.PerfectScore]: { name: 'Perfección', description: 'Obtuviste 100% en un test', icon: '💎', xp: 75 },
-  [MedalType.Streak7]: { name: 'Constante', description: '7 días seguidos activo', icon: '🔥', xp: 100 },
-  [MedalType.Streak30]: { name: 'Imparable', description: '30 días seguidos activo', icon: '💪', xp: 300 },
-  [MedalType.Top10]: { name: 'Elite', description: 'Top 10 del ranking', icon: '🏅', xp: 150 },
-  [MedalType.Top3]: { name: 'Podio', description: 'Top 3 del ranking', icon: '🥉', xp: 250 },
-  [MedalType.FirstPlace]: { name: 'Campeón', description: 'Primer lugar del ranking', icon: '🏆', xp: 500 },
+export const MEDAL_INFO: Record<
+  MedalType,
+  { name: string; description: string; icon: string; xp: number }
+> = {
+  [MedalType.FirstWorkshop]: {
+    name: 'Primer Paso',
+    description: 'Completaste tu primer taller',
+    icon: '🎯',
+    xp: 50,
+  },
+  [MedalType.Workshop5]: {
+    name: 'En Racha',
+    description: 'Completaste 5 talleres',
+    icon: '⭐',
+    xp: 100,
+  },
+  [MedalType.Workshop10]: {
+    name: 'Dedicado',
+    description: 'Completaste 10 talleres',
+    icon: '🌟',
+    xp: 200,
+  },
+  [MedalType.Workshop25]: {
+    name: 'Maestro',
+    description: 'Completaste 25 talleres',
+    icon: '👑',
+    xp: 500,
+  },
+  [MedalType.PerfectScore]: {
+    name: 'Perfección',
+    description: 'Obtuviste 100% en un test',
+    icon: '💎',
+    xp: 75,
+  },
+  [MedalType.Streak7]: {
+    name: 'Constante',
+    description: '7 días seguidos activo',
+    icon: '🔥',
+    xp: 100,
+  },
+  [MedalType.Streak30]: {
+    name: 'Imparable',
+    description: '30 días seguidos activo',
+    icon: '💪',
+    xp: 300,
+  },
+  [MedalType.Top10]: {
+    name: 'Elite',
+    description: 'Top 10 del ranking',
+    icon: '🏅',
+    xp: 150,
+  },
+  [MedalType.Top3]: {
+    name: 'Podio',
+    description: 'Top 3 del ranking',
+    icon: '🥉',
+    xp: 250,
+  },
+  [MedalType.FirstPlace]: {
+    name: 'Campeón',
+    description: 'Primer lugar del ranking',
+    icon: '🏆',
+    xp: 500,
+  },
 };
 
 @Schema({ _id: false })
@@ -57,7 +110,7 @@ export const AvatarConfigSchema = new MongooseSchema(
   {
     style: { type: String, required: true, default: 'avataaars' },
   },
-  { _id: false, strict: false, minimize: false }
+  { _id: false, strict: false, minimize: false },
 );
 
 @Schema({ _id: false })
@@ -87,7 +140,8 @@ export class TestCompletion {
   attemptCount!: number;
 }
 
-export const TestCompletionSchema = SchemaFactory.createForClass(TestCompletion);
+export const TestCompletionSchema =
+  SchemaFactory.createForClass(TestCompletion);
 
 @Schema({ _id: false })
 export class WorkshopCompletion {
@@ -104,7 +158,8 @@ export class WorkshopCompletion {
   maxPossibleScore!: number;
 }
 
-export const WorkshopCompletionSchema = SchemaFactory.createForClass(WorkshopCompletion);
+export const WorkshopCompletionSchema =
+  SchemaFactory.createForClass(WorkshopCompletion);
 
 @Schema({ timestamps: true })
 export class StudentProgress {
@@ -148,7 +203,8 @@ export class StudentProgress {
   lastActivityAt?: Date;
 }
 
-export const StudentProgressSchema = SchemaFactory.createForClass(StudentProgress);
+export const StudentProgressSchema =
+  SchemaFactory.createForClass(StudentProgress);
 
 // Index for ranking queries
 StudentProgressSchema.index({ schoolId: 1, totalXp: -1 });

@@ -52,7 +52,11 @@ export class Collaborator {
   @Prop({ required: true })
   userId!: string;
 
-  @Prop({ required: true, enum: CollaboratorRole, default: CollaboratorRole.Viewer })
+  @Prop({
+    required: true,
+    enum: CollaboratorRole,
+    default: CollaboratorRole.Viewer,
+  })
   role!: CollaboratorRole;
 
   @Prop({ required: false })
@@ -111,7 +115,11 @@ export class Workshop {
   @Prop({ required: true, enum: WorkshopStatus, default: WorkshopStatus.Draft })
   status!: WorkshopStatus;
 
-  @Prop({ required: true, enum: WorkshopVisibility, default: WorkshopVisibility.Internal })
+  @Prop({
+    required: true,
+    enum: WorkshopVisibility,
+    default: WorkshopVisibility.Internal,
+  })
   visibility!: WorkshopVisibility;
 
   @Prop({ required: false })

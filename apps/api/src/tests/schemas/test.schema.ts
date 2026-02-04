@@ -13,7 +13,8 @@ export class TestQuestionOption {
   imageUrl?: string; // Optional image for the option
 }
 
-export const TestQuestionOptionSchema = SchemaFactory.createForClass(TestQuestionOption);
+export const TestQuestionOptionSchema =
+  SchemaFactory.createForClass(TestQuestionOption);
 
 @Schema({ _id: false })
 export class TestQuestion {

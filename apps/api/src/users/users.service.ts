@@ -25,7 +25,9 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
-  async findByUsernameOrEmail(identifier: string): Promise<UserDocument | null> {
+  async findByUsernameOrEmail(
+    identifier: string,
+  ): Promise<UserDocument | null> {
     const normalized = identifier.trim().toLowerCase();
     return this.userModel
       .findOne({ $or: [{ username: normalized }, { email: normalized }] })
@@ -92,7 +94,10 @@ export class UsersService {
       .exec();
   }
 
-  async setRefreshTokenHash(userId: string, refreshToken: string): Promise<void> {
+  async setRefreshTokenHash(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
     await this.userModel
       .updateOne({ _id: userId }, { $set: { refreshTokenHash } })
@@ -105,11 +110,17 @@ export class UsersService {
       .exec();
   }
 
-  async validatePassword(user: UserDocument, password: string): Promise<boolean> {
+  async validatePassword(
+    user: UserDocument,
+    password: string,
+  ): Promise<boolean> {
     return bcrypt.compare(password, user.passwordHash);
   }
 
-  async searchTeachers(schoolId?: string, query?: string): Promise<UserDocument[]> {
+  async searchTeachers(
+    schoolId?: string,
+    query?: string,
+  ): Promise<UserDocument[]> {
     const filter: Record<string, unknown> = {
       role: { $in: [Role.Teacher, Role.Admin, Role.Reviewer] },
       isActive: true,
@@ -157,7 +168,9 @@ export class UsersService {
             .findOne({ email: newEmail, _id: { $ne: userId } })
             .exec();
           if (existing) {
-            throw new ConflictException('El correo electrónico ya está en uso.');
+            throw new ConflictException(
+              'El correo electrónico ya está en uso.',
+            );
           }
         }
         updates.email = newEmail;

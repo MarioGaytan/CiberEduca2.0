@@ -10,7 +10,14 @@ import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
 import { User, UserDocument } from '../users/schemas/user.schema';
-import { Workshop, WorkshopDocument, ContentBlock, ContentBlockType, CollaboratorRole, HistoryEntry } from './schemas/workshop.schema';
+import {
+  Workshop,
+  WorkshopDocument,
+  ContentBlock,
+  ContentBlockType,
+  CollaboratorRole,
+  HistoryEntry,
+} from './schemas/workshop.schema';
 import { WorkshopStatus, WorkshopVisibility } from './workshop.enums';
 
 export type AuthUser = {
@@ -31,10 +38,15 @@ export class WorkshopsService {
   ) {}
 
   // Helper to get username by userId
-  private async getUsernameMap(userIds: string[]): Promise<Record<string, string>> {
-    const uniqueIds = [...new Set(userIds.filter(id => id))];
+  private async getUsernameMap(
+    userIds: string[],
+  ): Promise<Record<string, string>> {
+    const uniqueIds = [...new Set(userIds.filter((id) => id))];
     if (uniqueIds.length === 0) return {};
-    const users = await this.userModel.find({ _id: { $in: uniqueIds } }).select('_id username').exec();
+    const users = await this.userModel
+      .find({ _id: { $in: uniqueIds } })
+      .select('_id username')
+      .exec();
     const map: Record<string, string> = {};
     for (const u of users) {
       map[(u._id as any).toString()] = u.username;
@@ -50,11 +62,11 @@ export class WorkshopsService {
       workshop.deletedByUserId,
       workshop.editRequestedByUserId,
       workshop.deleteRequestedByUserId,
-      ...(workshop.collaborators?.map(c => c.userId) || []),
-      ...(workshop.collaborators?.map(c => c.addedByUserId) || []),
-      ...(workshop.content?.map(c => c.createdByUserId) || []),
-      ...(workshop.content?.map(c => c.lastModifiedByUserId) || []),
-      ...(workshop.history?.map(h => h.userId) || []),
+      ...(workshop.collaborators?.map((c) => c.userId) || []),
+      ...(workshop.collaborators?.map((c) => c.addedByUserId) || []),
+      ...(workshop.content?.map((c) => c.createdByUserId) || []),
+      ...(workshop.content?.map((c) => c.lastModifiedByUserId) || []),
+      ...(workshop.history?.map((h) => h.userId) || []),
     ].filter(Boolean) as string[];
 
     const usernameMap = await this.getUsernameMap(userIds);
@@ -63,16 +75,24 @@ export class WorkshopsService {
     return {
       ...obj,
       createdByUsername: usernameMap[workshop.createdByUserId] || null,
-      approvedByUsername: workshop.approvedByUserId ? usernameMap[workshop.approvedByUserId] || null : null,
+      approvedByUsername: workshop.approvedByUserId
+        ? usernameMap[workshop.approvedByUserId] || null
+        : null,
       collaborators: obj.collaborators?.map((c: any) => ({
         ...c,
         username: usernameMap[c.userId] || null,
-        addedByUsername: c.addedByUserId ? usernameMap[c.addedByUserId] || null : null,
+        addedByUsername: c.addedByUserId
+          ? usernameMap[c.addedByUserId] || null
+          : null,
       })),
       content: obj.content?.map((block: any) => ({
         ...block,
-        createdByUsername: block.createdByUserId ? usernameMap[block.createdByUserId] || null : null,
-        lastModifiedByUsername: block.lastModifiedByUserId ? usernameMap[block.lastModifiedByUserId] || null : null,
+        createdByUsername: block.createdByUserId
+          ? usernameMap[block.createdByUserId] || null
+          : null,
+        lastModifiedByUsername: block.lastModifiedByUserId
+          ? usernameMap[block.lastModifiedByUserId] || null
+          : null,
       })),
       history: obj.history?.map((h: any) => ({
         ...h,
@@ -82,7 +102,12 @@ export class WorkshopsService {
   }
 
   // Add history entry
-  private addHistory(workshop: WorkshopDocument, userId: string, action: string, details?: string) {
+  private addHistory(
+    workshop: WorkshopDocument,
+    userId: string,
+    action: string,
+    details?: string,
+  ) {
     if (!workshop.history) workshop.history = [];
     workshop.history.push({
       userId,
@@ -93,26 +118,33 @@ export class WorkshopsService {
   }
 
   private requireSchoolId(user: AuthUser): string {
-    return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
+    return (
+      user.schoolId ?? this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default'
+    );
   }
 
-  async create(user: AuthUser, input: {
-    title: string;
-    description?: string;
-    coverImageUrl?: string;
-    objectives?: string[];
-    estimatedMinutes?: number;
-    content?: ContentBlock[];
-    visibility?: WorkshopVisibility;
-    accessCode?: string;
-  }) {
+  async create(
+    user: AuthUser,
+    input: {
+      title: string;
+      description?: string;
+      coverImageUrl?: string;
+      objectives?: string[];
+      estimatedMinutes?: number;
+      content?: ContentBlock[];
+      visibility?: WorkshopVisibility;
+      accessCode?: string;
+    },
+  ) {
     const schoolId = this.requireSchoolId(user);
     const visibility = input.visibility ?? WorkshopVisibility.Internal;
 
     let accessCodeHash: string | undefined;
     if (visibility === WorkshopVisibility.Code) {
       if (!input.accessCode) {
-        throw new BadRequestException('Se requiere accessCode para talleres por código.');
+        throw new BadRequestException(
+          'Se requiere accessCode para talleres por código.',
+        );
       }
       accessCodeHash = await bcrypt.hash(input.accessCode, 12);
     }
@@ -124,7 +156,7 @@ export class WorkshopsService {
 
     // Add metadata to content blocks
     const now = new Date();
-    const contentWithMeta = (input.content || []).map(block => ({
+    const contentWithMeta = (input.content || []).map((block) => ({
       ...block,
       createdByUserId: user.userId,
       createdAt: now,
@@ -138,18 +170,20 @@ export class WorkshopsService {
       title: input.title,
       description: input.description,
       coverImageUrl: input.coverImageUrl,
-      objectives: input.objectives?.filter(o => o.trim()),
+      objectives: input.objectives?.filter((o) => o.trim()),
       estimatedMinutes: input.estimatedMinutes,
       content: contentWithMeta,
       status: WorkshopStatus.Draft,
       visibility,
       accessCodeHash,
-      history: [{
-        userId: user.userId,
-        action: 'created',
-        details: `Taller "${input.title}" creado`,
-        timestamp: now,
-      }],
+      history: [
+        {
+          userId: user.userId,
+          action: 'created',
+          details: `Taller "${input.title}" creado`,
+          timestamp: now,
+        },
+      ],
     });
 
     const saved = await created.save();
@@ -163,7 +197,8 @@ export class WorkshopsService {
       }
       if (block.type === ContentBlockType.YouTube && block.url) {
         // Validate YouTube URL format
-        const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[\w-]+/;
+        const ytRegex =
+          /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[\w-]+/;
         if (!ytRegex.test(block.url)) {
           throw new BadRequestException('URL de YouTube inválida.');
         }
@@ -183,24 +218,31 @@ export class WorkshopsService {
   private canEdit(user: AuthUser, workshop: WorkshopDocument): boolean {
     if (user.role === Role.Admin) return true;
     if (workshop.createdByUserId === user.userId) return true;
-    const collab = workshop.collaborators?.find(c => c.userId === user.userId);
+    const collab = workshop.collaborators?.find(
+      (c) => c.userId === user.userId,
+    );
     if (collab && collab.role === CollaboratorRole.Editor) return true;
     return false;
   }
 
-  async updateDraft(user: AuthUser, workshopId: string, input: {
-    title?: string;
-    description?: string;
-    coverImageUrl?: string;
-    objectives?: string[];
-    estimatedMinutes?: number;
-    content?: ContentBlock[];
-    visibility?: WorkshopVisibility;
-    accessCode?: string;
-  }) {
+  async updateDraft(
+    user: AuthUser,
+    workshopId: string,
+    input: {
+      title?: string;
+      description?: string;
+      coverImageUrl?: string;
+      objectives?: string[];
+      estimatedMinutes?: number;
+      content?: ContentBlock[];
+      visibility?: WorkshopVisibility;
+      accessCode?: string;
+    },
+  ) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
-    if (workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -208,22 +250,31 @@ export class WorkshopsService {
     }
 
     if (!this.canEdit(user, workshop)) {
-      throw new ForbiddenException('No tienes permisos para editar este taller.');
+      throw new ForbiddenException(
+        'No tienes permisos para editar este taller.',
+      );
     }
 
     // Allow editing if draft OR if edit was requested on approved workshop
-    const canEditStatus = workshop.status === WorkshopStatus.Draft || 
+    const canEditStatus =
+      workshop.status === WorkshopStatus.Draft ||
       (workshop.status === WorkshopStatus.Approved && workshop.editRequested);
     if (!canEditStatus) {
-      throw new BadRequestException('Solo puedes editar un taller en borrador o con solicitud de edición aprobada.');
+      throw new BadRequestException(
+        'Solo puedes editar un taller en borrador o con solicitud de edición aprobada.',
+      );
     }
 
     if (input.title !== undefined) workshop.title = input.title;
-    if (input.description !== undefined) workshop.description = input.description;
-    if (input.coverImageUrl !== undefined) workshop.coverImageUrl = input.coverImageUrl || undefined;
-    if (input.objectives !== undefined) workshop.objectives = input.objectives.filter(o => o.trim());
-    if (input.estimatedMinutes !== undefined) workshop.estimatedMinutes = input.estimatedMinutes || undefined;
-    
+    if (input.description !== undefined)
+      workshop.description = input.description;
+    if (input.coverImageUrl !== undefined)
+      workshop.coverImageUrl = input.coverImageUrl || undefined;
+    if (input.objectives !== undefined)
+      workshop.objectives = input.objectives.filter((o) => o.trim());
+    if (input.estimatedMinutes !== undefined)
+      workshop.estimatedMinutes = input.estimatedMinutes || undefined;
+
     const now = new Date();
     if (input.content !== undefined) {
       this.validateContentBlocks(input.content);
@@ -259,7 +310,8 @@ export class WorkshopsService {
   async submitForReview(user: AuthUser, workshopId: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
-    if (workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -268,7 +320,9 @@ export class WorkshopsService {
 
     // Only owner or admin can submit for review
     if (workshop.createdByUserId !== user.userId && user.role !== Role.Admin) {
-      throw new ForbiddenException('Solo el creador o admin puede enviar a revisión.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede enviar a revisión.',
+      );
     }
 
     if (workshop.status !== WorkshopStatus.Draft) {
@@ -287,7 +341,8 @@ export class WorkshopsService {
   async approve(user: AuthUser, workshopId: string, feedback?: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
-    if (workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -316,7 +371,8 @@ export class WorkshopsService {
   async reject(user: AuthUser, workshopId: string, feedback?: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
     if (!workshop) throw new NotFoundException('Taller no encontrado.');
-    if (workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -346,11 +402,15 @@ export class WorkshopsService {
 
     const schoolId = this.requireSchoolId(user);
     const workshops = await this.workshopModel
-      .find({ schoolId, status: WorkshopStatus.InReview, isDeleted: { $ne: true } })
+      .find({
+        schoolId,
+        status: WorkshopStatus.InReview,
+        isDeleted: { $ne: true },
+      })
       .sort({ createdAt: -1 })
       .exec();
-    
-    return Promise.all(workshops.map(w => this.enrichWorkshop(w)));
+
+    return Promise.all(workshops.map((w) => this.enrichWorkshop(w)));
   }
 
   async listForUser(user: AuthUser) {
@@ -381,12 +441,17 @@ export class WorkshopsService {
     } else {
       // Students only see approved internal workshops
       workshops = await this.workshopModel
-        .find({ schoolId, status: WorkshopStatus.Approved, visibility: WorkshopVisibility.Internal, ...notDeleted })
+        .find({
+          schoolId,
+          status: WorkshopStatus.Approved,
+          visibility: WorkshopVisibility.Internal,
+          ...notDeleted,
+        })
         .sort({ createdAt: -1 })
         .exec();
     }
 
-    return Promise.all(workshops.map(w => this.enrichWorkshop(w)));
+    return Promise.all(workshops.map((w) => this.enrichWorkshop(w)));
   }
 
   // List only editable workshops (drafts where user is owner or editor collaborator)
@@ -419,19 +484,23 @@ export class WorkshopsService {
           status: { $in: [WorkshopStatus.Draft, WorkshopStatus.InReview] },
           $or: [
             { createdByUserId: user.userId },
-            { 'collaborators.userId': user.userId, 'collaborators.role': 'editor' },
+            {
+              'collaborators.userId': user.userId,
+              'collaborators.role': 'editor',
+            },
           ],
         })
         .sort({ createdAt: -1 })
         .exec();
     }
 
-    return Promise.all(workshops.map(w => this.enrichWorkshop(w)));
+    return Promise.all(workshops.map((w) => this.enrichWorkshop(w)));
   }
 
   async getByIdForUser(user: AuthUser, workshopId: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -445,7 +514,9 @@ export class WorkshopsService {
     if (user.role === Role.Teacher) {
       // Owner or collaborator can access
       const isOwner = workshop.createdByUserId === user.userId;
-      const isCollab = workshop.collaborators?.some(c => c.userId === user.userId);
+      const isCollab = workshop.collaborators?.some(
+        (c) => c.userId === user.userId,
+      );
       if (!isOwner && !isCollab) {
         throw new ForbiddenException('No tienes acceso a este taller.');
       }
@@ -466,7 +537,8 @@ export class WorkshopsService {
 
   async getByCode(user: AuthUser, workshopId: string, code: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -477,7 +549,10 @@ export class WorkshopsService {
       throw new ForbiddenException('Taller no disponible.');
     }
 
-    if (workshop.visibility !== WorkshopVisibility.Code || !workshop.accessCodeHash) {
+    if (
+      workshop.visibility !== WorkshopVisibility.Code ||
+      !workshop.accessCodeHash
+    ) {
       throw new BadRequestException('Este taller no es por código.');
     }
 
@@ -494,7 +569,8 @@ export class WorkshopsService {
   // Request edit permission for an approved workshop
   async requestEdit(user: AuthUser, workshopId: string, reason?: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -503,18 +579,27 @@ export class WorkshopsService {
 
     // Only owner or admin can request edit
     if (workshop.createdByUserId !== user.userId && user.role !== Role.Admin) {
-      throw new ForbiddenException('Solo el creador o admin puede solicitar edición.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede solicitar edición.',
+      );
     }
 
     if (workshop.status !== WorkshopStatus.Approved) {
-      throw new BadRequestException('Solo puedes solicitar edición de talleres aprobados.');
+      throw new BadRequestException(
+        'Solo puedes solicitar edición de talleres aprobados.',
+      );
     }
 
     workshop.editRequested = true;
     workshop.editRequestedAt = new Date();
     workshop.editRequestedByUserId = user.userId;
     workshop.editRequestReason = reason;
-    this.addHistory(workshop, user.userId, 'edit_requested', reason || 'Solicitud de edición');
+    this.addHistory(
+      workshop,
+      user.userId,
+      'edit_requested',
+      reason || 'Solicitud de edición',
+    );
 
     const saved = await workshop.save();
     return this.enrichWorkshop(saved);
@@ -523,7 +608,8 @@ export class WorkshopsService {
   // Approve edit request (by admin/reviewer)
   async approveEditRequest(user: AuthUser, workshopId: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -540,7 +626,12 @@ export class WorkshopsService {
 
     // Move to draft for editing
     workshop.status = WorkshopStatus.Draft;
-    this.addHistory(workshop, user.userId, 'edit_approved', 'Solicitud de edición aprobada');
+    this.addHistory(
+      workshop,
+      user.userId,
+      'edit_approved',
+      'Solicitud de edición aprobada',
+    );
 
     const saved = await workshop.save();
     return this.enrichWorkshop(saved);
@@ -549,7 +640,8 @@ export class WorkshopsService {
   // Request deletion of a workshop
   async requestDelete(user: AuthUser, workshopId: string, reason?: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -558,14 +650,21 @@ export class WorkshopsService {
 
     // Only owner or admin can request delete
     if (workshop.createdByUserId !== user.userId && user.role !== Role.Admin) {
-      throw new ForbiddenException('Solo el creador o admin puede solicitar eliminación.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede solicitar eliminación.',
+      );
     }
 
     workshop.deleteRequested = true;
     workshop.deleteRequestedAt = new Date();
     workshop.deleteRequestedByUserId = user.userId;
     workshop.deleteRequestReason = reason;
-    this.addHistory(workshop, user.userId, 'delete_requested', reason || 'Solicitud de eliminación');
+    this.addHistory(
+      workshop,
+      user.userId,
+      'delete_requested',
+      reason || 'Solicitud de eliminación',
+    );
 
     const saved = await workshop.save();
     return this.enrichWorkshop(saved);
@@ -574,7 +673,8 @@ export class WorkshopsService {
   // Approve delete request / soft delete (by admin/reviewer)
   async approveDelete(user: AuthUser, workshopId: string) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -596,9 +696,15 @@ export class WorkshopsService {
   }
 
   // Add collaborator
-  async addCollaborator(user: AuthUser, workshopId: string, collaboratorUserId: string, role: CollaboratorRole) {
+  async addCollaborator(
+    user: AuthUser,
+    workshopId: string,
+    collaboratorUserId: string,
+    role: CollaboratorRole,
+  ) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -607,7 +713,9 @@ export class WorkshopsService {
 
     // Only owner or admin can add collaborators
     if (workshop.createdByUserId !== user.userId && user.role !== Role.Admin) {
-      throw new ForbiddenException('Solo el creador o admin puede agregar colaboradores.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede agregar colaboradores.',
+      );
     }
 
     // Check if user exists
@@ -617,7 +725,7 @@ export class WorkshopsService {
     }
 
     // Check if already a collaborator
-    if (workshop.collaborators?.some(c => c.userId === collaboratorUserId)) {
+    if (workshop.collaborators?.some((c) => c.userId === collaboratorUserId)) {
       throw new BadRequestException('El usuario ya es colaborador.');
     }
 
@@ -634,16 +742,26 @@ export class WorkshopsService {
       addedByUserId: user.userId,
     });
 
-    this.addHistory(workshop, user.userId, 'collaborator_added', `Colaborador ${targetUser.username} agregado como ${role}`);
+    this.addHistory(
+      workshop,
+      user.userId,
+      'collaborator_added',
+      `Colaborador ${targetUser.username} agregado como ${role}`,
+    );
 
     const saved = await workshop.save();
     return this.enrichWorkshop(saved);
   }
 
   // Remove collaborator
-  async removeCollaborator(user: AuthUser, workshopId: string, collaboratorUserId: string) {
+  async removeCollaborator(
+    user: AuthUser,
+    workshopId: string,
+    collaboratorUserId: string,
+  ) {
     const workshop = await this.workshopModel.findById(workshopId).exec();
-    if (!workshop || workshop.isDeleted) throw new NotFoundException('Taller no encontrado.');
+    if (!workshop || workshop.isDeleted)
+      throw new NotFoundException('Taller no encontrado.');
 
     const schoolId = this.requireSchoolId(user);
     if (workshop.schoolId !== schoolId) {
@@ -652,16 +770,26 @@ export class WorkshopsService {
 
     // Only owner or admin can remove collaborators
     if (workshop.createdByUserId !== user.userId && user.role !== Role.Admin) {
-      throw new ForbiddenException('Solo el creador o admin puede remover colaboradores.');
+      throw new ForbiddenException(
+        'Solo el creador o admin puede remover colaboradores.',
+      );
     }
 
-    const idx = workshop.collaborators?.findIndex(c => c.userId === collaboratorUserId) ?? -1;
+    const idx =
+      workshop.collaborators?.findIndex(
+        (c) => c.userId === collaboratorUserId,
+      ) ?? -1;
     if (idx === -1) {
       throw new BadRequestException('El usuario no es colaborador.');
     }
 
     workshop.collaborators!.splice(idx, 1);
-    this.addHistory(workshop, user.userId, 'collaborator_removed', `Colaborador removido`);
+    this.addHistory(
+      workshop,
+      user.userId,
+      'collaborator_removed',
+      `Colaborador removido`,
+    );
 
     const saved = await workshop.save();
     return this.enrichWorkshop(saved);
@@ -683,6 +811,6 @@ export class WorkshopsService {
       .sort({ createdAt: -1 })
       .exec();
 
-    return Promise.all(workshops.map(w => this.enrichWorkshop(w)));
+    return Promise.all(workshops.map((w) => this.enrichWorkshop(w)));
   }
 }

@@ -4,9 +4,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../common/roles.enum';
 import { Test, TestDocument } from '../tests/schemas/test.schema';
-import { TestAttempt, TestAttemptDocument } from '../tests/schemas/test-attempt.schema';
+import {
+  TestAttempt,
+  TestAttemptDocument,
+} from '../tests/schemas/test-attempt.schema';
 import { TestStatus } from '../tests/test.enums';
-import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
+import {
+  Workshop,
+  WorkshopDocument,
+} from '../workshops/schemas/workshop.schema';
 import {
   StudentProgress,
   StudentProgressDocument,
@@ -45,7 +51,9 @@ export class ProgressService {
   ) {}
 
   private requireSchoolId(user: AuthUser): string {
-    return user.schoolId ?? (this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default');
+    return (
+      user.schoolId ?? this.config.get<string>('DEFAULT_SCHOOL_ID') ?? 'default'
+    );
   }
 
   /**
@@ -53,30 +61,43 @@ export class ProgressService {
    */
   private calculateLevelFromXp(
     totalXp: number,
-    levelConfig: { baseXpPerLevel: number; levelMultiplier: number; maxLevel: number }
-  ): { level: number; xpProgress: number; xpNeeded: number; xpPercentage: number } {
+    levelConfig: {
+      baseXpPerLevel: number;
+      levelMultiplier: number;
+      maxLevel: number;
+    },
+  ): {
+    level: number;
+    xpProgress: number;
+    xpNeeded: number;
+    xpPercentage: number;
+  } {
     const { baseXpPerLevel, levelMultiplier, maxLevel } = levelConfig;
-    
+
     let level = 1;
     let accumulatedXp = 0;
-    
+
     // Find current level by accumulating XP requirements
     while (level < maxLevel) {
-      const xpForThisLevel = Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1));
+      const xpForThisLevel = Math.round(
+        baseXpPerLevel * Math.pow(levelMultiplier, level - 1),
+      );
       if (accumulatedXp + xpForThisLevel > totalXp) {
         break;
       }
       accumulatedXp += xpForThisLevel;
       level++;
     }
-    
+
     // Calculate progress within current level
     const xpProgress = totalXp - accumulatedXp;
-    const xpNeeded = level < maxLevel 
-      ? Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1))
-      : 0;
-    const xpPercentage = xpNeeded > 0 ? Math.round((xpProgress / xpNeeded) * 100) : 100;
-    
+    const xpNeeded =
+      level < maxLevel
+        ? Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1))
+        : 0;
+    const xpPercentage =
+      xpNeeded > 0 ? Math.round((xpProgress / xpNeeded) * 100) : 100;
+
     return { level, xpProgress, xpNeeded, xpPercentage };
   }
 
@@ -85,9 +106,11 @@ export class ProgressService {
    */
   async getOrCreateProgress(user: AuthUser): Promise<StudentProgressDocument> {
     const schoolId = this.requireSchoolId(user);
-    
-    let progress = await this.progressModel.findOne({ userId: user.userId }).exec();
-    
+
+    let progress = await this.progressModel
+      .findOne({ userId: user.userId })
+      .exec();
+
     if (!progress) {
       progress = new this.progressModel({
         userId: user.userId,
@@ -111,7 +134,7 @@ export class ProgressService {
       });
       await progress.save();
     }
-    
+
     return progress;
   }
 
@@ -133,23 +156,27 @@ export class ProgressService {
     });
 
     // Get ranking position
-    const rankingPosition = await this.progressModel.countDocuments({
-      schoolId,
-      totalXp: { $gt: progress.totalXp },
-    }) + 1;
+    const rankingPosition =
+      (await this.progressModel.countDocuments({
+        schoolId,
+        totalXp: { $gt: progress.totalXp },
+      })) + 1;
 
     // Get total students for ranking context
     const totalStudents = await this.progressModel.countDocuments({ schoolId });
 
     // Get level config from gamification settings
-    const gamificationConfig = await this.gamificationService.getConfig(schoolId);
-    const levelConfig = gamificationConfig.levelConfig || { baseXpPerLevel: 100, levelMultiplier: 1.2, maxLevel: 50 };
-    
+    const gamificationConfig =
+      await this.gamificationService.getConfig(schoolId);
+    const levelConfig = gamificationConfig.levelConfig || {
+      baseXpPerLevel: 100,
+      levelMultiplier: 1.2,
+      maxLevel: 50,
+    };
+
     // Calculate level from XP using dynamic config
-    const { level, xpProgress, xpNeeded, xpPercentage } = this.calculateLevelFromXp(
-      progress.totalXp,
-      levelConfig
-    );
+    const { level, xpProgress, xpNeeded, xpPercentage } =
+      this.calculateLevelFromXp(progress.totalXp, levelConfig);
 
     return {
       ...progress.toObject(),
@@ -160,9 +187,12 @@ export class ProgressService {
       rankingPosition,
       totalStudents,
       availableWorkshops,
-      completionPercentage: availableWorkshops > 0 
-        ? Math.round((progress.workshopsCompletedCount / availableWorkshops) * 100)
-        : 0,
+      completionPercentage:
+        availableWorkshops > 0
+          ? Math.round(
+              (progress.workshopsCompletedCount / availableWorkshops) * 100,
+            )
+          : 0,
       // avatarOptions now fetched via /api/gamification/avatar-options/:xp/:level
     };
   }
@@ -177,12 +207,19 @@ export class ProgressService {
       .find({ schoolId })
       .sort({ totalXp: -1 })
       .limit(limit)
-      .select('userId username totalXp workshopsCompletedCount testsCompletedCount medals avatar')
+      .select(
+        'userId username totalXp workshopsCompletedCount testsCompletedCount medals avatar',
+      )
       .exec();
 
     // Get level config for calculating levels
-    const gamificationConfig = await this.gamificationService.getConfig(schoolId);
-    const levelConfig = gamificationConfig.levelConfig || { baseXpPerLevel: 100, levelMultiplier: 1.2, maxLevel: 50 };
+    const gamificationConfig =
+      await this.gamificationService.getConfig(schoolId);
+    const levelConfig = gamificationConfig.levelConfig || {
+      baseXpPerLevel: 100,
+      levelMultiplier: 1.2,
+      maxLevel: 50,
+    };
 
     return rankings.map((r, idx) => {
       const { level } = this.calculateLevelFromXp(r.totalXp, levelConfig);
@@ -208,26 +245,33 @@ export class ProgressService {
   async getMedals(user: AuthUser) {
     const progress = await this.getOrCreateProgress(user);
     const schoolId = this.requireSchoolId(user);
-    
+
     // Get earned medal IDs from progress
-    const earnedMedalIds = progress.medals.map(m => m.type);
-    
+    const earnedMedalIds = progress.medals.map((m) => m.type);
+
     // Calculate stats for progress tracking
     const stats = {
       testsCompleted: progress.testsCompletedCount,
       workshopsCompleted: progress.workshopsCompletedCount,
-      perfectScores: progress.testsCompleted.filter(t => t.bestScore === t.maxScore && t.maxScore > 0).length,
+      perfectScores: progress.testsCompleted.filter(
+        (t) => t.bestScore === t.maxScore && t.maxScore > 0,
+      ).length,
       currentStreak: progress.currentStreak,
-      rankingPosition: await this.progressModel.countDocuments({
-        schoolId,
-        totalXp: { $gt: progress.totalXp },
-      }) + 1,
+      rankingPosition:
+        (await this.progressModel.countDocuments({
+          schoolId,
+          totalXp: { $gt: progress.totalXp },
+        })) + 1,
       totalXp: progress.totalXp,
     };
-    
+
     // Get medals from dynamic config with earned status
-    const medals = await this.gamificationService.getMedalsStatus(schoolId, stats, earnedMedalIds);
-    
+    const medals = await this.gamificationService.getMedalsStatus(
+      schoolId,
+      stats,
+      earnedMedalIds,
+    );
+
     // Add earnedAt date for earned medals
     return medals.map((medal: any) => ({
       type: medal.id,
@@ -242,7 +286,7 @@ export class ProgressService {
       glow: medal.glow,
       xp: medal.xpReward,
       earned: medal.earned,
-      earnedAt: progress.medals.find(m => m.type === medal.id)?.earnedAt,
+      earnedAt: progress.medals.find((m) => m.type === medal.id)?.earnedAt,
       conditionType: medal.conditionType,
       conditionValue: medal.conditionValue,
       progress: medal.progress,
@@ -258,23 +302,28 @@ export class ProgressService {
   async updateAvatar(user: AuthUser, avatarUpdate: Partial<AvatarConfig>) {
     const progress = await this.getOrCreateProgress(user);
 
-    const shouldUnset = (v: unknown) => v === undefined || v === null || v === '' || v === 'none';
+    const shouldUnset = (v: unknown) =>
+      v === undefined || v === null || v === '' || v === 'none';
 
     // Build new avatar object from scratch to avoid stale fields from previous styles
     const newAvatar: Record<string, string> = {};
 
     // Always ensure style is set
-    const newStyle = avatarUpdate.style || progress.avatar?.style || 'avataaars';
+    const newStyle =
+      avatarUpdate.style || progress.avatar?.style || 'avataaars';
     newAvatar.style = newStyle;
 
     // If style changed, only keep the new style (reset all other fields)
     // If style is the same, merge current avatar with updates
-    const isStyleChange = avatarUpdate.style !== undefined && 
-                          avatarUpdate.style !== progress.avatar?.style;
+    const isStyleChange =
+      avatarUpdate.style !== undefined &&
+      avatarUpdate.style !== progress.avatar?.style;
 
     if (!isStyleChange && progress.avatar) {
       // Keep existing values from current avatar (same style)
-      for (const [key, value] of Object.entries(progress.avatar as Record<string, unknown>)) {
+      for (const [key, value] of Object.entries(
+        progress.avatar as Record<string, unknown>,
+      )) {
         if (key === 'style' || key === '_id') continue;
         if (!shouldUnset(value)) {
           newAvatar[key] = String(value);
@@ -283,7 +332,9 @@ export class ProgressService {
     }
 
     // Apply all updates from the request
-    for (const [key, value] of Object.entries(avatarUpdate as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      avatarUpdate as Record<string, unknown>,
+    )) {
       if (key === 'seed' || key === '_id') continue;
       if (key === 'style') continue; // Already handled above
 
@@ -306,7 +357,7 @@ export class ProgressService {
   /**
    * Record a test completion and update progress
    * Called after a student submits a test attempt
-   * 
+   *
    * XP Logic: Only the best score counts. If student retakes and gets better score,
    * they get the DIFFERENCE in XP, not cumulative.
    */
@@ -330,7 +381,7 @@ export class ProgressService {
 
     // Find existing test completion
     const existingIdx = progress.testsCompleted.findIndex(
-      (tc) => tc.testId === testId
+      (tc) => tc.testId === testId,
     );
 
     if (existingIdx >= 0) {
@@ -342,7 +393,7 @@ export class ProgressService {
       if (score > existing.bestScore) {
         // New best score! Calculate XP difference
         const xpDifference = xpForThisScore - existing.xpEarned;
-        
+
         if (xpDifference > 0) {
           progress.totalXp += xpDifference;
           existing.bestScore = score;
@@ -362,25 +413,31 @@ export class ProgressService {
         lastAttemptAt: now,
         attemptCount: 1,
       };
-      
+
       progress.testsCompleted.push(testCompletion);
       progress.testsCompletedCount += 1;
       progress.totalXp += xpForThisScore;
     }
 
     // Check if all tests in workshop are completed
-    const workshopTests = await this.testModel.find({
-      workshopId,
-      schoolId,
-      status: TestStatus.Approved,
-    }).select('_id').exec();
+    const workshopTests = await this.testModel
+      .find({
+        workshopId,
+        schoolId,
+        status: TestStatus.Approved,
+      })
+      .select('_id')
+      .exec();
 
-    const workshopTestIds = workshopTests.map(t => String(t._id));
+    const workshopTestIds = workshopTests.map((t) => String(t._id));
     const completedTestIds = progress.testsCompleted
-      .filter(tc => workshopTestIds.includes(tc.testId))
-      .map(tc => tc.testId);
+      .filter((tc) => workshopTestIds.includes(tc.testId))
+      .map((tc) => tc.testId);
 
-    if (completedTestIds.length === workshopTestIds.length && workshopTestIds.length > 0) {
+    if (
+      completedTestIds.length === workshopTestIds.length &&
+      workshopTestIds.length > 0
+    ) {
       // Workshop completed!
       await this.recordWorkshopCompletion(progress, workshopId, schoolId);
     }
@@ -404,19 +461,24 @@ export class ProgressService {
     schoolId: string,
   ) {
     // Check if already completed
-    if (progress.workshopsCompleted.some(w => w.workshopId === workshopId)) {
+    if (progress.workshopsCompleted.some((w) => w.workshopId === workshopId)) {
       return;
     }
 
     // Calculate total score for this workshop
-    const attempts = await this.attemptModel.find({
-      workshopId,
-      studentUserId: progress.userId,
-      isSubmitted: true,
-    }).exec();
+    const attempts = await this.attemptModel
+      .find({
+        workshopId,
+        studentUserId: progress.userId,
+        isSubmitted: true,
+      })
+      .exec();
 
     const totalScore = attempts.reduce((sum, a) => sum + a.totalScore, 0);
-    const maxPossibleScore = await this.calculateMaxWorkshopScore(workshopId, schoolId);
+    const maxPossibleScore = await this.calculateMaxWorkshopScore(
+      workshopId,
+      schoolId,
+    );
 
     progress.workshopsCompleted.push({
       workshopId,
@@ -435,12 +497,17 @@ export class ProgressService {
   /**
    * Calculate max possible score for a workshop
    */
-  private async calculateMaxWorkshopScore(workshopId: string, schoolId: string): Promise<number> {
-    const tests = await this.testModel.find({
-      workshopId,
-      schoolId,
-      status: TestStatus.Approved,
-    }).exec();
+  private async calculateMaxWorkshopScore(
+    workshopId: string,
+    schoolId: string,
+  ): Promise<number> {
+    const tests = await this.testModel
+      .find({
+        workshopId,
+        schoolId,
+        status: TestStatus.Approved,
+      })
+      .exec();
 
     let maxScore = 0;
     for (const test of tests) {
@@ -461,14 +528,15 @@ export class ProgressService {
   ) {
     // Calculate current stats
     const perfectScores = progress.testsCompleted.filter(
-      t => t.bestScore === t.maxScore && t.maxScore > 0
+      (t) => t.bestScore === t.maxScore && t.maxScore > 0,
     ).length;
-    
-    const rankingPosition = await this.progressModel.countDocuments({
-      schoolId,
-      totalXp: { $gt: progress.totalXp },
-    }) + 1;
-    
+
+    const rankingPosition =
+      (await this.progressModel.countDocuments({
+        schoolId,
+        totalXp: { $gt: progress.totalXp },
+      })) + 1;
+
     const stats = {
       testsCompleted: progress.testsCompletedCount,
       workshopsCompleted: progress.workshopsCompletedCount,
@@ -477,17 +545,17 @@ export class ProgressService {
       rankingPosition,
       totalXp: progress.totalXp,
     };
-    
+
     // Get already earned medal IDs
-    const earnedMedalIds = progress.medals.map(m => m.type);
-    
+    const earnedMedalIds = progress.medals.map((m) => m.type);
+
     // Check which medals should be awarded
     const medalsToAward = await this.gamificationService.checkMedalsToAward(
       schoolId,
       stats,
       earnedMedalIds,
     );
-    
+
     // Award each medal
     for (const medal of medalsToAward) {
       progress.medals.push({
@@ -501,8 +569,11 @@ export class ProgressService {
   /**
    * Award a medal if not already earned (legacy - kept for compatibility)
    */
-  private async awardMedal(progress: StudentProgressDocument, medalType: MedalType) {
-    if (progress.medals.some(m => m.type === medalType)) {
+  private async awardMedal(
+    progress: StudentProgressDocument,
+    medalType: MedalType,
+  ) {
+    if (progress.medals.some((m) => m.type === medalType)) {
       return; // Already has this medal
     }
 
@@ -523,7 +594,7 @@ export class ProgressService {
 
     if (lastActivity) {
       const daysSinceLastActivity = Math.floor(
-        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
+        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       if (daysSinceLastActivity === 1) {
@@ -534,8 +605,10 @@ export class ProgressService {
         }
 
         // Streak medals
-        if (progress.currentStreak === 7) await this.awardMedal(progress, MedalType.Streak7);
-        if (progress.currentStreak === 30) await this.awardMedal(progress, MedalType.Streak30);
+        if (progress.currentStreak === 7)
+          await this.awardMedal(progress, MedalType.Streak7);
+        if (progress.currentStreak === 30)
+          await this.awardMedal(progress, MedalType.Streak30);
       } else if (daysSinceLastActivity > 1) {
         // Streak broken
         progress.currentStreak = 1;

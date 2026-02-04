@@ -43,19 +43,25 @@ export class SchoolAvatarConfig {
   lastModifiedBy?: string;
 }
 
-export const SchoolAvatarConfigSchema = SchemaFactory.createForClass(SchoolAvatarConfig);
+export const SchoolAvatarConfigSchema =
+  SchemaFactory.createForClass(SchoolAvatarConfig);
 
 // Compound indexes for optimized queries
 // Index for getting all configs for a school+style combination
 SchoolAvatarConfigSchema.index({ schoolId: 1, styleId: 1, category: 1 });
 
 // Index for getting unlocked options (filtering by XP/Level)
-SchoolAvatarConfigSchema.index({ schoolId: 1, styleId: 1, requiredXp: 1, requiredLevel: 1 });
+SchoolAvatarConfigSchema.index({
+  schoolId: 1,
+  styleId: 1,
+  requiredXp: 1,
+  requiredLevel: 1,
+});
 
 // Unique index to prevent duplicates
 SchoolAvatarConfigSchema.index(
   { schoolId: 1, styleId: 1, category: 1, optionValue: 1 },
-  { unique: true }
+  { unique: true },
 );
 
 // Index for category-based queries across all styles

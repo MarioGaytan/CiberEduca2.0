@@ -82,7 +82,11 @@ export class GamificationController {
     @Body() rules: Partial<XpRules>,
   ) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.updateXpRules(schoolId, rules, req.user.userId);
+    return this.gamificationService.updateXpRules(
+      schoolId,
+      rules,
+      req.user.userId,
+    );
   }
 
   /**
@@ -95,7 +99,11 @@ export class GamificationController {
     @Body() levelConfig: Partial<LevelConfig>,
   ) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.updateLevelConfig(schoolId, levelConfig, req.user.userId);
+    return this.gamificationService.updateLevelConfig(
+      schoolId,
+      levelConfig,
+      req.user.userId,
+    );
   }
 
   /**
@@ -114,12 +122,13 @@ export class GamificationController {
    */
   @Roles(Role.Admin, Role.ExperienceManager)
   @Post('medals')
-  async upsertMedal(
-    @Req() req: { user: any },
-    @Body() medal: UpsertMedalDto,
-  ) {
+  async upsertMedal(@Req() req: { user: any }, @Body() medal: UpsertMedalDto) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.upsertMedal(schoolId, medal as MedalDefinition, req.user.userId);
+    return this.gamificationService.upsertMedal(
+      schoolId,
+      medal as MedalDefinition,
+      req.user.userId,
+    );
   }
 
   /**
@@ -132,7 +141,11 @@ export class GamificationController {
     @Body() dto: ReorderMedalsDto,
   ) {
     const schoolId = req.user.schoolId ?? 'default';
-    await this.gamificationService.reorderMedals(schoolId, dto.medalIds, req.user.userId);
+    await this.gamificationService.reorderMedals(
+      schoolId,
+      dto.medalIds,
+      req.user.userId,
+    );
     return { success: true };
   }
 
@@ -141,10 +154,7 @@ export class GamificationController {
    */
   @Roles(Role.Admin, Role.ExperienceManager)
   @Delete('medals/:id')
-  async deleteMedal(
-    @Req() req: { user: any },
-    @Param('id') id: string,
-  ) {
+  async deleteMedal(@Req() req: { user: any }, @Param('id') id: string) {
     const schoolId = req.user.schoolId ?? 'default';
     await this.gamificationService.deleteMedal(schoolId, id, req.user.userId);
     return { success: true };
@@ -170,7 +180,11 @@ export class GamificationController {
     @Body() option: AvatarOptionDefinition,
   ) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.upsertAvatarOption(schoolId, option, req.user.userId);
+    return this.gamificationService.upsertAvatarOption(
+      schoolId,
+      option,
+      req.user.userId,
+    );
   }
 
   /**
@@ -178,12 +192,13 @@ export class GamificationController {
    */
   @Roles(Role.Admin, Role.ExperienceManager)
   @Delete('avatar-options/:id')
-  async deleteAvatarOption(
-    @Req() req: { user: any },
-    @Param('id') id: string,
-  ) {
+  async deleteAvatarOption(@Req() req: { user: any }, @Param('id') id: string) {
     const schoolId = req.user.schoolId ?? 'default';
-    await this.gamificationService.deleteAvatarOption(schoolId, id, req.user.userId);
+    await this.gamificationService.deleteAvatarOption(
+      schoolId,
+      id,
+      req.user.userId,
+    );
     return { success: true };
   }
 
@@ -310,7 +325,8 @@ export class GamificationController {
   async bulkUpdateAvatarConfigs(
     @Req() req: { user: any },
     @Param('styleId') styleId: string,
-    @Body() body: {
+    @Body()
+    body: {
       configs: Array<{
         category: string;
         optionValue: string;
@@ -350,7 +366,8 @@ export class GamificationController {
   @Post('medal-configs')
   async upsertMedalConfig(
     @Req() req: { user: any },
-    @Body() body: {
+    @Body()
+    body: {
       medalId: string;
       name: string;
       description: string;
@@ -396,6 +413,9 @@ export class GamificationController {
   @Post('medal-configs/seed-defaults')
   async seedDefaultMedals(@Req() req: { user: any }) {
     const schoolId = req.user.schoolId ?? 'default';
-    return this.gamificationService.seedDefaultMedals(schoolId, req.user.userId);
+    return this.gamificationService.seedDefaultMedals(
+      schoolId,
+      req.user.userId,
+    );
   }
 }

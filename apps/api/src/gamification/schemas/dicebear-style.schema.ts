@@ -16,7 +16,8 @@ export class DiceBearOptionValue {
   previewSeed?: string; // Seed to generate preview
 }
 
-export const DiceBearOptionValueSchema = SchemaFactory.createForClass(DiceBearOptionValue);
+export const DiceBearOptionValueSchema =
+  SchemaFactory.createForClass(DiceBearOptionValue);
 
 // Category of options (e.g., hair, eyes, mouth)
 @Schema({ _id: false })
@@ -49,7 +50,8 @@ export class DiceBearCategory {
   sortOrder!: number;
 }
 
-export const DiceBearCategorySchema = SchemaFactory.createForClass(DiceBearCategory);
+export const DiceBearCategorySchema =
+  SchemaFactory.createForClass(DiceBearCategory);
 
 // Main DiceBear style document
 @Schema({ timestamps: true })

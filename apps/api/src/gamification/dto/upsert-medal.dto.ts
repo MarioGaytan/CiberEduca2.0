@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, IsIn, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  IsIn,
+  Min,
+} from 'class-validator';
 
 export class UpsertMedalDto {
   @IsString()

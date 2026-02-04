@@ -1,4 +1,10 @@
-import { IsEnum, IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { CollaboratorRole } from '../schemas/workshop.schema';
 
 export class AddCollaboratorDto {

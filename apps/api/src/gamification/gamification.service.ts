@@ -47,18 +47,21 @@ export class GamificationService {
    * Get or create gamification config for a school
    */
   async getConfig(schoolId?: string): Promise<GamificationConfigDocument> {
-    const id = schoolId && schoolId.trim() ? schoolId : this.getDefaultSchoolId();
-    
+    const id =
+      schoolId && schoolId.trim() ? schoolId : this.getDefaultSchoolId();
+
     // First, fix any existing documents with empty values (migration fix)
     // This runs BEFORE loading to avoid validation errors
-    await this.configModel.updateMany(
-      { schoolId: id, 'avatarOptions.value': '' },
-      { $set: { 'avatarOptions.$[elem].value': 'none' } },
-      { arrayFilters: [{ 'elem.value': '' }] }
-    ).exec();
-    
+    await this.configModel
+      .updateMany(
+        { schoolId: id, 'avatarOptions.value': '' },
+        { $set: { 'avatarOptions.$[elem].value': 'none' } },
+        { arrayFilters: [{ 'elem.value': '' }] },
+      )
+      .exec();
+
     let config = await this.configModel.findOne({ schoolId: id }).exec();
-    
+
     if (!config) {
       // Create default config
       config = await this.configModel.create({
@@ -77,49 +80,66 @@ export class GamificationService {
           levelMultiplier: 1.2,
           maxLevel: 50,
         },
-        medals: DEFAULT_MEDALS.map((m, i) => ({ ...m, isActive: true, sortOrder: i })),
-        avatarOptions: DEFAULT_AVATAR_OPTIONS.map((a, i) => ({ ...a, isActive: true, sortOrder: i })),
+        medals: DEFAULT_MEDALS.map((m, i) => ({
+          ...m,
+          isActive: true,
+          sortOrder: i,
+        })),
+        avatarOptions: DEFAULT_AVATAR_OPTIONS.map((a, i) => ({
+          ...a,
+          isActive: true,
+          sortOrder: i,
+        })),
         isActive: true,
       });
     }
-    
+
     return config;
   }
 
   /**
    * Calculate XP for a test attempt
    */
-  async calculateTestXp(schoolId: string, score: number, maxScore: number): Promise<{ xp: number; isPerfect: boolean }> {
+  async calculateTestXp(
+    schoolId: string,
+    score: number,
+    maxScore: number,
+  ): Promise<{ xp: number; isPerfect: boolean }> {
     const config = await this.getConfig(schoolId);
     const rules = config.xpRules;
-    
+
     const isPerfect = maxScore > 0 && score === maxScore;
     let xp = rules.testBaseXp + Math.round(score * rules.testPointMultiplier);
-    
+
     if (isPerfect) {
       xp += rules.testPerfectBonus;
     }
-    
+
     return { xp, isPerfect };
   }
 
   /**
    * Calculate level from total XP
    */
-  async calculateLevel(schoolId: string, totalXp: number): Promise<{ level: number; xpInLevel: number; xpForNextLevel: number }> {
+  async calculateLevel(
+    schoolId: string,
+    totalXp: number,
+  ): Promise<{ level: number; xpInLevel: number; xpForNextLevel: number }> {
     const config = await this.getConfig(schoolId);
     const { baseXpPerLevel, levelMultiplier, maxLevel } = config.levelConfig;
-    
+
     let level = 1;
     let xpNeeded = baseXpPerLevel;
     let xpAccumulated = 0;
-    
+
     while (totalXp >= xpAccumulated + xpNeeded && level < maxLevel) {
       xpAccumulated += xpNeeded;
       level++;
-      xpNeeded = Math.round(baseXpPerLevel * Math.pow(levelMultiplier, level - 1));
+      xpNeeded = Math.round(
+        baseXpPerLevel * Math.pow(levelMultiplier, level - 1),
+      );
     }
-    
+
     return {
       level,
       xpInLevel: totalXp - xpAccumulated,
@@ -130,26 +150,35 @@ export class GamificationService {
   /**
    * Get unlocked avatar options for a user based on XP and level
    */
-  async getUnlockedAvatarOptions(schoolId: string, totalXp: number, level: number) {
+  async getUnlockedAvatarOptions(
+    schoolId: string,
+    totalXp: number,
+    level: number,
+  ) {
     const config = await this.getConfig(schoolId);
-    
+
     const unlocked = config.avatarOptions.filter(
-      opt => opt.isActive && opt.requiredXp <= totalXp && opt.requiredLevel <= level
+      (opt) =>
+        opt.isActive && opt.requiredXp <= totalXp && opt.requiredLevel <= level,
     );
-    
+
     const locked = config.avatarOptions.filter(
-      opt => opt.isActive && (opt.requiredXp > totalXp || opt.requiredLevel > level)
+      (opt) =>
+        opt.isActive && (opt.requiredXp > totalXp || opt.requiredLevel > level),
     );
-    
+
     // Group by category
     const groupByCategory = (options: AvatarOptionDefinition[]) => {
-      return options.reduce((acc, opt) => {
-        if (!acc[opt.category]) acc[opt.category] = [];
-        acc[opt.category].push(opt);
-        return acc;
-      }, {} as Record<string, AvatarOptionDefinition[]>);
+      return options.reduce(
+        (acc, opt) => {
+          if (!acc[opt.category]) acc[opt.category] = [];
+          acc[opt.category].push(opt);
+          return acc;
+        },
+        {} as Record<string, AvatarOptionDefinition[]>,
+      );
     };
-    
+
     return {
       unlocked: groupByCategory(unlocked),
       locked: groupByCategory(locked),
@@ -180,20 +209,21 @@ export class GamificationService {
     earnedMedalIds: string[],
   ) {
     const config = await this.getConfig(schoolId);
-    
+
     // Convert to plain objects to ensure spread works correctly
-    const configObj = typeof (config as any).toObject === 'function' 
-      ? (config as any).toObject() 
-      : config;
+    const configObj =
+      typeof (config as any).toObject === 'function'
+        ? (config as any).toObject()
+        : config;
     const medalsArray = configObj.medals || [];
-    
+
     return medalsArray
       .filter((m: MedalDefinition) => m.isActive)
       .map((medal: MedalDefinition) => {
         const earned = earnedMedalIds.includes(medal.id);
         let progress = 0;
         const target = medal.conditionValue;
-        
+
         switch (medal.conditionType) {
           case 'tests_completed':
             progress = stats.testsCompleted;
@@ -214,7 +244,7 @@ export class GamificationService {
             progress = stats.totalXp;
             break;
         }
-        
+
         return {
           ...medal,
           earned,
@@ -242,17 +272,18 @@ export class GamificationService {
   ): Promise<MedalDefinition[]> {
     const config = await this.getConfig(schoolId);
     const toAward: MedalDefinition[] = [];
-    
+
     // Convert to plain objects to ensure proper access
-    const configObj = typeof (config as any).toObject === 'function' 
-      ? (config as any).toObject() 
-      : config;
+    const configObj =
+      typeof (config as any).toObject === 'function'
+        ? (config as any).toObject()
+        : config;
     const medalsArray = configObj.medals || [];
-    
+
     console.log('[MEDALS DEBUG] Stats:', stats);
     console.log('[MEDALS DEBUG] Already earned IDs:', alreadyEarnedIds);
     console.log('[MEDALS DEBUG] Total medals in config:', medalsArray.length);
-    
+
     for (const medal of medalsArray) {
       const alreadyEarned = alreadyEarnedIds.includes(medal.id);
       if (!medal.isActive || alreadyEarned) {
@@ -261,35 +292,60 @@ export class GamificationService {
         }
         continue;
       }
-      
+
       let value = 0;
       switch (medal.conditionType) {
-        case 'tests_completed': value = stats.testsCompleted; break;
-        case 'workshops_completed': value = stats.workshopsCompleted; break;
-        case 'perfect_scores': value = stats.perfectScores; break;
-        case 'streak_days': value = stats.currentStreak; break;
-        case 'ranking_position': value = stats.rankingPosition; break;
-        case 'total_xp': value = stats.totalXp; break;
-        case 'level_reached': value = Math.floor(stats.totalXp / 500) + 1; break;
+        case 'tests_completed':
+          value = stats.testsCompleted;
+          break;
+        case 'workshops_completed':
+          value = stats.workshopsCompleted;
+          break;
+        case 'perfect_scores':
+          value = stats.perfectScores;
+          break;
+        case 'streak_days':
+          value = stats.currentStreak;
+          break;
+        case 'ranking_position':
+          value = stats.rankingPosition;
+          break;
+        case 'total_xp':
+          value = stats.totalXp;
+          break;
+        case 'level_reached':
+          value = Math.floor(stats.totalXp / 500) + 1;
+          break;
       }
-      
+
       const op = medal.conditionOperator ?? 'gte';
       let conditionMet = false;
-      
+
       switch (op) {
-        case 'gte': conditionMet = value >= medal.conditionValue; break;
-        case 'lte': conditionMet = value <= medal.conditionValue && value > 0; break;
-        case 'eq': conditionMet = value === medal.conditionValue; break;
+        case 'gte':
+          conditionMet = value >= medal.conditionValue;
+          break;
+        case 'lte':
+          conditionMet = value <= medal.conditionValue && value > 0;
+          break;
+        case 'eq':
+          conditionMet = value === medal.conditionValue;
+          break;
       }
-      
-      console.log(`[MEDALS DEBUG] Medal ${medal.id} (${medal.name}): condition=${medal.conditionType}, value=${value}, target=${medal.conditionValue}, op=${op}, met=${conditionMet}`);
-      
+
+      console.log(
+        `[MEDALS DEBUG] Medal ${medal.id} (${medal.name}): condition=${medal.conditionType}, value=${value}, target=${medal.conditionValue}, op=${op}, met=${conditionMet}`,
+      );
+
       if (conditionMet) {
         toAward.push(medal);
       }
     }
-    
-    console.log('[MEDALS DEBUG] Medals to award:', toAward.map(m => m.id));
+
+    console.log(
+      '[MEDALS DEBUG] Medals to award:',
+      toAward.map((m) => m.id),
+    );
     return toAward;
   }
 
@@ -298,7 +354,11 @@ export class GamificationService {
   /**
    * Update XP rules
    */
-  async updateXpRules(schoolId: string, rules: Partial<XpRules>, userId: string) {
+  async updateXpRules(
+    schoolId: string,
+    rules: Partial<XpRules>,
+    userId: string,
+  ) {
     const config = await this.getConfig(schoolId);
     Object.assign(config.xpRules, rules);
     config.lastModifiedByUserId = userId;
@@ -309,7 +369,11 @@ export class GamificationService {
   /**
    * Update level config
    */
-  async updateLevelConfig(schoolId: string, levelConfig: Partial<LevelConfig>, userId: string) {
+  async updateLevelConfig(
+    schoolId: string,
+    levelConfig: Partial<LevelConfig>,
+    userId: string,
+  ) {
     const config = await this.getConfig(schoolId);
     Object.assign(config.levelConfig, levelConfig);
     config.lastModifiedByUserId = userId;
@@ -322,15 +386,15 @@ export class GamificationService {
    */
   async upsertMedal(schoolId: string, medal: MedalDefinition, userId: string) {
     const config = await this.getConfig(schoolId);
-    const idx = config.medals.findIndex(m => m.id === medal.id);
-    
+    const idx = config.medals.findIndex((m) => m.id === medal.id);
+
     if (idx >= 0) {
       config.medals[idx] = medal;
     } else {
       medal.sortOrder = config.medals.length;
       config.medals.push(medal);
     }
-    
+
     config.lastModifiedByUserId = userId;
     await config.save();
     return medal;
@@ -341,7 +405,7 @@ export class GamificationService {
    */
   async deleteMedal(schoolId: string, medalId: string, userId: string) {
     const config = await this.getConfig(schoolId);
-    config.medals = config.medals.filter(m => m.id !== medalId);
+    config.medals = config.medals.filter((m) => m.id !== medalId);
     config.lastModifiedByUserId = userId;
     await config.save();
   }
@@ -351,21 +415,21 @@ export class GamificationService {
    */
   async reorderMedals(schoolId: string, medalIds: string[], userId: string) {
     const config = await this.getConfig(schoolId);
-    
+
     // Create a map of id -> new sortOrder
     const orderMap = new Map(medalIds.map((id, idx) => [id, idx]));
-    
+
     // Update sort orders
-    config.medals.forEach(medal => {
+    config.medals.forEach((medal) => {
       const newOrder = orderMap.get(medal.id);
       if (newOrder !== undefined) {
         medal.sortOrder = newOrder;
       }
     });
-    
+
     // Sort medals by new order
     config.medals.sort((a, b) => a.sortOrder - b.sortOrder);
-    
+
     config.lastModifiedByUserId = userId;
     await config.save();
   }
@@ -373,17 +437,21 @@ export class GamificationService {
   /**
    * Add or update an avatar option
    */
-  async upsertAvatarOption(schoolId: string, option: AvatarOptionDefinition, userId: string) {
+  async upsertAvatarOption(
+    schoolId: string,
+    option: AvatarOptionDefinition,
+    userId: string,
+  ) {
     const config = await this.getConfig(schoolId);
-    const idx = config.avatarOptions.findIndex(a => a.id === option.id);
-    
+    const idx = config.avatarOptions.findIndex((a) => a.id === option.id);
+
     if (idx >= 0) {
       config.avatarOptions[idx] = option;
     } else {
       option.sortOrder = config.avatarOptions.length;
       config.avatarOptions.push(option);
     }
-    
+
     config.lastModifiedByUserId = userId;
     await config.save();
     return option;
@@ -394,7 +462,9 @@ export class GamificationService {
    */
   async deleteAvatarOption(schoolId: string, optionId: string, userId: string) {
     const config = await this.getConfig(schoolId);
-    config.avatarOptions = config.avatarOptions.filter(a => a.id !== optionId);
+    config.avatarOptions = config.avatarOptions.filter(
+      (a) => a.id !== optionId,
+    );
     config.lastModifiedByUserId = userId;
     await config.save();
   }
@@ -411,7 +481,7 @@ export class GamificationService {
    */
   async resetToDefaults(schoolId: string, userId: string) {
     const config = await this.getConfig(schoolId);
-    
+
     config.xpRules = {
       testBaseXp: 0,
       testPointMultiplier: 1,
@@ -421,17 +491,25 @@ export class GamificationService {
       weeklyStreakBonus: 50,
       monthlyStreakBonus: 200,
     };
-    
+
     config.levelConfig = {
       baseXpPerLevel: 100,
       levelMultiplier: 1.2,
       maxLevel: 50,
     };
-    
-    config.medals = DEFAULT_MEDALS.map((m, i) => ({ ...m, isActive: true, sortOrder: i }));
-    config.avatarOptions = DEFAULT_AVATAR_OPTIONS.map((a, i) => ({ ...a, isActive: true, sortOrder: i }));
+
+    config.medals = DEFAULT_MEDALS.map((m, i) => ({
+      ...m,
+      isActive: true,
+      sortOrder: i,
+    }));
+    config.avatarOptions = DEFAULT_AVATAR_OPTIONS.map((a, i) => ({
+      ...a,
+      isActive: true,
+      sortOrder: i,
+    }));
     config.lastModifiedByUserId = userId;
-    
+
     await config.save();
     return config;
   }
@@ -447,14 +525,18 @@ export class GamificationService {
       .find(query)
       .sort({ sortOrder: 1 })
       .exec();
-    
+
     // Add computed counts for frontend
-    return styles.map(style => {
+    return styles.map((style) => {
       const doc = style.toObject();
       return {
         ...doc,
         categoriesCount: doc.categories?.length ?? 0,
-        optionsCount: doc.categories?.reduce((sum: number, c: any) => sum + (c.options?.length ?? 0), 0) ?? 0,
+        optionsCount:
+          doc.categories?.reduce(
+            (sum: number, c: any) => sum + (c.options?.length ?? 0),
+            0,
+          ) ?? 0,
       };
     });
   }
@@ -473,13 +555,14 @@ export class GamificationService {
   /**
    * Update DiceBear style settings (enable/disable, sort order)
    */
-  async updateDiceBearStyle(styleId: string, updates: { isActive?: boolean; sortOrder?: number }) {
-    const style = await this.dicebearStyleModel.findOneAndUpdate(
-      { styleId },
-      { $set: updates },
-      { new: true }
-    ).exec();
-    
+  async updateDiceBearStyle(
+    styleId: string,
+    updates: { isActive?: boolean; sortOrder?: number },
+  ) {
+    const style = await this.dicebearStyleModel
+      .findOneAndUpdate({ styleId }, { $set: updates }, { new: true })
+      .exec();
+
     if (!style) {
       throw new NotFoundException(`Style ${styleId} not found`);
     }
@@ -490,32 +573,62 @@ export class GamificationService {
    * Get avatar configuration for a specific style with unlock requirements
    * This combines the DiceBear style data with school-specific unlock settings
    */
-  async getStyleOptionsForUser(schoolId: string, styleId: string, userXp: number, userLevel: number) {
+  async getStyleOptionsForUser(
+    schoolId: string,
+    styleId: string,
+    userXp: number,
+    userLevel: number,
+  ) {
     const style = await this.getDiceBearStyle(styleId);
     const config = await this.getConfig(schoolId);
-    
-    // Get unlock requirements for this style from avatar options
-    const styleOption = config.avatarOptions.find(
-      opt => opt.category === 'style' && opt.value === styleId
+    const avatarConfigs = await this.getAvatarConfigsForStyle(
+      schoolId,
+      styleId,
     );
-    
-    const isStyleUnlocked = !styleOption || 
-      (styleOption.requiredXp <= userXp && styleOption.requiredLevel <= userLevel);
-    
+    const avatarConfigMap = new Map(
+      avatarConfigs.map((c) => [`${c.category}:${c.optionValue}`, c] as const),
+    );
+
+    // Get unlock requirements for this style
+    const styleOptionFromNew = avatarConfigMap.get(`style:${styleId}`);
+    const styleOptionFromLegacy = config.avatarOptions.find(
+      (opt) => opt.category === 'style' && opt.value === styleId,
+    );
+    const styleOption = styleOptionFromNew
+      ? {
+          requiredXp: styleOptionFromNew.requiredXp,
+          requiredLevel: styleOptionFromNew.requiredLevel,
+        }
+      : styleOptionFromLegacy;
+
+    const isStyleUnlocked =
+      !styleOption ||
+      (styleOption.requiredXp <= userXp &&
+        styleOption.requiredLevel <= userLevel);
+
     // Build categories with unlock status
     // Convert Mongoose subdocuments to plain objects to preserve all fields
     const styleObj = style.toObject();
     const categoriesWithStatus = styleObj.categories.map((category: any) => {
       const optionsWithStatus = (category.options || []).map((option: any) => {
         // Find if there's a specific unlock requirement for this option
-        const optionConfig = config.avatarOptions.find(
-          opt => opt.category === category.name && opt.value === option.value
+        const optionConfigFromNew = avatarConfigMap.get(
+          `${category.name}:${option.value}`,
         );
-        
+        const optionConfigFromLegacy = config.avatarOptions.find(
+          (opt) => opt.category === category.name && opt.value === option.value,
+        );
+        const optionConfig = optionConfigFromNew
+          ? {
+              requiredXp: optionConfigFromNew.requiredXp,
+              requiredLevel: optionConfigFromNew.requiredLevel,
+            }
+          : optionConfigFromLegacy;
+
         const requiredXp = optionConfig?.requiredXp ?? 0;
         const requiredLevel = optionConfig?.requiredLevel ?? 0;
         const isUnlocked = requiredXp <= userXp && requiredLevel <= userLevel;
-        
+
         return {
           ...option,
           requiredXp,
@@ -523,13 +636,13 @@ export class GamificationService {
           isUnlocked,
         };
       });
-      
+
       return {
         ...category,
         options: optionsWithStatus,
       };
     });
-    
+
     return {
       ...styleObj,
       isUnlocked: isStyleUnlocked,
@@ -542,26 +655,48 @@ export class GamificationService {
   /**
    * Get all styles with their unlock status for a user
    */
-  async getAllStylesForUser(schoolId: string, userXp: number, userLevel: number) {
+  async getAllStylesForUser(
+    schoolId: string,
+    userXp: number,
+    userLevel: number,
+  ) {
     const styles = await this.getDiceBearStyles(true);
     const config = await this.getConfig(schoolId);
-    
-    return styles.map(style => {
-      const styleOption = config.avatarOptions.find(
-        opt => opt.category === 'style' && opt.value === style.styleId
+    const id = schoolId?.trim() || this.getDefaultSchoolId();
+    const styleUnlockConfigs = await this.avatarConfigModel
+      .find({ schoolId: id, category: 'style' })
+      .lean()
+      .exec();
+    const styleUnlockMap = new Map(
+      styleUnlockConfigs.map((c) => [c.optionValue, c] as const),
+    );
+
+    return styles.map((style) => {
+      const styleOptionFromNew = styleUnlockMap.get(style.styleId);
+      const styleOptionFromLegacy = config.avatarOptions.find(
+        (opt) => opt.category === 'style' && opt.value === style.styleId,
       );
-      
+      const styleOption = styleOptionFromNew
+        ? {
+            requiredXp: styleOptionFromNew.requiredXp,
+            requiredLevel: styleOptionFromNew.requiredLevel,
+          }
+        : styleOptionFromLegacy;
+
       const requiredXp = styleOption?.requiredXp ?? 0;
       const requiredLevel = styleOption?.requiredLevel ?? 0;
       const isUnlocked = requiredXp <= userXp && requiredLevel <= userLevel;
-      
+
       return {
         styleId: style.styleId,
         displayName: style.displayName,
         creator: style.creator,
         apiUrl: style.apiUrl,
         categoriesCount: style.categories.length,
-        optionsCount: style.categories.reduce((sum, c) => sum + c.options.length, 0),
+        optionsCount: style.categories.reduce(
+          (sum, c) => sum + c.options.length,
+          0,
+        ),
         requiredXp,
         requiredLevel,
         isUnlocked,
@@ -577,7 +712,7 @@ export class GamificationService {
    */
   async getAvatarConfigsForStyle(schoolId: string, styleId: string) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
+
     return this.avatarConfigModel
       .find({ schoolId: id, styleId })
       .sort({ category: 1, sortOrder: 1 })
@@ -596,7 +731,7 @@ export class GamificationService {
     userLevel: number,
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
+
     return this.avatarConfigModel
       .find({
         schoolId: id,
@@ -622,21 +757,23 @@ export class GamificationService {
     userId?: string,
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
-    return this.avatarConfigModel.findOneAndUpdate(
-      { schoolId: id, styleId, category, optionValue },
-      {
-        $set: {
-          ...data,
-          schoolId: id,
-          styleId,
-          category,
-          optionValue,
-          lastModifiedBy: userId,
+
+    return this.avatarConfigModel
+      .findOneAndUpdate(
+        { schoolId: id, styleId, category, optionValue },
+        {
+          $set: {
+            ...data,
+            schoolId: id,
+            styleId,
+            category,
+            optionValue,
+            lastModifiedBy: userId,
+          },
         },
-      },
-      { upsert: true, new: true }
-    ).exec();
+        { upsert: true, new: true },
+      )
+      .exec();
   }
 
   /**
@@ -657,7 +794,7 @@ export class GamificationService {
     userId?: string,
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
+
     const bulkOps = configs.map((config, idx) => ({
       updateOne: {
         filter: {
@@ -692,13 +829,16 @@ export class GamificationService {
    */
   async getStyleUnlockConfig(schoolId: string, styleId: string) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
-    return this.avatarConfigModel.findOne({
-      schoolId: id,
-      styleId,
-      category: 'style',
-      optionValue: styleId,
-    }).lean().exec();
+
+    return this.avatarConfigModel
+      .findOne({
+        schoolId: id,
+        styleId,
+        category: 'style',
+        optionValue: styleId,
+      })
+      .lean()
+      .exec();
   }
 
   /**
@@ -713,24 +853,26 @@ export class GamificationService {
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
     const style = await this.getDiceBearStyle(styleId);
-    
-    return this.avatarConfigModel.findOneAndUpdate(
-      { schoolId: id, styleId, category: 'style', optionValue: styleId },
-      {
-        $set: {
-          schoolId: id,
-          styleId,
-          category: 'style',
-          optionValue: styleId,
-          displayName: style.displayName,
-          requiredXp,
-          requiredLevel,
-          isActive: true,
-          lastModifiedBy: userId,
+
+    return this.avatarConfigModel
+      .findOneAndUpdate(
+        { schoolId: id, styleId, category: 'style', optionValue: styleId },
+        {
+          $set: {
+            schoolId: id,
+            styleId,
+            category: 'style',
+            optionValue: styleId,
+            displayName: style.displayName,
+            requiredXp,
+            requiredLevel,
+            isActive: true,
+            lastModifiedBy: userId,
+          },
         },
-      },
-      { upsert: true, new: true }
-    ).exec();
+        { upsert: true, new: true },
+      )
+      .exec();
   }
 
   // ========== OPTIMIZED MEDAL CONFIG METHODS (New Collections) ==========
@@ -742,7 +884,7 @@ export class GamificationService {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
     const query: any = { schoolId: id };
     if (activeOnly) query.isActive = true;
-    
+
     return this.medalConfigModel
       .find(query)
       .sort({ sortOrder: 1 })
@@ -767,7 +909,7 @@ export class GamificationService {
     alreadyEarnedIds: string[],
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
+
     const allMedals = await this.medalConfigModel
       .find({ schoolId: id, isActive: true })
       .lean()
@@ -780,21 +922,39 @@ export class GamificationService {
 
       let value = 0;
       switch (medal.conditionType) {
-        case 'tests_completed': value = stats.testsCompleted; break;
-        case 'workshops_completed': value = stats.workshopsCompleted; break;
-        case 'perfect_scores': value = stats.perfectScores; break;
-        case 'streak_days': value = stats.currentStreak; break;
-        case 'ranking_position': value = stats.rankingPosition; break;
-        case 'total_xp': value = stats.totalXp; break;
+        case 'tests_completed':
+          value = stats.testsCompleted;
+          break;
+        case 'workshops_completed':
+          value = stats.workshopsCompleted;
+          break;
+        case 'perfect_scores':
+          value = stats.perfectScores;
+          break;
+        case 'streak_days':
+          value = stats.currentStreak;
+          break;
+        case 'ranking_position':
+          value = stats.rankingPosition;
+          break;
+        case 'total_xp':
+          value = stats.totalXp;
+          break;
       }
 
       const op = medal.conditionOperator ?? 'gte';
       let conditionMet = false;
 
       switch (op) {
-        case 'gte': conditionMet = value >= medal.conditionValue; break;
-        case 'lte': conditionMet = value <= medal.conditionValue && value > 0; break;
-        case 'eq': conditionMet = value === medal.conditionValue; break;
+        case 'gte':
+          conditionMet = value >= medal.conditionValue;
+          break;
+        case 'lte':
+          conditionMet = value <= medal.conditionValue && value > 0;
+          break;
+        case 'eq':
+          conditionMet = value === medal.conditionValue;
+          break;
       }
 
       if (conditionMet) {
@@ -815,19 +975,21 @@ export class GamificationService {
     userId?: string,
   ) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
-    return this.medalConfigModel.findOneAndUpdate(
-      { schoolId: id, medalId },
-      {
-        $set: {
-          ...data,
-          schoolId: id,
-          medalId,
-          lastModifiedBy: userId,
+
+    return this.medalConfigModel
+      .findOneAndUpdate(
+        { schoolId: id, medalId },
+        {
+          $set: {
+            ...data,
+            schoolId: id,
+            medalId,
+            lastModifiedBy: userId,
+          },
         },
-      },
-      { upsert: true, new: true }
-    ).exec();
+        { upsert: true, new: true },
+      )
+      .exec();
   }
 
   /**
@@ -843,7 +1005,7 @@ export class GamificationService {
    */
   async seedDefaultMedals(schoolId: string, userId?: string) {
     const id = schoolId?.trim() || this.getDefaultSchoolId();
-    
+
     const bulkOps = DEFAULT_MEDALS.map((medal, idx) => ({
       updateOne: {
         filter: { schoolId: id, medalId: medal.id },

@@ -31,16 +31,23 @@ export class AuthService {
       throw new UnauthorizedException('Config JWT inválida.');
     }
 
-    const accessExpiresIn =
-      (this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '24h') as SignOptions['expiresIn'];
-    const refreshExpiresIn =
-      (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d') as SignOptions['expiresIn'];
+    const accessExpiresIn = (this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ??
+      '24h') as SignOptions['expiresIn'];
+    const refreshExpiresIn = (this.config.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+    ) ?? '7d') as SignOptions['expiresIn'];
 
     const payload = { sub: user.userId };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwt.signAsync(payload, { secret: accessSecret, expiresIn: accessExpiresIn }),
-      this.jwt.signAsync(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn }),
+      this.jwt.signAsync(payload, {
+        secret: accessSecret,
+        expiresIn: accessExpiresIn,
+      }),
+      this.jwt.signAsync(payload, {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
+      }),
     ]);
 
     await this.usersService.setRefreshTokenHash(user.userId, refreshToken);

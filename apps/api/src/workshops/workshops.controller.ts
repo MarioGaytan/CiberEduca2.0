@@ -15,7 +15,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '../common/roles.enum';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
-import { AddCollaboratorDto, RemoveCollaboratorDto, RequestReasonDto } from './dto/collaborator.dto';
+import {
+  AddCollaboratorDto,
+  RemoveCollaboratorDto,
+  RequestReasonDto,
+} from './dto/collaborator.dto';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { ReviewFeedbackDto } from './dto/review-feedback.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
@@ -28,10 +32,7 @@ export class WorkshopsController {
 
   @Roles(Role.Teacher, Role.Admin)
   @Post()
-  create(
-    @Req() req: { user: any },
-    @Body() dto: CreateWorkshopDto,
-  ) {
+  create(@Req() req: { user: any }, @Body() dto: CreateWorkshopDto) {
     return this.workshopsService.create(req.user, dto);
   }
 
@@ -155,7 +156,12 @@ export class WorkshopsController {
     @Param('id') id: string,
     @Body() dto: AddCollaboratorDto,
   ) {
-    return this.workshopsService.addCollaborator(req.user, id, dto.userId, dto.role);
+    return this.workshopsService.addCollaborator(
+      req.user,
+      id,
+      dto.userId,
+      dto.role,
+    );
   }
 
   @Roles(Role.Teacher, Role.Admin)
